@@ -54,7 +54,7 @@ namespace Alabaster
         {
             public DirectoryPath(string val) : base(val)
             {
-                if (val[val.Length - 1] != '\\') { this.Value += "\\"; }
+                if (val == "" || val[val.Length - 1] != '\\') { this.Value += "\\"; }
             }
         }
 

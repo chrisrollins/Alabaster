@@ -20,12 +20,12 @@ namespace Alabaster
             public static Response ResolveUniversals(ContextWrapper ctx)
             {
                 Response result = null;
-                for(int i = 0; i < UniversalCallbacks.Length; i++)
+                for (int i = 0; i < UniversalCallbacks.Length; i++)
                 {
                     result = Resolve(UniversalCallbacks[i], ctx);
-                    if (!(result is PassThrough)) { break; }
+                    if (result == null) { return null; }
                 }
-                return (result is PassThrough) ? null : result;
+                return result;
             }
 
             public static Response ResolveMethod(ContextWrapper cw) => methodCallbacks.TryGetValue(RouteKey(cw.Context.Request.HttpMethod, ""), out RouteCallback rc) ? Resolve(rc, cw) : null;
@@ -54,16 +54,7 @@ namespace Alabaster
                 routeCallbacks = new Dictionary<string, RouteCallback>(deferredRouteCallbacks.Count);
                 methodCallbacks = new Dictionary<string, RouteCallback>(deferredMethodCallbacks.Count);
 
-                if (deferredUniversalCallbacks.Count > 0)
-                {
-                    UniversalCallbacks = new RouteCallback[deferredUniversalCallbacks.Count];
-
-                    for (int i = UniversalCallbacks.Length - 1; i >= 0; i--)
-                    {
-                        UniversalCallbacks[i] = deferredUniversalCallbacks.Dequeue();
-                    }
-                }
-
+                UniversalCallbacks = deferredUniversalCallbacks.ToArray();
                 while (deferredRouteCallbacks.Count > 0) { deferredRouteCallbacks.Dequeue()(); }
                 while (deferredMethodCallbacks.Count > 0) { deferredMethodCallbacks.Dequeue()(); }
             }

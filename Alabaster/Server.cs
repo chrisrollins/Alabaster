@@ -94,7 +94,12 @@ namespace Alabaster
             {
                 Response result;
                 try { result = callback(); }
-                catch { result = new EmptyResponse(500); }
+                catch(Exception e)
+                {
+                    Console.WriteLine("Exception in application code:");
+                    Console.WriteLine(e);
+                    result = new EmptyResponse(500);
+                }
                 return result;
             }
 

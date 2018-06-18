@@ -6,7 +6,8 @@
 
 ## Hello World example:  
 
-```using Alabaster;
+```
+using Alabaster;
 
 namespace HelloWorldExample
 {

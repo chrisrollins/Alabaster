@@ -6,6 +6,11 @@ using System.Threading.Tasks;
 
 namespace Alabaster
 {
+    public delegate Response RouteCallback_A(Request req);
+    public delegate IEnumerable<T> RouteCallback_B<T>(Request req) where T : struct;
+    public delegate IEnumerable<T> RouteCallback_C<T>() where T : struct;
+    public delegate void RouteCallback_D(Request req);
+
     public partial class Server
     {
         public static void AttachWebSocketModule(string route, WebSocketModule module) => Get(route, (Request req) => { if (req.IsWebSocketRequest) { return new WebSocketHandshake(module, req.cw.Context); } else { return new PassThrough(); } });
@@ -19,32 +24,36 @@ namespace Alabaster
         public static void All(RouteCallback_A callback) => Routing.AddUniversalCallback(callback);
         public static void All(string method, RouteCallback_A callback) => Routing.AddMethodCallback(method, callback);
 
-        public static void Get<T>(string route, RouteCallback_B<T> callback) where T : struct => Get(route, (Request req) => new StringResponse(String.Join(null, callback(req))));
-        public static void Post<T>(string route, RouteCallback_B<T> callback) where T : struct => Post(route, (Request req) => new StringResponse(String.Join(null, callback(req))));
-        public static void Patch<T>(string route, RouteCallback_B<T> callback) where T : struct => Patch(route, (Request req) => new StringResponse(String.Join(null, callback(req))));
-        public static void Put<T>(string route, RouteCallback_B<T> callback) where T : struct => Put(route, (Request req) => new StringResponse(String.Join(null, callback(req))));
-        public static void Delete<T>(string route, RouteCallback_B<T> callback) where T : struct => Delete(route, (Request req) => new StringResponse(String.Join(null, callback(req))));
-        public static void Route<T>(string route, string method, RouteCallback_B<T> callback) where T : struct => Route(route, method, (Request req) => new StringResponse(String.Join(null, callback(req))));
-        public static void All<T>(RouteCallback_B<T> callback) where T : struct => Routing.AddUniversalCallback((Request req) => new StringResponse(String.Join(null, callback(req))));
-        public static void All<T>(string method, RouteCallback_A callback) => Routing.AddMethodCallback(method, (Request req) => new StringResponse(String.Join(null, callback(req))));
+        public static void Get<T>(string route, RouteCallback_B<T> callback) where T : struct => Get(route, ConvertB(callback));
+        public static void Post<T>(string route, RouteCallback_B<T> callback) where T : struct => Post(route, ConvertB(callback));
+        public static void Patch<T>(string route, RouteCallback_B<T> callback) where T : struct => Patch(route, ConvertB(callback));
+        public static void Put<T>(string route, RouteCallback_B<T> callback) where T : struct => Put(route, ConvertB(callback));
+        public static void Delete<T>(string route, RouteCallback_B<T> callback) where T : struct => Delete(route, ConvertB(callback));
+        public static void Route<T>(string route, string method, RouteCallback_B<T> callback) where T : struct => Route(route, method, ConvertB(callback));
+        public static void All<T>(RouteCallback_B<T> callback) where T : struct => Routing.AddUniversalCallback(ConvertB(callback));
+        public static void All<T>(string method, RouteCallback_B<T> callback) where T : struct => Routing.AddMethodCallback(method, ConvertB(callback));
 
-        public static void Get<T>(string route, RouteCallback_C<T> callback) where T : struct => Get(route, (Request req) => new StringResponse(String.Join(null, callback())));
-        public static void Post<T>(string route, RouteCallback_C<T> callback) where T : struct => Post(route, (Request req) => new StringResponse(String.Join(null, callback())));
-        public static void Patch<T>(string route, RouteCallback_C<T> callback) where T : struct => Patch(route, (Request req) => new StringResponse(String.Join(null, callback())));
-        public static void Put<T>(string route, RouteCallback_C<T> callback) where T : struct => Put(route, (Request req) => new StringResponse(String.Join(null, callback())));
-        public static void Delete<T>(string route, RouteCallback_C<T> callback) where T : struct => Delete(route, (Request req) => new StringResponse(String.Join(null, callback())));
-        public static void Route<T>(string route, string method, RouteCallback_C<T> callback) where T : struct => Route(route, method, (Request req) => new StringResponse(String.Join(null, callback())));
-        public static void All<T>(RouteCallback_C<T> callback) where T : struct => Routing.AddUniversalCallback((Request req) => new StringResponse(String.Join(null, callback())));
-        public static void All<T>(string method, RouteCallback_C<T> callback) where T : struct => Routing.AddMethodCallback(method, (Request req) => new StringResponse(String.Join(null, callback())));
+        public static void Get<T>(string route, RouteCallback_C<T> callback) where T : struct => Get(route, ConvertC(callback));
+        public static void Post<T>(string route, RouteCallback_C<T> callback) where T : struct => Post(route, ConvertC(callback));
+        public static void Patch<T>(string route, RouteCallback_C<T> callback) where T : struct => Patch(route, ConvertC(callback));
+        public static void Put<T>(string route, RouteCallback_C<T> callback) where T : struct => Put(route, ConvertC(callback));
+        public static void Delete<T>(string route, RouteCallback_C<T> callback) where T : struct => Delete(route, ConvertC(callback));
+        public static void Route<T>(string route, string method, RouteCallback_C<T> callback) where T : struct => Route(route, method, ConvertC(callback));
+        public static void All<T>(RouteCallback_C<T> callback) where T : struct => Routing.AddUniversalCallback(ConvertC(callback));
+        public static void All<T>(string method, RouteCallback_C<T> callback) where T : struct => Routing.AddMethodCallback(method, ConvertC(callback));
 
-        public static void Get(string route, RouteCallback_D callback) => Get(route, (Request req) => { callback(req); return new PassThrough(); });
-        public static void Post(string route, RouteCallback_D callback) => Post(route, (Request req) => { callback(req); return new PassThrough(); });
-        public static void Patch(string route, RouteCallback_D callback) => Patch(route, (Request req) => { callback(req); return new PassThrough(); });
-        public static void Put(string route, RouteCallback_D callback) => Put(route, (Request req) => { callback(req); return new PassThrough(); });
-        public static void Delete(string route, RouteCallback_D callback) => Delete(route, (Request req) => { callback(req); return new PassThrough(); });
-        public static void Route(string route, string method, RouteCallback_D callback) => Route(route, method, (Request req) => { callback(req); return new PassThrough(); });
-        public static void All(RouteCallback_D callback) => Routing.AddUniversalCallback((Request req) => { callback(req); return new PassThrough(); });
-        public static void All(string method, RouteCallback_D callback) => Routing.AddMethodCallback(method, (Request req) => { callback(req); return new PassThrough(); });
+        public static void Get(string route, RouteCallback_D callback) => Get(route, ConvertD(callback));
+        public static void Post(string route, RouteCallback_D callback) => Post(route, ConvertD(callback));
+        public static void Patch(string route, RouteCallback_D callback) => Patch(route, ConvertD(callback));
+        public static void Put(string route, RouteCallback_D callback) => Put(route, ConvertD(callback));
+        public static void Delete(string route, RouteCallback_D callback) => Delete(route, ConvertD(callback));
+        public static void Route(string route, string method, RouteCallback_D callback) => Route(route, method, ConvertD(callback));
+        public static void All(RouteCallback_D callback) => Routing.AddUniversalCallback(ConvertD(callback));
+        public static void All(string method, RouteCallback_D callback) => Routing.AddMethodCallback(method, ConvertD(callback));
+
+        private static RouteCallback_A ConvertB<T>(RouteCallback_B<T> callback) where T : struct => (Request req) => new StringResponse(String.Join(null, callback(req)));
+        private static RouteCallback_A ConvertC<T>(RouteCallback_C<T> callback) where T : struct => (Request req) => new StringResponse(String.Join(null, callback()));
+        private static RouteCallback_A ConvertD(RouteCallback_D callback) => (Request req) => { callback(req); return new PassThrough(); };
 
         private static class Routing
         {

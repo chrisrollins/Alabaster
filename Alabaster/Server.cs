@@ -7,11 +7,6 @@ using System.Threading.Tasks;
 
 namespace Alabaster
 {
-    public delegate Response RouteCallback_A(Request req);
-    public delegate IEnumerable<T> RouteCallback_B<T>(Request req) where T : struct;
-    public delegate IEnumerable<T> RouteCallback_C<T>() where T : struct;
-    public delegate void RouteCallback_D(Request req);
-
     public static partial class Server
     {
         private static HttpListener listener = new HttpListener();

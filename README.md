@@ -68,11 +68,11 @@ void GlobalData.StoreVariable(string name, string value)
 
 ### Classes & Delegates:  
 
-delegate Response RouteCallback_A(Request req)
-delegate IEnumerable<T> RouteCallback_B<T>(Request req)
-delegate IEnumerable<T> RouteCallback_C<T>()
-delegate void RouteCallback_D(Request req)
- 
+delegate Response RouteCallback_A(Request req)  
+delegate IEnumerable<T> RouteCallback_B<T>(Request req)  
+delegate IEnumerable<T> RouteCallback_C<T>()  
+delegate void RouteCallback_D(Request req)  
+  
 class Request  
 class Session  
 abstract class Response  

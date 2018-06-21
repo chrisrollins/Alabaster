@@ -16,7 +16,7 @@ namespace HelloWorldExample
         static void Main(string[] args)
         {
             Server.Port = 5000;
-            Server.Get("/", (Request req) => new StringResponse("Hello world!"));            
+            Server.Get("/", () => "Hello World!");            
             Server.Start();
         }
     }
@@ -33,21 +33,21 @@ string FileIO.StaticFilesBaseDirectory
 ### Functions:  
 
 ###### Server:  
-void Server.All(RouteCallback callback)  
-void Server.All(string method, RouteCallback callback)  
+void Server.All(RouteCallback_A/B/C/D callback)  
+void Server.All(string method, RouteCallback_A/B/C/D callback)  
 void Server.AttachWebSocketModule(string route, WebSocketModule module)  
-void Server.Delete(string route, RouteCallback callback)  
-void Server.Get(string route, string file)  
-void Server.Get(string route, RouteCallback callback)  
-void Server.Patch(string route, RouteCallback callback)  
-void Server.Post(string route, RouteCallback callback)  
-void Server.Put(string route, RouteCallback callback)  
-void Server.Route(string method, string route, RouteCallback callback)  
+void Server.Delete(string route, RouteCallback_A/B/C/D callback)   
+void Server.Get(string route, RouteCallback_A/B/C/D callback)  
+void Server.Get(string route, Response res)  
+void Server.Patch(string route, RouteCallback_A/B/C/D callback)  
+void Server.Post(string route, RouteCallback_A/B/C/D callback)  
+void Server.Put(string route, RouteCallback_A/B/C/D callback)  
+void Server.Route(string method, string route, RouteCallback_A/B/C/D callback)  
 void Server.Start()  
 void Server.Stop()  
 
 ###### FileIO:  
-byte[] FileIO.GetStaticFile(string file)  
+byte[] FileIO.GetFile(string file)  
 void FileIO.AllowFile(string file)  
 void FileIO.AllowDirectory(string directory)  
 void FileIO.ForbidFile(string file)  
@@ -67,8 +67,12 @@ void GlobalData.StoreVariable<T>(string name, T value) where T : struct
 void GlobalData.StoreVariable(string name, string value)  
 
 ### Classes & Delegates:  
-  
-delegate Response RouteCallback(Request req)  
+
+delegate Response RouteCallback_A(Request req)
+delegate IEnumerable<T> RouteCallback_B<T>(Request req)
+delegate IEnumerable<T> RouteCallback_C<T>()
+delegate void RouteCallback_D(Request req)
+ 
 class Request  
 class Session  
 abstract class Response  

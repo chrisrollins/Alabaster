@@ -41,8 +41,7 @@ namespace Alabaster
         public static Session GetSession(Int64 id, Int32 key)
         {
             sessions.TryGetValue(id, out Session val);
-            if (val.key == key) { return val; }
-            else { return null; }
+            return (val.key == key) ? val : null;
         }
 
         private static void SetupRNG()

@@ -53,10 +53,10 @@ namespace Alabaster
 
         public WebSocketChannel CreateChannel() => new WebSocketChannel(this, Interlocked.Increment(ref this.channelCount));
 
-        public void NumberedEvent(byte number, WebSocketCallback callback) => Server.InitExceptions(() => { this.NumberedEvents[number] = callback; });
-        public void NamedEvent(string name, WebSocketCallback callback) => Server.InitExceptions(() => { this.NamedEvents[name] = callback; });
-        public void ConnectionEvent(WebSocketCallback callback) => Server.InitExceptions(() => this.connectEvent = callback);
-        public void DisconnectionEvent(WebSocketCallback callback) => Server.InitExceptions(() => this.disconnectEvent = callback);
+        public void NumberedEvent(byte number, WebSocketCallback callback) => Util.InitExceptions(() => { this.NumberedEvents[number] = callback; });
+        public void NamedEvent(string name, WebSocketCallback callback) => Util.InitExceptions(() => { this.NamedEvents[name] = callback; });
+        public void ConnectionEvent(WebSocketCallback callback) => Util.InitExceptions(() => this.connectEvent = callback);
+        public void DisconnectionEvent(WebSocketCallback callback) => Util.InitExceptions(() => this.disconnectEvent = callback);
 
         internal void RunCallback(byte number, WebSocketMessageContext data) => this.NumberedEvents[number]?.Invoke(data);
         internal void RunCallback(string name, WebSocketMessageContext data) { if (this.NamedEvents.TryGetValue(name, out WebSocketCallback callback)) { callback(data); } }
@@ -208,30 +208,22 @@ namespace Alabaster
         private Task SendAsyncImplementation(byte[] buffer)
         {
             if(!this.isOpen) { return Task.Run(() => { }); }
-            Task result;            
-            this.currentSend.Wait();
-            lock (this.sendLock)
+            return Task.Run(() =>
             {
-                if (!this.currentSend.IsCompleted) { result = this.SendAsyncImplementation(buffer); }
-                else
+                lock (this.sendLock)
                 {
-                    result = new Task(()=> this.socket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Binary, this.socketResult.EndOfMessage, CancellationToken.None).Wait());
-                    this.currentSend = result;
+                    this.currentSend.Wait();
+                    this.currentSend = Util.RunTaskWithExceptionHandler(() => this.socket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Binary, this.socketResult.EndOfMessage, CancellationToken.None).Wait());
                 }
-            }
-            result.Start();
-            return result;
+            });
         }
     }
     
-    public static partial class Server
+    internal sealed class WebSocketHandshake : Response
     {
-        private sealed class WebSocketHandshake : Response
+        public WebSocketHandshake(WebSocketModule module, HttpListenerContext ctx)
         {
-            public WebSocketHandshake(WebSocketModule module, HttpListenerContext ctx)
-            {
-                WebSocketConnection connection = new WebSocketConnection(module, ctx);
-            }
+            WebSocketConnection connection = new WebSocketConnection(module, ctx);
         }
-    }
+    }    
 }

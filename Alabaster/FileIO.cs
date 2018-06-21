@@ -27,7 +27,7 @@ namespace Alabaster
         public static bool RemoveFileExtensionDirectory(string extension) => extensionPaths.TryRemove(extension, out string junk);
         public static string GetFileExtensionDirectory(string extension) => extensionPaths[extension];
 
-        public static byte[] GetStaticFile(string file) => LRUCache.GetStaticFileData(file);
+        public static byte[] GetFile(string file) => LRUCache.GetStaticFileData(file);
 
         //private
         private static void AddPath(Path p, bool allowed) => allowedPaths[p] = allowed;

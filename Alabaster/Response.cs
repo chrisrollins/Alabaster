@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Net;
 using System.Text;
 
@@ -77,7 +78,7 @@ namespace Alabaster
         public RedirectResponse(string route, int statusCode = 302)
         {
             this.redirectRoute = route;
-            this.StatusCode = Math.Max(300, Math.Min(statusCode, 399)) ;
+            this.StatusCode = Util.Clamp(statusCode, 300, 399);
         }
         internal override void Finish(ContextWrapper cw)
         {
@@ -98,12 +99,21 @@ namespace Alabaster
 
     public sealed class DataResponse : Response
     {
-        public DataResponse(byte[] data) : this(data, (data == null) ? 404 : 200) { }
+        public DataResponse(byte[] data) : this(data, (data == null) ? 501 : 200) { }
         public DataResponse(byte[] data, int status)
         {
             this.data = data;
             this.StatusCode = status;
         }
+    }
+
+    public sealed class FileResponse : Response
+    {
+        public FileResponse(string filename)
+        {
+            this.data = FileIO.GetFile(filename);
+            this.StatusCode = (this.data == null) ? 404 : 200;
+        }        
     }
 
     public sealed class EmptyResponse : Response

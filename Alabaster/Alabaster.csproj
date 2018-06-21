@@ -5,9 +5,11 @@
     <OutputType>Library</OutputType>
     <StartupObject></StartupObject>
     <Authors>Chris Rollins</Authors>
-    <Description></Description>
+    <Description>Another webserver framework</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
+    <RepositoryUrl>https://github.com/chrisrollins/Alabaster</RepositoryUrl>
+    <RepositoryType></RepositoryType>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Program.cs" />

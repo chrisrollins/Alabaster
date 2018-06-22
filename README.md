@@ -28,21 +28,29 @@ namespace HelloWorldExample
 ### Configurable Values:  
 
 int Server.Port  
+bool EnableCustomHTTPMethods  
 string FileIO.StaticFilesBaseDirectory  
   
 ### Functions:  
 
 ###### Server:  
-void Server.All(RouteCallback_A/B/C/D callback)  
-void Server.All(string method, RouteCallback_A/B/C/D callback)  
-void Server.AttachWebSocketModule(string route, WebSocketModule module)  
-void Server.Delete(string route, RouteCallback_A/B/C/D callback)   
-void Server.Get(string route, RouteCallback_A/B/C/D callback)  
+void Server.Get(string route, RouteCallback_A/B/C/D/E/F callback)  
 void Server.Get(string route, Response res)  
-void Server.Patch(string route, RouteCallback_A/B/C/D callback)  
-void Server.Post(string route, RouteCallback_A/B/C/D callback)  
-void Server.Put(string route, RouteCallback_A/B/C/D callback)  
-void Server.Route(string method, string route, RouteCallback_A/B/C/D callback)  
+void Server.Delete(string route, RouteCallback_A/B/C/D/E/F callback)  
+void Server.Delete(string route, Response res)  
+void Server.Patch(string route, RouteCallback_A/B/C/D/E/F callback)  
+void Server.Patch(string route, Response res)  
+void Server.Post(string route, RouteCallback_A/B/C/D/E/F callback)  
+void Server.Post(string route, Response res)  
+void Server.Put(string route, RouteCallback_A/B/C/D/E/F callback)  
+void Server.Put(string route, Response res)  
+void Server.Route(string method, string route, RouteCallback_A/B/C/D/E/F callback)  
+void Server.Route(string method, string route, Response res)  
+void Server.All(string method, RouteCallback_A/B/C/D/E/F callback)  
+void Server.All(string method, Response res)  
+void Server.All(RouteCallback_A/B/C/D/E callback)  
+void Server.All(Response res)  
+void Server.AttachWebSocketModule(string route, WebSocketModule module)  
 void Server.Start()  
 void Server.Stop()  
 
@@ -69,9 +77,11 @@ void GlobalData.StoreVariable(string name, string value)
 ### Classes & Delegates:  
 
 delegate Response RouteCallback_A(Request req)  
-delegate IEnumerable<T> RouteCallback_B<T>(Request req)  
-delegate IEnumerable<T> RouteCallback_C<T>()  
-delegate void RouteCallback_D(Request req)  
+delegate void RouteCallback_B(Request req)  
+delegate void RouteCallback_C()  
+delegate T RouteCallback_D<T>(Request req) where T : struct  
+delegate IEnumerable<T> RouteCallback_E<T>(Request req) where T : struct  
+delegate IEnumerable<T> RouteCallback_F<T>() where T : struct  
   
 class Request  
 class Session  

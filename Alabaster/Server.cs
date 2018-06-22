@@ -27,6 +27,8 @@ namespace Alabaster
             }
         }
 
+        public static bool EnableCustomHTTPMethods = false;
+
         static Server()
         {
             if(Interlocked.CompareExchange<Thread>(ref baseThread, Thread.CurrentThread, null) != null) { Util.ThreadExceptions(); }

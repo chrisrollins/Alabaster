@@ -225,5 +225,12 @@ namespace Alabaster
         {
             WebSocketConnection connection = new WebSocketConnection(module, ctx);
         }
-    }    
+    }
+
+    public partial class Server
+    {
+        public static void AttachWebSocketModule(string route, WebSocketModule module)
+            => Get(route, (Request req)
+                => (req.IsWebSocketRequest) ? (Response)(new WebSocketHandshake(module, req.cw.Context)) : new PassThrough() );        
+    }
 }

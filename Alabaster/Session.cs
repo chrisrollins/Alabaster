@@ -47,7 +47,7 @@ namespace Alabaster
         private static void SetupRNG()
         {
             rand = new Random();
-            int dummyRolls = (Thread.CurrentThread.ManagedThreadId + (Server.Port % 11)) % 100;
+            int dummyRolls = (Thread.CurrentThread.ManagedThreadId + (Server.Config.Port % 11)) % 100;
             for(int i = 0; i < dummyRolls; i++)
             {
                 int n = rand.Next();

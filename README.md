@@ -52,6 +52,7 @@ void Server.All(RouteCallback_A/B/C/D/E callback)
 void Server.All(Response res)  
 void Server.AttachWebSocketModule(string route, WebSocketModule module)  
 void Server.Start()  
+void Server.Start(int Port, bool EnableCustomHTTPMethods = false)  
 void Server.Stop()  
 
 ###### FileIO:  
@@ -73,6 +74,14 @@ T GlobalData.RetrieveVariable<T>(string name) where T : struct
 string GlobalData.RetrieveVariable(string name)  
 void GlobalData.StoreVariable<T>(string name, T value) where T : struct  
 void GlobalData.StoreVariable(string name, string value)  
+
+###### Client:  
+async Task<string> Client.Get(string url, Scheme scheme = Scheme.HTTP)  
+async Task<string> Client.Delete(string url, Scheme scheme = Scheme.HTTP)  
+async Task<string> Client.Post(string url, string body, Scheme scheme = Scheme.HTTP)  
+async Task<string> Client.Patch(string url, string body, Scheme scheme = Scheme.HTTP)  
+async Task<string> Client.Put(string url, string body, Scheme scheme = Scheme.HTTP)  
+async Task<string> Client.Request(string method, string url, string body, Scheme scheme = Scheme.HTTP)  
 
 ### Classes & Delegates:  
 
@@ -97,3 +106,7 @@ class WebSocketMessageContext
 class WebSocketModule  
 class WebSocketChannel  
 class WebSocketConnection  
+
+### Enums:  
+Client.Scheme { HTTP, HTTPS }
+

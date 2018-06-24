@@ -13,25 +13,18 @@ namespace Alabaster
         private static Thread keepAliveThread = null;
         internal static Thread baseThread = null;
         internal static bool initialized = false;
-        private static bool running = false;
-
-        private static int port;
-        public static int Port
-        {
-            get => port;
-            set
-            {
-                Util.InitExceptions();
-                port = Util.Clamp(value, 0, UInt16.MaxValue);
-                Console.WriteLine(port);
-            }
-        }
-
-        public static bool EnableCustomHTTPMethods = false;
+        internal static bool running = false;      
 
         static Server()
         {
             if(Interlocked.CompareExchange<Thread>(ref baseThread, Thread.CurrentThread, null) != null) { Util.ThreadExceptions(); }
+        }
+        
+        public static void Start(int Port, bool EnableCustomHTTPMethods = false)
+        {
+            Config.Port = Port;
+            Config.EnableCustomHTTPMethods = EnableCustomHTTPMethods;
+            Start();
         }
 
         public static void Start()
@@ -42,9 +35,10 @@ namespace Alabaster
             
             void Init()
             {
+                if (Config.Port == 0) { throw new Exception("Port not set."); }
                 Util.InitExceptions();
                 initialized = true;
-                Util.ProgressVisualizer("Initializing Server...", "Listening on port " + Port,
+                Util.ProgressVisualizer("Initializing Server...", "Listening on port " + _port,
                     Routing.Activate,
                     LaunchListeners,
                     PreventProgramTermination
@@ -54,7 +48,7 @@ namespace Alabaster
             void LaunchListeners()
             {
                 running = true;
-                listener.Prefixes.Add(String.Join(null, "http://*:", Port.ToString(), "/"));
+                listener.Prefixes.Add(String.Join(null, "http://*:", _port.ToString(), "/"));
                 listener.Start();
                 SmartThreadPool stp = new SmartThreadPool(Environment.ProcessorCount, 100, true);
                 for (int i = 0; i < Environment.ProcessorCount; i++)

@@ -87,11 +87,9 @@ namespace Alabaster
         
         private struct MethodArg
         {
-            private static readonly string[] standardMethods = { "GET", "POST", "PATCH", "PUT", "DELETE", "HEAD", "CONNECT", "OPTIONS", "TRACE" };
             public MethodArg(string val)
-            {
-                val = val.ToUpper();
-                if(!EnableCustomHTTPMethods && !standardMethods.Contains(val)) { throw new ArgumentException("Non-standard HTTP method: " + val + " Enable non-standard HTTP methods to use a custom method by setting Server.EnableCustomHTTPMethods to true."); }                
+            {                
+                Util.httpMethodExceptions(val);
                 this.Value = val;
             }
             public string Value;

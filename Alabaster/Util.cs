@@ -17,7 +17,7 @@ namespace Alabaster
                 if (filename[i] == '.') { return filename.Substring(i + 1); }
             }
             return null;
-        }        
+        }
 
         internal static void ProgressVisualizer(string startLabel, string endLabel, params Action[] functions)
         {
@@ -51,7 +51,13 @@ namespace Alabaster
             callback?.Invoke();
         }
 
-        internal static T Clamp<T>(T value, T min, T max) where T : struct, IComparable, IFormattable, IConvertible, IComparable<T>, IEquatable<T> => (value.CompareTo(max) > 0) ? max : (value.CompareTo(min) < 0) ? min : value;        
+        internal static readonly string[] standardHTTPMethods = { "GET", "POST", "PATCH", "PUT", "DELETE", "HEAD", "CONNECT", "OPTIONS", "TRACE" };
+        internal static void httpMethodExceptions(string method)
+        {
+            if (!Server.Config.EnableCustomHTTPMethods && !Util.standardHTTPMethods.Contains(method.ToUpper())) { throw new ArgumentException("Non-standard HTTP method: " + method + " Enable non-standard HTTP methods to use a custom method by setting Server.EnableCustomHTTPMethods to true."); }
+        }
+
+        internal static T Clamp<T>(T value, T min, T max) where T : struct, IComparable, IFormattable, IConvertible, IComparable<T>, IEquatable<T> => (value.CompareTo(max) > 0) ? max : (value.CompareTo(min) < 0) ? min : value;
 
         internal static Task TaskWithExceptionHandler(Action callback, Action<Exception> handler = null) => new Task(() => ExceptionHandlerCallback(callback, handler));
         internal static Task RunTaskWithExceptionHandler(Action callback, Action<Exception> handler = null) => Task.Run(() => ExceptionHandlerCallback(callback, handler));

@@ -15,9 +15,8 @@ namespace HelloWorldExample
     {
         static void Main(string[] args)
         {
-            Server.Port = 5000;
             Server.Get("/", () => "Hello World!");            
-            Server.Start();
+            Server.Start(Port: 5000);
         }
     }
 }

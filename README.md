@@ -26,8 +26,8 @@ namespace HelloWorldExample
 
 ### Configurable Values:  
 
-int Server.Port  
-bool EnableCustomHTTPMethods  
+int Server.Config.Port  
+bool Server.Config.EnableCustomHTTPMethods  
 string FileIO.StaticFilesBaseDirectory  
   
 ### Functions:  

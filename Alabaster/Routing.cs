@@ -12,7 +12,7 @@ namespace Alabaster
     public delegate T RouteCallback_D<T>(Request req) where T : struct;
     public delegate IEnumerable<T> RouteCallback_E<T>(Request req) where T : struct;
     public delegate IEnumerable<T> RouteCallback_F<T>() where T : struct;
-
+    
     public partial class Server
     {      
         public static void Get(string route, RouteCallback_A callback) =>                                           Routing.GetBase(new RouteArg(route), callback);
@@ -122,7 +122,7 @@ namespace Alabaster
             }
 
             internal static Response ResolveMethod(ContextWrapper cw) => methodCallbacks.TryGetValue(RouteKey(cw.Context.Request.HttpMethod, ""), out RouteCallback_A rc) ? Resolve(rc, cw) : null;
-            internal static Response ResolveRoute(ContextWrapper cw) => routeCallbacks.TryGetValue(RouteKey(cw.Context.Request.HttpMethod, cw.Context.Request.Url.AbsolutePath), out RouteCallback_A rc) ? Resolve(rc, cw) : null;
+            internal static Response ResolveRoute(ContextWrapper cw) => routeCallbacks.TryGetValue(RouteKey(cw.Context.Request.HttpMethod, cw.Context.Request.Url.AbsolutePath), out RouteCallback_A rc) ? Resolve(rc, cw, true) : null;
 
             internal static void GetBase(RouteArg route, RouteCallback_A callback) => Add(new MethodArg("GET"), route, callback);
             internal static void PostBase(RouteArg route, RouteCallback_A callback) => Add(new MethodArg("POST"), route, callback);
@@ -164,8 +164,9 @@ namespace Alabaster
                 while (deferredMethodCallbacks.Count > 0) { deferredMethodCallbacks.Dequeue()(); }
             }
 
-            private static Response Resolve(RouteCallback_A callback, ContextWrapper cw)
+            private static Response Resolve(RouteCallback_A callback, ContextWrapper cw, bool includeRequestWithFileExt = false)
             {
+                if(!includeRequestWithFileExt && Util.GetFileExtension(cw.Route) != null) { return null; }
                 Response result = callback(new Request(cw));
                 result.Merge(cw);
                 return (result is PassThrough) ? null : result;

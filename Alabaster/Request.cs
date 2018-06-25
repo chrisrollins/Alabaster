@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Collections.Specialized;
+using System.Linq;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Threading;
 
 namespace Alabaster
 {
@@ -12,32 +15,19 @@ namespace Alabaster
         internal ContextWrapper cw;
         internal HttpListenerRequest req { get => this.cw.Context.Request; }
         internal HttpListenerResponse res { get => this.cw.Context.Response; }
-        internal Request(ContextWrapper cw) => this.cw = cw;
-        private Session[] sessions;
+        private SessionCollection sessions;        
 
-        public Session[] Sessions
+        public Session[] Sessions { get => this.sessions.SessionList; }
+        public string[] SessionCategories { get => this.sessions.CategoryList; }
+        public Session GetSession(string category) => this.sessions[category];
+
+        internal Request(ContextWrapper cw)
         {
-            get
-            {
-                if(this.sessions == null) { ParseSessions(); }
-                return this.sessions;
-            }
+            this.cw = cw;
+            this.sessions = new SessionCollection(this.Cookies);
         }
                 
-        private Request(){}
-
-        private void ParseSessions()
-        {
-            Queue<Session> sq = new Queue<Session>();
-            foreach (Cookie cookie in this.Cookies)
-            {
-                if (!Int64.TryParse(cookie.Name, out Int64 id)) { continue; }
-                Int32.TryParse(cookie.Value, out Int32 key);
-                Session session = Session.GetSession(id, key);
-                if (session != null) { sq.Enqueue(session); }
-            }
-            this.sessions = sq.ToArray();
-        }
+        private Request() { throw new InvalidOperationException(); }
 
         public int ClientCertificateError { get => this.req.ClientCertificateError; }
         public long ContentLength64 { get => this.req.ContentLength64; }
@@ -68,5 +58,51 @@ namespace Alabaster
         public Version ProtocolVersion { get => this.req.ProtocolVersion; }
         public CookieCollection Cookies { get => this.req.Cookies; }
         public TransportContext TransportContext { get => this.req.TransportContext; }
+
+        private struct SessionCollection
+        {
+            private ConcurrentDictionary<string, Session> _sessions;
+            private CookieCollection cookies;
+            private volatile int parsed;
+
+            public SessionCollection(CookieCollection cookies)
+            {
+                this._sessions = new ConcurrentDictionary<string, Session>(Environment.ProcessorCount, 100);
+                this.cookies = cookies;
+                this.parsed = 0;
+            }
+            
+            private ConcurrentDictionary<string, Session> sessions
+            {
+                get
+                {
+                    ParseSessions();
+                    return this._sessions;
+                }
+            }
+
+            public Session this[string c]
+            {
+                get
+                {
+                    sessions.TryGetValue(c, out Session session);
+                    return session;
+                }
+            }
+
+            public Session[] SessionList => this.sessions.Values.ToArray();
+            public string[] CategoryList => this.sessions.Keys.ToArray();
+
+            private void ParseSessions()
+            {
+                if (Interlocked.CompareExchange(ref parsed, 1, 0) == 1) { return; }
+                foreach (Cookie cookie in this.cookies)
+                {
+                    if (!Int64.TryParse(cookie.Name, out Int64 id)) { continue; }
+                    Session session = Session.GetSession(id, cookie.Value);
+                    if (session != null) { this.sessions.TryAdd(session.category, session); }
+                }
+            }
+        }
     }
 }

@@ -95,7 +95,7 @@ namespace Alabaster
 
             private static int CacheSize = 100;
             private static ConcurrentDictionary<string, FileData> fileDict = new ConcurrentDictionary<string, FileData>(Environment.ProcessorCount, CacheSize);
-
+            
             public static byte[] GetStaticFileData(string file)
             {
                 string fullpath = String.Join("\\", StaticFilesBaseDirectory, file);

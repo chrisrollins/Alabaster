@@ -16,5 +16,7 @@ namespace Alabaster
         }
 
         internal ContextWrapper(HttpListenerContext ctx) => this.Context = ctx;
+
+        internal string Route => this.Context.Request.Url.AbsolutePath;
     }
 }

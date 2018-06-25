@@ -22,7 +22,7 @@ namespace Alabaster
 
         public static async Task<string> Request(string method, string url, string body, Scheme scheme = Scheme.HTTP)
         {
-            if(url.Substring(0, 4).ToUpper() == "HTTP") { throw new ArgumentException("Do not define the HTTP scheme directly in the URL."); }            
+            if(url.Substring(0, 4).ToUpper() == "HTTP") { throw new ArgumentException("HTTP scheme must not be defined in the URL."); }            
             string fullURL = String.Join(null, scheme.ToString().ToLower() , "://" , url);
             using (HttpRequestMessage msg = new HttpRequestMessage(new HttpMethod(method), fullURL))
             {

@@ -23,22 +23,24 @@ namespace Alabaster
             }
         }
 
-        internal readonly Int32 key;
         internal readonly Int64 id;
+        internal readonly string key;
+        internal readonly string category;
 
         private static Int64 count = 0;
         [ThreadStatic] private static Random rand;
         private static ConcurrentDictionary<Int64, Session> sessions = new ConcurrentDictionary<Int64, Session>(Environment.ProcessorCount, 100);
-        
-        public Session()
+
+        public Session(string category)
         {
-            if(rand == null) { SetupRNG(); }
-            this.key = rand.Next();
+            this.category = category ?? throw new ArgumentNullException("Category must not be null.");
+            if (rand == null) { SetupRNG(); }
             this.id = Interlocked.Increment(ref count);
+            this.key = Guid.NewGuid().ToString() + rand.Next();
             sessions[this.id] = this;
         }
 
-        public static Session GetSession(Int64 id, Int32 key)
+        internal static Session GetSession(Int64 id, string key)
         {
             sessions.TryGetValue(id, out Session val);
             return (val.key == key) ? val : null;

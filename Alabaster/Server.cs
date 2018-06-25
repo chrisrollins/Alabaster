@@ -71,7 +71,7 @@ namespace Alabaster
                         Routing.ResolveUniversals(cw) ??
                         Routing.ResolveMethod(cw) ??
                         Routing.ResolveRoute(cw) ??
-                        new FileResponse(cw.Context.Request.Url.AbsolutePath)
+                        new FileResponse(cw.Route)
                     ).Finish(cw);
                 }
             }

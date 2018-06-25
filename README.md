@@ -48,7 +48,7 @@ void Server.Route(string method, string route, RouteCallback_A/B/C/D/E/F callbac
 void Server.Route(string method, string route, Response res)  
 void Server.All(string method, RouteCallback_A/B/C/D/E/F callback)  
 void Server.All(string method, Response res)  
-void Server.All(RouteCallback_A/B/C/D/E callback)  
+void Server.All(RouteCallback_A/B/C/D/E/F callback)  
 void Server.All(Response res)  
 void Server.AttachWebSocketModule(string route, WebSocketModule module)  
 void Server.Start()  

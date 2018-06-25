@@ -7,6 +7,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Alabaster
 {
@@ -24,7 +25,7 @@ namespace Alabaster
         internal Request(ContextWrapper cw)
         {
             this.cw = cw;
-            this.sessions = new SessionCollection(this.Cookies);
+            this.sessions = new SessionCollection(this.Cookies);            
         }
                 
         private Request() { throw new InvalidOperationException(); }
@@ -58,6 +59,16 @@ namespace Alabaster
         public Version ProtocolVersion { get => this.req.ProtocolVersion; }
         public CookieCollection Cookies { get => this.req.Cookies; }
         public TransportContext TransportContext { get => this.req.TransportContext; }
+
+        public string Body { get => GetBodyAsync().Result; }
+                
+        public async Task<string> GetBodyAsync(int maximumSize = 104857600)
+        {
+            int size = (int)Util.Clamp(this.ContentLength64, 0, maximumSize);
+            byte[] buffer = new byte[size];
+            await this.req.InputStream.ReadAsync(buffer, 0, size);
+            return Encoding.UTF8.GetString(buffer);
+        }
 
         private struct SessionCollection
         {

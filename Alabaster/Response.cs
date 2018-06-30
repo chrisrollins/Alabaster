@@ -28,12 +28,19 @@ namespace Alabaster
             get => this._StatusCode ?? 200;
             set => this._StatusCode = value;
         }
-
-        public void AddSession(Session session)
+        
+        public Response SetStatusCode(int statusCode)
         {
-            Cookie cookie = new Cookie(session.id.ToString(), session.key.ToString());
-            cookie.HttpOnly = true;
+            this.StatusCode = statusCode;
+            return this;
+        }
+
+        public Response AddSession(Session session)
+        {
+            Cookie cookie = new Cookie(Session.CookieID, session.id.ToString());
+            cookie.HttpOnly = true;           
             this.Cookies.Add(cookie);
+            return this;
         }
 
         internal void Merge(ContextWrapper cw)
@@ -46,6 +53,7 @@ namespace Alabaster
             res.KeepAlive = this._KeepAlive ?? res.KeepAlive;
             res.StatusCode = this._StatusCode ?? res.StatusCode;
             res.Cookies = mergeCookies(this.Cookies, res.Cookies, cw.Context.Request.Cookies);
+            cw.Context.Request.Cookies.Add(res.Cookies);
             cw.ResponseBody = this.Body;
 
             CookieCollection mergeCookies(params CookieCollection[] cookies)

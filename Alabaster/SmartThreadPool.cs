@@ -11,8 +11,8 @@ namespace Alabaster
     {
         private readonly int concurrency;
         private ConcurrentQueue<Action> workQueue = new ConcurrentQueue<Action>();
-        private ConcurrentBag<Thread> availableThreads = new ConcurrentBag<Thread>();
-        private ConcurrentDictionary<Thread, bool> runningThreads = new ConcurrentDictionary<Thread, bool>();
+        private ConcurrentBag<WorkerThread> availableThreads = new ConcurrentBag<WorkerThread>();
+        private ConcurrentDictionary<WorkerThread, bool> runningThreads = new ConcurrentDictionary<WorkerThread, bool>();
         private object CheckConcurrencyLock = new object();
         private object CheckSuspendedLock = new object();
         private readonly bool autoExpand;
@@ -27,52 +27,68 @@ namespace Alabaster
             }
         }
 
-        private Thread GenerateThread()
+        private WorkerThread GenerateThread()
         {
-            return new Thread((object callback) =>
+            WorkerThread wt = new WorkerThread();
+            wt.ResetEvent = new AutoResetEvent(false);
+            wt.InternalThread = new Thread(() =>
             {
-                (callback as Action)();
-                while (this.workQueue.TryDequeue(out Action work)) { work(); }
-                this.runningThreads.TryRemove(Thread.CurrentThread, out bool junk);
-                this.availableThreads.Add(Thread.CurrentThread);
+                while (true)
+                {
+                    runningThreads.TryAdd(wt, true);
+                    while (this.workQueue.TryDequeue(out Action work)) { work(); }
+                    this.runningThreads.TryRemove(wt, out _);
+                    this.availableThreads.Add(wt);
+                    wt.ResetEvent.WaitOne();
+                }
             });
+            return wt;
         }
 
         public void QueueWork(Action work)
         {
-            if(!TryStart()) { this.workQueue.Enqueue(work); }
+            this.workQueue.Enqueue(work);
 
-            bool TryStart()
+            lock (CheckConcurrencyLock)
             {
-                lock (CheckConcurrencyLock)
+                if (runningThreads.Count < this.concurrency)
                 {
-                    if (runningThreads.Count < this.concurrency) { return Start(); }
+                    Start();
+                    return;
                 }
-
-                lock (CheckSuspendedLock)
-                {
-                    int running = 0;
-                    foreach (Thread thread in runningThreads.Keys)
-                    {
-                        if (thread.ThreadState == ThreadState.Running) { running++; }
-                    }
-                    if (running < this.concurrency) { return Start(); }
-                }
-
-                return false;
             }
 
-            bool Start()
+            lock (CheckSuspendedLock)
             {
-                Thread thread = availableThreads.TryTake(out thread) ? thread : (this.autoExpand) ? GenerateThread() : null;
-                if (thread != null)
+                int running = 0;
+                foreach (WorkerThread thread in runningThreads.Keys)
                 {
-                    thread.Start(work);
-                    runningThreads.TryAdd(thread, true);
-                    return true;
+                    if (thread.InternalThread.ThreadState == ThreadState.Running) { running++; }
                 }
-                return false;
+                if (running < this.concurrency) { Start(); }
+            }            
+
+            void Start()
+            {
+                WorkerThread thread;
+                bool haveThread = availableThreads.TryTake(out thread);
+                if(!haveThread && this.autoExpand)
+                {
+                    thread = GenerateThread();
+                    haveThread = true;
+                }
+                if (haveThread)
+                {
+                    if (thread.InternalThread.ThreadState == ThreadState.Unstarted) { thread.InternalThread.Start(); }
+                    else { thread.ResetEvent.Set(); }
+                }
             }           
+        }
+
+        private struct WorkerThread
+        {
+            public Thread InternalThread;
+            public AutoResetEvent ResetEvent;
         }
     }
 }

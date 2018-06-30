@@ -116,7 +116,7 @@ namespace Alabaster
                 for (int i = 0; i < UniversalCallbacks.Length; i++)
                 {
                     result = Resolve(UniversalCallbacks[i], ctx);
-                    if (result == null) { return null; }
+                    if (result != null) { return null; }
                 }
                 return result;
             }
@@ -124,14 +124,14 @@ namespace Alabaster
             internal static Response ResolveMethod(ContextWrapper cw) => methodCallbacks.TryGetValue(RouteKey(cw.Context.Request.HttpMethod, ""), out RouteCallback_A rc) ? Resolve(rc, cw) : null;
             internal static Response ResolveRoute(ContextWrapper cw) => routeCallbacks.TryGetValue(RouteKey(cw.Context.Request.HttpMethod, cw.Context.Request.Url.AbsolutePath), out RouteCallback_A rc) ? Resolve(rc, cw, true) : null;
 
-            internal static void GetBase(RouteArg route, RouteCallback_A callback) => Add(new MethodArg("GET"), route, callback);
-            internal static void PostBase(RouteArg route, RouteCallback_A callback) => Add(new MethodArg("POST"), route, callback);
-            internal static void PatchBase(RouteArg route, RouteCallback_A callback) => Add(new MethodArg("PATCH"), route, callback);
-            internal static void PutBase(RouteArg route, RouteCallback_A callback) => Add(new MethodArg("PUT"), route, callback);
-            internal static void DeleteBase(RouteArg route, RouteCallback_A callback) => Add(new MethodArg("DELETE"), route, callback);
-            internal static void RouteBase(MethodArg method, RouteArg route, RouteCallback_A callback) => Add(method, route, callback);
-            internal static void AllMethodBase(MethodArg method, RouteCallback_A callback) => AddMethodCallback(method, callback);
-            internal static void AllBase(RouteCallback_A callback) => AddUniversalCallback(callback);
+            internal static void GetBase(RouteArg route, RouteCallback_A callback) =>                       Add(new MethodArg("GET"), route, callback);
+            internal static void PostBase(RouteArg route, RouteCallback_A callback) =>                      Add(new MethodArg("POST"), route, callback);
+            internal static void PatchBase(RouteArg route, RouteCallback_A callback) =>                     Add(new MethodArg("PATCH"), route, callback);
+            internal static void PutBase(RouteArg route, RouteCallback_A callback) =>                       Add(new MethodArg("PUT"), route, callback);
+            internal static void DeleteBase(RouteArg route, RouteCallback_A callback) =>                    Add(new MethodArg("DELETE"), route, callback);
+            internal static void RouteBase(MethodArg method, RouteArg route, RouteCallback_A callback) =>   Add(method, route, callback);
+            internal static void AllMethodBase(MethodArg method, RouteCallback_A callback) =>               AddMethodCallback(method, callback);
+            internal static void AllBase(RouteCallback_A callback) =>                                       AddUniversalCallback(callback);
 
             private static void Add(MethodArg method, RouteArg route, RouteCallback_A callback)
             {

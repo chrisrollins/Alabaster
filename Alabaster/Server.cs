@@ -13,7 +13,7 @@ namespace Alabaster
         private static Thread keepAliveThread = null;
         internal static Thread baseThread = null;
         internal static bool initialized = false;
-        internal static bool running = false;      
+        internal static bool running = false;
 
         static Server()
         {
@@ -35,21 +35,29 @@ namespace Alabaster
             
             void Init()
             {
-                if (Config.Port == 0) { throw new Exception("Port not set."); }
+                listener.Prefixes.Add(String.Join(null, "http://*:", _port.ToString(), "/"));
+                try { listener.Start(); }
+                catch (HttpListenerException e)
+                {
+                    Console.WriteLine("Server was unable to start. Error code: " + e.ErrorCode);
+                    Console.WriteLine("Exception message: " + e.Message);
+                    return;
+                }
+
+                if (Config.Port == 0) { throw new InvalidOperationException("Port not set."); }
+
                 Util.InitExceptions();
-                initialized = true;
                 Util.ProgressVisualizer("Initializing Server...", "Listening on port " + _port,
                     Routing.Activate,
                     LaunchListeners,
                     PreventProgramTermination
                 );
+                initialized = true;
             }
 
             void LaunchListeners()
             {
                 running = true;
-                listener.Prefixes.Add(String.Join(null, "http://*:", _port.ToString(), "/"));
-                listener.Start();
                 SmartThreadPool stp = new SmartThreadPool(Environment.ProcessorCount, 100, true);
                 for (int i = 0; i < Environment.ProcessorCount; i++)
                 {

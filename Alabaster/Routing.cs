@@ -172,7 +172,11 @@ namespace Alabaster
                 return (result is PassThrough) ? null : result;
             }
 
-            private static string RouteKey(string method, string route) => String.Join(null, method, route).ToUpper();
+            private static string RouteKey(string method, string route)
+            {
+                if(route.Last() != '/') { route += "/"; }
+                return String.Join(null, method, route).ToUpper();
+            }
 
             private static void RouteAddingExceptions(string method, string route)
             {

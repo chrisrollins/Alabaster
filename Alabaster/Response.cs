@@ -117,9 +117,11 @@ namespace Alabaster
 
     public sealed class FileResponse : Response
     {
-        public FileResponse(string filename)
+        public FileResponse(string filename) : this(filename, FileIO.StaticFilesBaseDirectory) { }
+
+        public FileResponse(string filename, string baseDirectory)
         {
-            this.data = FileIO.GetFile(filename);
+            this.data = FileIO.GetFile(filename, baseDirectory);
             this.StatusCode = (this.data == null) ? 404 : 200;
         }        
     }

@@ -56,10 +56,11 @@ void Server.Stop()
 
 ###### FileIO:  
 byte[] FileIO.GetFile(string file)  
-void FileIO.AllowFile(string file)  
-void FileIO.AllowDirectory(string directory)  
-void FileIO.ForbidFile(string file)  
-void FileIO.ForbidDirectory(string directory)  
+byte[] FileIO.GetFile(string file, string baseDirectory)  
+void FileIO.AllowFiles(params string[] files)  
+void FileIO.AllowDirectories(params string[] directories)  
+void FileIO.ForbidFiles(string files)  
+void FileIO.ForbidDirectories(string directories)  
 bool FileIO.IsFileAllowed(string file)  
 bool FileIO.IsDirectoryAllowed(string directory)  
 string FileIO.GetFileExtensionDirectory(string extension)  
@@ -82,7 +83,7 @@ async Task<string> Client.Patch(string url, string body, Scheme scheme = Scheme.
 async Task<string> Client.Put(string url, string body, Scheme scheme = Scheme.HTTP)  
 async Task<string> Client.Request(string method, string url, string body, Scheme scheme = Scheme.HTTP)  
 
-### Classes & Delegates:  
+### Delegates:  
 
 delegate Response RouteCallback_A(Request req)  
 delegate void RouteCallback_B(Request req)  
@@ -90,7 +91,10 @@ delegate void RouteCallback_C()
 delegate T RouteCallback_D<T>(Request req) where T : struct  
 delegate IEnumerable<T> RouteCallback_E<T>(Request req) where T : struct  
 delegate IEnumerable<T> RouteCallback_F<T>() where T : struct  
-  
+delegate WebSocketMessageContext WebSocketCallback(WebSocketMessageContext context)  
+
+### Classes:  
+
 class Request  
 class Session  
 abstract class Response  
@@ -100,7 +104,6 @@ class EmptyResponse : Response
 class PassThrough : Response  
 class RedirectResponse : Response  
 
-delegate WebSocketMessageContext WebSocketCallback(WebSocketMessageContext context)  
 class WebSocketMessageContext  
 class WebSocketModule  
 class WebSocketChannel  

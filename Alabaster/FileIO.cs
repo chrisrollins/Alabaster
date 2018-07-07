@@ -11,23 +11,30 @@ namespace Alabaster
         private static Dictionary<Path, bool> allowedPaths = new Dictionary<Path, bool>(100);
         private static string serverExePath = Environment.GetCommandLineArgs()[0];
         private static bool whitelistMode = false;
+        private static string staticBase = "";
 
-        public static void AllowFile(string file) => AddPath(new FilePath(file), true);
-        public static void ForbidFile(string file) => AddPath(new FilePath(file), false);
-        public static void AllowDirectory(string directory) => AddPath(new DirectoryPath(directory), true);
-        public static void ForbidDirectory(string directory) => AddPath(new DirectoryPath(directory), false);
+        public static void AllowFiles(params string[] files) => Array.ForEach(files, (string f)=> AddPath(new FilePath(f), true));
+        public static void ForbidFiles(params string[] files) => Array.ForEach(files, (string f)=> AddPath(new FilePath(f), false));
+        public static void AllowDirectories(params string[] directories) => Array.ForEach(directories, (string d)=> AddPath(new DirectoryPath(d), true));
+        public static void ForbidDirectories(params string[] directories) => Array.ForEach(directories, (string d)=> AddPath(new DirectoryPath(d), false));
         public static void SetWhitelistMode() => whitelistMode = true;
         public static void SetBlacklistMode() => whitelistMode = false;
 
         public static bool IsFileAllowed(string file) => IsPathAllowed(new FilePath(file));
         public static bool IsDirectoryAllowed(string directory) => IsPathAllowed(new DirectoryPath(directory));
 
-        public static string StaticFilesBaseDirectory = "";
+        public static string StaticFilesBaseDirectory
+        {
+            get => staticBase;
+            set => staticBase = value.TrimStart('/', '\\');                
+        }
+
         public static void SetFileExtensionDirectory(string extension, string directory) => extensionPaths[extension] = directory;
-        public static bool RemoveFileExtensionDirectory(string extension) => extensionPaths.TryRemove(extension, out string junk);
+        public static bool RemoveFileExtensionDirectory(string extension) => extensionPaths.TryRemove(extension, out _);
         public static string GetFileExtensionDirectory(string extension) => extensionPaths[extension];
 
-        public static byte[] GetFile(string file) => LRUCache.GetStaticFileData(file);
+        public static byte[] GetFile(string file) => LRUCache.GetStaticFileData(file, staticBase);
+        public static byte[] GetFile(string file, string baseDirectory) => LRUCache.GetStaticFileData(file, baseDirectory);
 
         //private
         private static void AddPath(Path p, bool allowed) => allowedPaths[p] = allowed;
@@ -38,7 +45,12 @@ namespace Alabaster
             return (p is FilePath) ? IsPathAllowed((p as FilePath).Directory) : allowed;
         }
 
-        private abstract class Path { public Path(string val) => this.Value = val; public string Value; }
+        private abstract class Path
+        {
+            public Path(string val) => this.Value = val.Replace('\\', '/');            
+            public string Value;
+        }
+
         private sealed class FilePath : Path
         {
             public FilePath(string val) : base(val) { }
@@ -46,15 +58,16 @@ namespace Alabaster
             {
                 get
                 {
-                    return new DirectoryPath(this.Value.Substring(0, this.Value.LastIndexOf('\\')));
+                    return new DirectoryPath(this.Value.Substring(0, this.Value.LastIndexOf('/')));
                 }
             }
         }
+
         private sealed class DirectoryPath : Path
         {
             public DirectoryPath(string val) : base(val)
             {
-                if (val == "" || val[val.Length - 1] != '\\') { this.Value += "\\"; }
+                if (val == "" || val[val.Length - 1] != '/') { this.Value += "/"; }
             }
         }
 
@@ -96,9 +109,9 @@ namespace Alabaster
             private static int CacheSize = 100;
             private static ConcurrentDictionary<string, FileData> fileDict = new ConcurrentDictionary<string, FileData>(Environment.ProcessorCount, CacheSize);
             
-            public static byte[] GetStaticFileData(string file)
+            public static byte[] GetStaticFileData(string file, string baseDir)
             {
-                string fullpath = String.Join("\\", StaticFilesBaseDirectory, file);
+                string fullpath = String.Join("/", baseDir, file);
                 FilePath f = new FilePath(fullpath);
                 if (!IsPathAllowed(f) || !IsPathAllowed(f.Directory) || !File.Exists(fullpath)) { return null; }
                 return (fileDict.TryGetValue(fullpath, out FileData result) == true) ? GetFromCache() : LoadFromDisk();

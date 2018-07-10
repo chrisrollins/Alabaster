@@ -16,10 +16,10 @@ namespace Alabaster
         private static string staticBase = "";
 
         internal static void Init()
-        {            
-            foreach(ProcessModule module in Process.GetCurrentProcess().Modules)
+        {
+            foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
             {
-                FilePath path = new FilePath(module.FileName);
+                FilePath path = new FilePath(asm.Location);
                 allowedPaths[path] = false;
                 allowedPaths.Lock(path);
             }

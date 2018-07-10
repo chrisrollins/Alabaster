@@ -23,6 +23,7 @@ namespace Alabaster
         {
             public static int Port { get => port; set => port = value; }
             public static bool EnableCustomHTTPMethods = false;
+            public static string ServerID;
         }
     }
 }

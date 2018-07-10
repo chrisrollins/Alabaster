@@ -12,7 +12,7 @@ namespace Alabaster
     {
         private ValueType data;
         private object dataSync = new object();
-
+        
         public ValueType Data
         {
             get { lock (dataSync) { return data; } }
@@ -24,7 +24,7 @@ namespace Alabaster
                 }
             }
         }
-
+        
         internal readonly string id;
         internal readonly string category;
         private long disposed = 0;
@@ -33,7 +33,7 @@ namespace Alabaster
 
         [ThreadStatic] private static Random rand;
         private static ConcurrentDictionary<string, Session> sessions = new ConcurrentDictionary<string, Session>(Environment.ProcessorCount, 100);
-        internal const string CookieID = "AlabasterSessionID";
+        internal static string CookieID = Server.Config.ServerID;
         
         public Session(string category, ValueType data)
         {

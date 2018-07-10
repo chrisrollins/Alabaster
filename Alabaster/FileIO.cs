@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Diagnostics;
 using System.IO;
 
 namespace Alabaster
@@ -8,10 +10,21 @@ namespace Alabaster
     public static class FileIO
     {
         private static ConcurrentDictionary<string, string> extensionPaths = new ConcurrentDictionary<string, string>(2, 100);
-        private static Dictionary<Path, bool> allowedPaths = new Dictionary<Path, bool>(100);
-        private static string serverExePath = Environment.GetCommandLineArgs()[0];
+        private static LockableDictionary<IPath, bool> allowedPaths = new LockableDictionary<IPath, bool>(100);
         private static bool whitelistMode = false;
+        private static volatile bool initialized = false;
         private static string staticBase = "";
+
+        internal static void Init()
+        {            
+            foreach(ProcessModule module in Process.GetCurrentProcess().Modules)
+            {
+                FilePath path = new FilePath(module.FileName);
+                allowedPaths[path] = false;
+                allowedPaths.Lock(path);
+            }
+            initialized = true;
+        }
 
         public static void AllowFiles(params string[] files) => Array.ForEach(files, (string f)=> AddPath(new FilePath(f), true));
         public static void ForbidFiles(params string[] files) => Array.ForEach(files, (string f)=> AddPath(new FilePath(f), false));
@@ -37,38 +50,35 @@ namespace Alabaster
         public static byte[] GetFile(string file, string baseDirectory) => LRUCache.GetStaticFileData(file, baseDirectory);
 
         //private
-        private static void AddPath(Path p, bool allowed) => allowedPaths[p] = allowed;
-        private static bool IsPathAllowed(Path p)
+        private static void AddPath(IPath p, bool allowed) => allowedPaths[p] = allowed;
+        private static bool IsPathAllowed(IPath p)
         {
             bool inDict = allowedPaths.TryGetValue(p, out bool allowed);
             allowed = (inDict) ? allowed : !whitelistMode;
-            return (p is FilePath) ? IsPathAllowed((p as FilePath).Directory) : allowed;
+            return (p is FilePath) ? IsPathAllowed(p.GetDirectory()) : allowed;
+        }
+        
+        private interface IPath
+        {
+            DirectoryPath GetDirectory();
         }
 
-        private abstract class Path
+        private struct FilePath : IPath
         {
-            public Path(string val) => this.Value = val.Replace('\\', '/');            
             public string Value;
+            public FilePath(string val) => this.Value = val.Replace('\\', '/');
+            public DirectoryPath GetDirectory() => new DirectoryPath(this.Value.Substring(0, this.Value.LastIndexOf('/')));
         }
 
-        private sealed class FilePath : Path
+        private struct DirectoryPath : IPath
         {
-            public FilePath(string val) : base(val) { }
-            public DirectoryPath Directory
+            public string Value;
+            public DirectoryPath(string val)
             {
-                get
-                {
-                    return new DirectoryPath(this.Value.Substring(0, this.Value.LastIndexOf('/')));
-                }
-            }
-        }
-
-        private sealed class DirectoryPath : Path
-        {
-            public DirectoryPath(string val) : base(val)
-            {
+                this.Value = val.Replace('\\', '/');
                 if (val == "" || val[val.Length - 1] != '/') { this.Value += "/"; }
             }
+            public DirectoryPath GetDirectory() => this;
         }
 
         private static class LRUCache
@@ -111,9 +121,10 @@ namespace Alabaster
             
             public static byte[] GetStaticFileData(string file, string baseDir)
             {
+                if(!initialized) { throw new InvalidOperationException("Server not yet initialized."); }
                 string fullpath = String.Join("/", baseDir, file);
                 FilePath f = new FilePath(fullpath);
-                if (!IsPathAllowed(f) || !IsPathAllowed(f.Directory) || !File.Exists(fullpath)) { return null; }
+                if (!IsPathAllowed(f) || !IsPathAllowed(f.GetDirectory()) || !File.Exists(fullpath)) { return null; }
                 return (fileDict.TryGetValue(fullpath, out FileData result) == true) ? GetFromCache() : LoadFromDisk();
 
                 byte[] LoadFromDisk()

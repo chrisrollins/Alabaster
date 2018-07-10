@@ -28,6 +28,7 @@ namespace HelloWorldExample
 
 int Server.Config.Port  
 bool Server.Config.EnableCustomHTTPMethods  
+string Server.Config.ServerID  
 string FileIO.StaticFilesBaseDirectory  
   
 ### Functions:  
@@ -51,7 +52,8 @@ void Server.All(RouteCallback_A/B/C/D/E/F callback)
 void Server.All(Response res)  
 void Server.AttachWebSocketModule(string route, WebSocketModule module)  
 void Server.Start()  
-void Server.Start(int Port, bool EnableCustomHTTPMethods = false)  
+void Server.Start(int Port)  
+void Server.Start(ServerOptions options)  
 void Server.Stop()  
 
 ###### FileIO:  
@@ -76,6 +78,7 @@ void GlobalData.StoreVariable<T>(string name, T value) where T : struct
 void GlobalData.StoreVariable(string name, string value)  
 
 ###### Client:  
+
 async Task<string> Client.Get(string url, Scheme scheme = Scheme.HTTP)  
 async Task<string> Client.Delete(string url, Scheme scheme = Scheme.HTTP)  
 async Task<string> Client.Post(string url, string body, Scheme scheme = Scheme.HTTP)  
@@ -108,6 +111,10 @@ class WebSocketMessageContext
 class WebSocketModule  
 class WebSocketChannel  
 class WebSocketConnection  
+
+### Structs:
+
+struct ServerOptions  
 
 ### Enums:  
 Client.Scheme { HTTP, HTTPS }

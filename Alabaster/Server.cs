@@ -19,11 +19,14 @@ namespace Alabaster
         {
             if(Interlocked.CompareExchange<Thread>(ref baseThread, Thread.CurrentThread, null) != null) { Util.ThreadExceptions(); }
         }
-        
-        public static void Start(int Port, bool EnableCustomHTTPMethods = false)
+
+        public static void Start(int Port) => Start(new ServerOptions { Port = port });        
+
+        public static void Start(ServerOptions options)
         {
-            Config.Port = Port;
-            Config.EnableCustomHTTPMethods = EnableCustomHTTPMethods;
+            Config.Port = options.Port;
+            Config.EnableCustomHTTPMethods = options.EnableCustomHTTPMethods;
+            Config.ServerID = options.ServerID ?? new Guid().ToString();
             Start();
         }
 
@@ -48,6 +51,7 @@ namespace Alabaster
 
                 Util.InitExceptions();
                 Util.ProgressVisualizer("Initializing Server...", "Listening on port " + _port,
+                    FileIO.Init,
                     Routing.Activate,
                     LaunchListeners,
                     PreventProgramTermination

@@ -7,8 +7,8 @@ namespace Alabaster
 {
     public abstract class Response
     {
-        internal byte[] data;
-        public byte[] Body { get => this.data; }
+        protected byte[] data;
+        public virtual byte[] Body { get => this.data; }
         public string ContentType;
         public Encoding ContentEncoding;
         public WebHeaderCollection Headers;
@@ -117,11 +117,24 @@ namespace Alabaster
 
     public sealed class FileResponse : Response
     {
-        public FileResponse(string filename) : this(filename, FileIO.StaticFilesBaseDirectory) { }
-
-        public FileResponse(string filename, string baseDirectory)
+        private string fileName;
+        private string baseDirectory;
+        public override byte[] Body
         {
-            this.data = FileIO.GetFile(filename, baseDirectory);
+            get
+            {
+                if(this.data == null) { this.data = FileIO.GetFile(fileName, baseDirectory); }
+                return this.data;
+            }
+        }
+
+        public FileResponse(string fileName) : this(fileName, FileIO.StaticFilesBaseDirectory) { }
+
+        public FileResponse(string fileName, string baseDirectory)
+        {
+            this.data = null;
+            this.fileName = fileName;
+            this.baseDirectory = baseDirectory;
             this.StatusCode = (this.data == null) ? 404 : 200;
         }        
     }

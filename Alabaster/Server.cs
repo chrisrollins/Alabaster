@@ -9,6 +9,7 @@ namespace Alabaster
 {
     public static partial class Server
     {
+        public static ServerOptions Config { get; private set; }
         private static HttpListener listener = new HttpListener();
         private static Thread keepAliveThread = null;
         internal static Thread baseThread = null;
@@ -20,13 +21,11 @@ namespace Alabaster
             if(Interlocked.CompareExchange<Thread>(ref baseThread, Thread.CurrentThread, null) != null) { Util.ThreadExceptions(); }
         }
 
-        public static void Start(int Port) => Start(new ServerOptions { Port = port });        
+        public static void Start(int Port) => Start(new ServerOptions { Port = Port });        
 
         public static void Start(ServerOptions options)
         {
-            Config.Port = options.Port;
-            Config.EnableCustomHTTPMethods = options.EnableCustomHTTPMethods;
-            Config.ServerID = options.ServerID ?? new Guid().ToString();
+            Config = options;
             Start();
         }
 
@@ -38,7 +37,7 @@ namespace Alabaster
             
             void Init()
             {
-                listener.Prefixes.Add(String.Join(null, "http://*:", _port.ToString(), "/"));
+                listener.Prefixes.Add(String.Join(null, "http://*:", Config.Port.ToString(), "/"));
                 try { listener.Start(); }
                 catch (HttpListenerException e)
                 {
@@ -50,7 +49,7 @@ namespace Alabaster
                 if (Config.Port == 0) { throw new InvalidOperationException("Port not set."); }
 
                 Util.InitExceptions();
-                Util.ProgressVisualizer("Initializing Server...", "Listening on port " + _port,
+                Util.ProgressVisualizer("Initializing Server...", "Listening on port " + Config.Port,
                     FileIO.Init,
                     Routing.Activate,
                     LaunchListeners,

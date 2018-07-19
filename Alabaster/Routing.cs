@@ -90,24 +90,23 @@ namespace Alabaster
             public MethodArg(string val)
             {                
                 Util.httpMethodExceptions(val);
-                this.Value = val;
+                this.Value = val.ToUpper();
             }
-            public string Value;
+            public readonly string Value;
         }
 
         private struct RouteArg
         {
-            public RouteArg(string val) => this.Value = val;
-            public string Value;
+            public RouteArg(string val) => this.Value = string.Join(null, val, (val.Last() != '/') ? "/" : "").ToUpper();            
+            public readonly string Value;
         }
 
         private static class Routing
         {
-            private static Dictionary<string, RouteCallback_A> routeCallbacks;
-            private static Dictionary<string, RouteCallback_A> methodCallbacks;
+            private static Dictionary<RoutingKey, RouteCallback_A> routeCallbacks;
+            private static Dictionary<RoutingKey, RouteCallback_A> methodCallbacks;
             private static RouteCallback_A[] UniversalCallbacks;
             private static Queue<RouteCallback_A> deferredUniversalCallbacks = new Queue<RouteCallback_A>();
-            private static Queue<Action> deferredMethodCallbacks = new Queue<Action>();
             private static Queue<Action> deferredRouteCallbacks = new Queue<Action>();
 
             internal static Response ResolveUniversals(ContextWrapper ctx)
@@ -121,61 +120,51 @@ namespace Alabaster
                 return result;
             }
 
-            internal static Response ResolveMethod(ContextWrapper cw) => methodCallbacks.TryGetValue(RouteKey(cw.Context.Request.HttpMethod, ""), out RouteCallback_A rc) ? Resolve(rc, cw) : null;
-            internal static Response ResolveRoute(ContextWrapper cw) => routeCallbacks.TryGetValue(RouteKey(cw.Context.Request.HttpMethod, cw.Context.Request.Url.AbsolutePath), out RouteCallback_A rc) ? Resolve(rc, cw, true) : null;
+            internal static Response ResolveMethod(ContextWrapper cw) => methodCallbacks.TryGetValue(new RoutingKey(cw), out RouteCallback_A rc) ? Resolve(rc, cw) : null;
+            internal static Response ResolveRoute(ContextWrapper cw) => routeCallbacks.TryGetValue(new RoutingKey(cw), out RouteCallback_A rc) ? Resolve(rc, cw, true) : null;
 
-            internal static void GetBase(RouteArg route, RouteCallback_A callback) =>                       Add(new MethodArg("GET"), route, callback);
-            internal static void PostBase(RouteArg route, RouteCallback_A callback) =>                      Add(new MethodArg("POST"), route, callback);
-            internal static void PatchBase(RouteArg route, RouteCallback_A callback) =>                     Add(new MethodArg("PATCH"), route, callback);
-            internal static void PutBase(RouteArg route, RouteCallback_A callback) =>                       Add(new MethodArg("PUT"), route, callback);
-            internal static void DeleteBase(RouteArg route, RouteCallback_A callback) =>                    Add(new MethodArg("DELETE"), route, callback);
-            internal static void RouteBase(MethodArg method, RouteArg route, RouteCallback_A callback) =>   Add(method, route, callback);
-            internal static void AllMethodBase(MethodArg method, RouteCallback_A callback) =>               AddMethodCallback(method, callback);
-            internal static void AllBase(RouteCallback_A callback) =>                                       AddUniversalCallback(callback);
+            internal static void GetBase(RouteArg route, RouteCallback_A callback) => Add(new MethodArg("GET"), route, callback);
+            internal static void PostBase(RouteArg route, RouteCallback_A callback) => Add(new MethodArg("POST"), route, callback);
+            internal static void PatchBase(RouteArg route, RouteCallback_A callback) => Add(new MethodArg("PATCH"), route, callback);
+            internal static void PutBase(RouteArg route, RouteCallback_A callback) => Add(new MethodArg("PUT"), route, callback);
+            internal static void DeleteBase(RouteArg route, RouteCallback_A callback) => Add(new MethodArg("DELETE"), route, callback);
+            internal static void RouteBase(MethodArg method, RouteArg route, RouteCallback_A callback) => Add(method, route, callback);
+            internal static void AllMethodBase(MethodArg method, RouteCallback_A callback) => AddMethodCallback(method, callback);
+            internal static void AllBase(RouteCallback_A callback) => AddUniversalCallback(callback);
 
             private static void Add(MethodArg method, RouteArg route, RouteCallback_A callback)
             {
-                string m = method.Value ?? "";
-                string r = route.Value ?? "";
-                RouteAddingExceptions(m, r);
-                deferredRouteCallbacks.Enqueue(() => { routeCallbacks.Add(RouteKey(m, r), callback); });
+                RouteAddingExceptions(method.Value, route.Value);
+                deferredRouteCallbacks.Enqueue(() => { routeCallbacks.Add(new RoutingKey(method, route), callback); });
             }
 
             private static void AddMethodCallback(MethodArg method, RouteCallback_A callback)
             {
-                string m = method.Value ?? "";
-                RouteAddingExceptions(m, null);
-                deferredMethodCallbacks.Enqueue(() => { methodCallbacks.Add(RouteKey(m, ""), callback); });
+                RouteAddingExceptions(method.Value, null);
+                deferredRouteCallbacks.Enqueue(() => { methodCallbacks.Add(new RoutingKey(method), callback); });
             }
 
             private static void AddUniversalCallback(RouteCallback_A callback)
             {
-                RouteAddingExceptions(null, null);
+                Util.InitExceptions();
                 deferredUniversalCallbacks.Enqueue(callback);
             }
 
             public static void Activate()
             {
-                routeCallbacks = new Dictionary<string, RouteCallback_A>(deferredRouteCallbacks.Count);
-                methodCallbacks = new Dictionary<string, RouteCallback_A>(deferredMethodCallbacks.Count);
-
+                routeCallbacks = new Dictionary<RoutingKey, RouteCallback_A>(deferredRouteCallbacks.Count);
                 UniversalCallbacks = deferredUniversalCallbacks.ToArray();
                 while (deferredRouteCallbacks.Count > 0) { deferredRouteCallbacks.Dequeue()(); }
-                while (deferredMethodCallbacks.Count > 0) { deferredMethodCallbacks.Dequeue()(); }
+                deferredRouteCallbacks = null;
+                deferredUniversalCallbacks = null;
             }
 
             private static Response Resolve(RouteCallback_A callback, ContextWrapper cw, bool includeRequestWithFileExt = false)
             {
-                if(!includeRequestWithFileExt && Util.GetFileExtension(cw.Route) != null) { return null; }
+                if (!includeRequestWithFileExt && Util.GetFileExtension(cw.Route) != null) { return null; }
                 Response result = callback(new Request(cw));
                 result.Merge(cw);
                 return (result is PassThrough) ? null : result;
-            }
-
-            private static string RouteKey(string method, string route)
-            {
-                if(route.Last() != '/') { route += "/"; }
-                return String.Join(null, method, route).ToUpper();
             }
 
             private static void RouteAddingExceptions(string method, string route)
@@ -183,6 +172,22 @@ namespace Alabaster
                 Util.InitExceptions();
                 if (!isValid(method) || !isValid(route)) { throw new ArgumentException("Routes and methods cannot be empty or contain spaces."); }
                 bool isValid(string str) => str == null || str != string.Empty && !str.Contains(' ');
+            }
+            
+            private struct RoutingKey
+            {
+                private RouteArg route;
+                private MethodArg method;
+
+                public RoutingKey(MethodArg method, RouteArg route)
+                {
+                    this.route = route;
+                    this.method = method;
+                }
+                public RoutingKey(string method, string route) : this(new MethodArg(method), new RouteArg(route)) { }
+                public RoutingKey(MethodArg method) : this(method, new RouteArg("")) { }
+                public RoutingKey(RouteArg route) : this(new MethodArg(""), route) { }
+                public RoutingKey(ContextWrapper cw) : this(cw.Context.Request.HttpMethod, cw.Context.Request.Url.AbsolutePath) { }
             }
         }
     }

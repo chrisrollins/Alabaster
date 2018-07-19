@@ -53,7 +53,8 @@ namespace Alabaster
                     FileIO.Init,
                     Routing.Activate,
                     LaunchListeners,
-                    PreventProgramTermination
+                    PreventProgramTermination,
+                    GC.Collect
                 );
                 initialized = true;
             }

@@ -5,16 +5,16 @@ namespace Alabaster
     public struct ServerOptions
     {
         public bool EnableCustomHTTPMethods;
-        private string serverID;
+        private string _serverID;
 
         public string ServerID
         {
             get
             {
-                if (this.serverID == null) { this.serverID = new Guid().ToString(); }
-                return this.serverID;
+                if (this._serverID == null) { this._serverID = new Guid().ToString(); }
+                return this._serverID;
             }
-            set => this.serverID = value;
+            set => this._serverID = value;
         }
 
         private int _port;
@@ -26,6 +26,32 @@ namespace Alabaster
                 Util.InitExceptions();
                 _port = Util.Clamp(value, 1, UInt16.MaxValue);
             }
+        }
+
+        private Int64 _maximumCacheFileSize;
+        public Int64 MaximumCacheFileSize
+        {
+            get
+            {
+                if(_maximumCacheFileSize == 0) { _maximumCacheFileSize = 5 * 1024 * 1024; }
+                return _maximumCacheFileSize;
+            }
+            set
+            {
+                Util.InitExceptions();
+                _maximumCacheFileSize = Util.Clamp(value, 1, Int64.MaxValue);
+            }
+        }
+
+        private string _staticFilesBaseDirectory;
+        public string StaticFilesBaseDirectory
+        {
+            get
+            {
+                if(_staticFilesBaseDirectory == null) { _staticFilesBaseDirectory = ""; }
+                return _staticFilesBaseDirectory;
+            }
+            set => _staticFilesBaseDirectory = value.TrimStart('/', '\\');
         }
     }
 }

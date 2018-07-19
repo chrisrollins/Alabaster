@@ -13,7 +13,6 @@ namespace Alabaster
         private static LockableDictionary<IPath, bool> allowedPaths = new LockableDictionary<IPath, bool>(100);
         private static bool whitelistMode = false;
         private static volatile bool initialized = false;
-        private static string staticBase = "";
 
         internal static void Init()
         {
@@ -26,28 +25,22 @@ namespace Alabaster
             initialized = true;
         }
 
-        public static void AllowFiles(params string[] files) => Array.ForEach(files, (string f)=> AddPath(new FilePath(f), true));
-        public static void ForbidFiles(params string[] files) => Array.ForEach(files, (string f)=> AddPath(new FilePath(f), false));
-        public static void AllowDirectories(params string[] directories) => Array.ForEach(directories, (string d)=> AddPath(new DirectoryPath(d), true));
-        public static void ForbidDirectories(params string[] directories) => Array.ForEach(directories, (string d)=> AddPath(new DirectoryPath(d), false));
+        public static void AllowFiles(params string[] files) => Array.ForEach(files, (string f) => AddPath(new FilePath(f), true));
+        public static void ForbidFiles(params string[] files) => Array.ForEach(files, (string f) => AddPath(new FilePath(f), false));
+        public static void AllowDirectories(params string[] directories) => Array.ForEach(directories, (string d) => AddPath(new DirectoryPath(d), true));
+        public static void ForbidDirectories(params string[] directories) => Array.ForEach(directories, (string d) => AddPath(new DirectoryPath(d), false));
         public static void SetWhitelistMode() => whitelistMode = true;
         public static void SetBlacklistMode() => whitelistMode = false;
 
         public static bool IsFileAllowed(string file) => IsPathAllowed(new FilePath(file));
         public static bool IsDirectoryAllowed(string directory) => IsPathAllowed(new DirectoryPath(directory));
 
-        public static string StaticFilesBaseDirectory
-        {
-            get => staticBase;
-            set => staticBase = value.TrimStart('/', '\\');                
-        }
-
         public static void SetFileExtensionDirectory(string extension, string directory) => extensionPaths[extension] = directory;
         public static bool RemoveFileExtensionDirectory(string extension) => extensionPaths.TryRemove(extension, out _);
         public static string GetFileExtensionDirectory(string extension) => extensionPaths[extension];
 
-        public static byte[] GetFile(string file) => LRUCache.GetStaticFileData(file, staticBase);
-        public static byte[] GetFile(string file, string baseDirectory) => LRUCache.GetStaticFileData(file, baseDirectory);
+        public static byte[] GetFile(string file) => LRUCache.GetStaticFileData(new FilePath(file), new DirectoryPath(Server.Config.StaticFilesBaseDirectory));
+        public static byte[] GetFile(string file, string baseDirectory) => LRUCache.GetStaticFileData(new FilePath(file), new DirectoryPath(baseDirectory));
 
         //private
         private static void AddPath(IPath p, bool allowed) => allowedPaths[p] = allowed;
@@ -61,24 +54,30 @@ namespace Alabaster
         private interface IPath
         {
             DirectoryPath GetDirectory();
+            string Value { get; set; }
         }
 
         private struct FilePath : IPath
         {
-            public string Value;
+            public string Value { get; set; }
             public FilePath(string val) => this.Value = val.Replace('\\', '/');
-            public DirectoryPath GetDirectory() => new DirectoryPath(this.Value.Substring(0, this.Value.LastIndexOf('/')));
+            public DirectoryPath GetDirectory() => new DirectoryPath(this.Value.Substring(0, Util.Clamp(this.Value.LastIndexOf('/'), 0, int.MaxValue)));            
         }
 
         private struct DirectoryPath : IPath
         {
-            public string Value;
+            public string Value { get; set; }
             public DirectoryPath(string val)
             {
                 this.Value = val.Replace('\\', '/');
                 if (val == "" || val[val.Length - 1] != '/') { this.Value += "/"; }
             }
             public DirectoryPath GetDirectory() => this;
+            public static IPath operator +(DirectoryPath p1, IPath p2)
+            {
+                string value = p1.Value + p2.Value;
+                return (p2.GetType() == typeof(DirectoryPath)) ? (IPath)new DirectoryPath(value) : new FilePath(value);
+            }
         }
 
         private static class LRUCache
@@ -110,30 +109,30 @@ namespace Alabaster
                 public static volatile int Count = 0;
                 public static volatile LRUNode End = new LRUNode(null);
                 public static volatile LRUNode NewestNode = End;
-                public FileData data;
+                public FileData file;
                 public LRUNode Next;
                 public LRUNode Previous;
-                public LRUNode(FileData data) => this.data = data;
+                public LRUNode(FileData data) => this.file = data;
             }
 
             private static int CacheSize = 100;
-            private static ConcurrentDictionary<string, FileData> fileDict = new ConcurrentDictionary<string, FileData>(Environment.ProcessorCount, CacheSize);
+            private static ConcurrentDictionary<FilePath, FileData> fileDict = new ConcurrentDictionary<FilePath, FileData>(Environment.ProcessorCount, CacheSize);
             
-            public static byte[] GetStaticFileData(string file, string baseDir)
+            public static byte[] GetStaticFileData(FilePath file, DirectoryPath baseDir)
             {
                 if(!initialized) { throw new InvalidOperationException("Server not yet initialized."); }
-                string fullpath = String.Join("/", baseDir, file);
-                FilePath f = new FilePath(fullpath);
-                if (!IsPathAllowed(f) || !IsPathAllowed(f.GetDirectory()) || !File.Exists(fullpath)) { return null; }
-                return (fileDict.TryGetValue(fullpath, out FileData result) == true) ? GetFromCache() : LoadFromDisk();
+                FilePath fullPath = (FilePath)(baseDir + file);
+                if (!IsFileValid(fullPath)) { return null; }
+                return (fileDict.TryGetValue(fullPath, out FileData result) == true) ? GetFromCache() : LoadFromDisk();
 
                 byte[] LoadFromDisk()
                 {
-                    byte[] data = File.ReadAllBytes(fullpath);
+                    byte[] data = File.ReadAllBytes(fullPath.Value);
+                    if(data.LongLength > Server.Config.MaximumCacheFileSize) { return data; }
                     if (result == null)
                     {
                         result = new FileData();
-                        fileDict[fullpath] = result;
+                        fileDict[fullPath] = result;
                     }
                     LRUPrepend();
                     result.Data = data;
@@ -143,8 +142,10 @@ namespace Alabaster
                 byte[] GetFromCache()
                 {
                     byte[] data = result?.Data;
-                    return (data != null && File.GetLastWriteTime(fullpath) > result.Timestamp) ? data : LoadFromDisk();
+                    return (data != null && File.GetLastWriteTime(fullPath.Value) > result.Timestamp) ? data : LoadFromDisk();
                 }
+
+                bool IsFileValid(FilePath filePathValid) => IsPathAllowed(filePathValid) && IsPathAllowed(filePathValid.GetDirectory()) && File.Exists(fullPath.Value);
 
                 void LRUPrepend()
                 {
@@ -173,7 +174,7 @@ namespace Alabaster
                         LRUNode toDelete = LRUNode.End.Previous;
                         LRUNode.End.Previous = toDelete.Previous;
                         LRUNode.End.Previous.Next = LRUNode.End;
-                        toDelete.data.Data = null;
+                        toDelete.file.Data = null;
                         toDelete.Next = null;
                         toDelete.Previous = null;
                     }

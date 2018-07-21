@@ -26,10 +26,11 @@ namespace HelloWorldExample
 
 ### Configurable Values:  
 
-int Server.Config.Port  
+Int32 Server.Config.Port  
 bool Server.Config.EnableCustomHTTPMethods  
 string Server.Config.ServerID  
-string FileIO.StaticFilesBaseDirectory  
+string Server.Config.StaticFilesBaseDirectory  
+Int64 Server.Config.MaximumCacheFileSize  
   
 ### Functions:  
 

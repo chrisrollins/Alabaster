@@ -16,7 +16,7 @@ namespace Alabaster
         public CookieCollection Cookies = new CookieCollection();
         private bool? _KeepAlive;
         private int? _StatusCode;
-
+        
         public bool KeepAlive
         {
             get => this._KeepAlive ?? false;
@@ -103,6 +103,7 @@ namespace Alabaster
             this.data = Encoding.UTF8.GetBytes(response);
             this.StatusCode = status;
         }
+        public static implicit operator StringResponse(string str) => new StringResponse(str);        
     }
 
     public sealed class DataResponse : Response
@@ -113,6 +114,7 @@ namespace Alabaster
             this.data = data;
             this.StatusCode = status;
         }
+        public static implicit operator DataResponse(byte[] bytes) => new DataResponse(bytes);
     }
 
     public sealed class FileResponse : Response
@@ -128,7 +130,7 @@ namespace Alabaster
             }
         }
 
-        public FileResponse(string fileName) : this(fileName, FileIO.StaticFilesBaseDirectory) { }
+        public FileResponse(string fileName) : this(fileName, Server.Config.StaticFilesBaseDirectory) { }
 
         public FileResponse(string fileName, string baseDirectory)
         {

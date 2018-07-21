@@ -9,7 +9,16 @@ namespace Alabaster
 {
     public static partial class Server
     {
-        public static ServerOptions Config { get; private set; }
+        private static ServerOptions _config;
+        public static ServerOptions Config
+        {
+            get => _config;
+            set
+            {
+                Util.InitExceptions();
+                _config = value;
+            }
+        }
         private static HttpListener listener = new HttpListener();
         private static Thread keepAliveThread = null;
         internal static Thread baseThread = null;

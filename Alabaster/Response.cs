@@ -78,6 +78,8 @@ namespace Alabaster
             res.OutputStream.Write(data, 0, data.Length);
             res.OutputStream.Close();
         }
+
+        public static implicit operator Response(FileIO.FileData file) => new DataResponse(file.Data);
     }
 
     public sealed class RedirectResponse : Response
@@ -115,6 +117,7 @@ namespace Alabaster
             this.StatusCode = status;
         }
         public static implicit operator DataResponse(byte[] bytes) => new DataResponse(bytes);
+        public static implicit operator DataResponse(FileIO.FileData file) => new DataResponse(file.Data);
     }
 
     public sealed class FileResponse : Response
@@ -125,7 +128,7 @@ namespace Alabaster
         {
             get
             {
-                if(this.data == null) { this.data = FileIO.GetFile(fileName, baseDirectory); }
+                if(this.data == null) { this.data = FileIO.GetFile(fileName, baseDirectory).Data; }
                 return this.data;
             }
         }
@@ -138,7 +141,7 @@ namespace Alabaster
             this.fileName = fileName;
             this.baseDirectory = baseDirectory;
             this.StatusCode = (this.data == null) ? 404 : 200;
-        }        
+        }
     }
 
     public sealed class EmptyResponse : Response

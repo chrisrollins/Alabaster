@@ -47,8 +47,13 @@ void Server.Put(string route, RouteCallback_A/B/C/D/E/F callback)
 void Server.Put(string route, Response res)  
 void Server.Route(string method, string route, RouteCallback_A/B/C/D/E/F callback)  
 void Server.Route(string method, string route, Response res)  
+void Server.Route(HTTPMethod method, string route, RouteCallback_A/B/C/D/E/F callback)  
+void Server.Route(HTTPMethod method, string route, Response res)  
+void Server.Routes(params Controller[] controllers)  
 void Server.All(string method, RouteCallback_A/B/C/D/E/F callback)  
 void Server.All(string method, Response res)  
+void Server.All(HTTPMethod method, RouteCallback_A/B/C/D/E/F callback)  
+void Server.All(HTTPMethod method, Response res)  
 void Server.All(RouteCallback_A/B/C/D/E/F callback)  
 void Server.All(Response res)  
 void Server.AttachWebSocketModule(string route, WebSocketModule module)  
@@ -58,8 +63,8 @@ void Server.Start(ServerOptions options)
 void Server.Stop()  
 
 ###### FileIO:  
-byte[] FileIO.GetFile(string file)  
-byte[] FileIO.GetFile(string file, string baseDirectory)  
+FileData FileIO.GetFile(string file)  
+FileData FileIO.GetFile(string file, string baseDirectory)  
 void FileIO.AllowFiles(params string[] files)  
 void FileIO.AllowDirectories(params string[] directories)  
 void FileIO.ForbidFiles(string files)  
@@ -116,7 +121,9 @@ class WebSocketConnection
 ### Structs:
 
 struct ServerOptions  
+struct Controller  
+struct FileIO.FileData
 
 ### Enums:  
-Client.Scheme { HTTP, HTTPS }
-
+Client.Scheme { HTTP, HTTPS }  
+HTTPMethod { GET, POST, PATCH, PUT, DELETE, HEAD, CONNECT, OPTIONS, TRACE };  

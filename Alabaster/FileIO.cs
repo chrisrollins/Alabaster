@@ -39,8 +39,14 @@ namespace Alabaster
         public static bool RemoveFileExtensionDirectory(string extension) => extensionPaths.TryRemove(extension, out _);
         public static string GetFileExtensionDirectory(string extension) => extensionPaths[extension];
 
-        public static byte[] GetFile(string file) => LRUCache.GetStaticFileData(new FilePath(file), new DirectoryPath(Server.Config.StaticFilesBaseDirectory));
-        public static byte[] GetFile(string file, string baseDirectory) => LRUCache.GetStaticFileData(new FilePath(file), new DirectoryPath(baseDirectory));
+        public static FileData GetFile(string file) => new FileData(LRUCache.GetStaticFileData((FilePath)file, (DirectoryPath)Server.Config.StaticFilesBaseDirectory));
+        public static FileData GetFile(string file, string baseDirectory) => new FileData(LRUCache.GetStaticFileData((FilePath)file, (DirectoryPath)baseDirectory));
+
+        public struct FileData
+        {
+            public byte[] Data { get; private set; }
+            internal FileData(byte[] data) => this.Data = data;
+        }
 
         //private
         private static void AddPath(IPath p, bool allowed) => allowedPaths[p] = allowed;
@@ -61,7 +67,8 @@ namespace Alabaster
         {
             public string Value { get; set; }
             public FilePath(string val) => this.Value = val.Replace('\\', '/');
-            public DirectoryPath GetDirectory() => new DirectoryPath(this.Value.Substring(0, Util.Clamp(this.Value.LastIndexOf('/'), 0, int.MaxValue)));            
+            public DirectoryPath GetDirectory() => new DirectoryPath(this.Value.Substring(0, Util.Clamp(this.Value.LastIndexOf('/'), 0, int.MaxValue)));
+            public static explicit operator FilePath(string path) => new FilePath(path);
         }
 
         private struct DirectoryPath : IPath
@@ -78,16 +85,17 @@ namespace Alabaster
                 string value = p1.Value + p2.Value;
                 return (p2.GetType() == typeof(DirectoryPath)) ? (IPath)new DirectoryPath(value) : new FilePath(value);
             }
+            public static explicit operator DirectoryPath(string path) => new DirectoryPath(path);
         }
 
         private static class LRUCache
         {
-            private class FileData
+            private class CachedFile
             {
                 private byte[] data;
                 public LRUNode Node;
 
-                public FileData() => this.Node = new LRUNode(this);
+                public CachedFile() => this.Node = new LRUNode(this);
 
                 public DateTime Timestamp { get; private set; }
 
@@ -109,21 +117,21 @@ namespace Alabaster
                 public static volatile int Count = 0;
                 public static volatile LRUNode End = new LRUNode(null);
                 public static volatile LRUNode NewestNode = End;
-                public FileData file;
+                public CachedFile file;
                 public LRUNode Next;
                 public LRUNode Previous;
-                public LRUNode(FileData data) => this.file = data;
+                public LRUNode(CachedFile data) => this.file = data;
             }
 
             private static int CacheSize = 100;
-            private static ConcurrentDictionary<FilePath, FileData> fileDict = new ConcurrentDictionary<FilePath, FileData>(Environment.ProcessorCount, CacheSize);
+            private static ConcurrentDictionary<FilePath, CachedFile> fileDict = new ConcurrentDictionary<FilePath, CachedFile>(Environment.ProcessorCount, CacheSize);
             
             public static byte[] GetStaticFileData(FilePath file, DirectoryPath baseDir)
             {
                 if(!initialized) { throw new InvalidOperationException("Server not yet initialized."); }
                 FilePath fullPath = (FilePath)(baseDir + file);
                 if (!IsFileValid(fullPath)) { return null; }
-                return (fileDict.TryGetValue(fullPath, out FileData result) == true) ? GetFromCache() : LoadFromDisk();
+                return (fileDict.TryGetValue(fullPath, out CachedFile result) == true) ? GetFromCache() : LoadFromDisk();
 
                 byte[] LoadFromDisk()
                 {
@@ -131,7 +139,7 @@ namespace Alabaster
                     if(data.LongLength > Server.Config.MaximumCacheFileSize) { return data; }
                     if (result == null)
                     {
-                        result = new FileData();
+                        result = new CachedFile();
                         fileDict[fullPath] = result;
                     }
                     LRUPrepend();

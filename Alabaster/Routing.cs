@@ -20,13 +20,16 @@ namespace Alabaster
         public string Route;
         public HTTPMethod Method;
         public RouteCallback_A Callback;
-        public Controller(string route, HTTPMethod method, RouteCallback_A callback)
+        public Controller(HTTPMethod method, string route, RouteCallback_A callback)
         {
             this.Route = route;
             this.Method = method;
             this.Callback = callback;
         }
-        public static implicit operator Controller((string r, HTTPMethod m, RouteCallback_A c) args) => new Controller(args.r, args.m, args.c);
+        public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_A c) args) => new Controller(args.m, args.r, args.c);
+        public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_B c) args) => new Controller(args.m, args.r, Server.Convert(args.c));
+        public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_C c) args) => new Controller(args.m, args.r, Server.Convert(args.c));
+        public static implicit operator Controller((HTTPMethod m, string r, Response res) args) => new Controller(args.m, args.r, Server.ResponseShortcut(args.res));
     }
     
     public partial class Server
@@ -103,25 +106,25 @@ namespace Alabaster
         public static void All<T>(RouteCallback_F<T> callback) where T : struct =>                                      Routing.AllBase(Convert(callback));
         public static void All(Response res) =>                                                                         Routing.AllBase(ResponseShortcut(res));
         
-        private static RouteCallback_A Convert(RouteCallback_B callback) =>                                             (Request req) => { callback(req); return new PassThrough(); };
-        private static RouteCallback_A Convert(RouteCallback_C callback) =>                                             (Request req) => { callback(); return new PassThrough(); };
-        private static RouteCallback_A Convert<T>(RouteCallback_D<T> callback) where T : struct =>                      (Request req) => new StringResponse(callback(req).ToString());
-        private static RouteCallback_A Convert<T>(RouteCallback_E<T> callback) where T : struct =>                      (Request req) => new StringResponse(String.Join(null, callback(req) ?? new T[] { }));
-        private static RouteCallback_A Convert<T>(RouteCallback_F<T> callback) where T : struct =>                      (Request req) => new StringResponse(String.Join(null, callback() ?? new T[] { }));
-        private static RouteCallback_A ResponseShortcut(Response res) =>                                                (Request req) => res;
-                
+        internal static RouteCallback_A Convert(RouteCallback_B callback) =>                                             (Request req) => { callback(req); return new PassThrough(); };
+        internal static RouteCallback_A Convert(RouteCallback_C callback) =>                                             (Request req) => { callback(); return new PassThrough(); };
+        internal static RouteCallback_A Convert<T>(RouteCallback_D<T> callback) where T : struct =>                      (Request req) => new StringResponse(callback(req).ToString());
+        internal static RouteCallback_A Convert<T>(RouteCallback_E<T> callback) where T : struct =>                      (Request req) => new StringResponse(String.Join(null, callback(req) ?? new T[] { }));
+        internal static RouteCallback_A Convert<T>(RouteCallback_F<T> callback) where T : struct =>                      (Request req) => new StringResponse(String.Join(null, callback() ?? new T[] { }));
+        internal static RouteCallback_A ResponseShortcut(Response res) =>                                                (Request req) => res;
+        
         private struct MethodArg
         {
+            public readonly string Value;
+            static readonly string[] stdMethods = Enum.GetNames(typeof(HTTPMethod));
             public MethodArg(string val)
             {
-                string[] stdMethods = Enum.GetNames(typeof(HTTPMethod));
                 if (!Server.Config.EnableCustomHTTPMethods && !stdMethods.Contains(val.ToUpper())) { throw new ArgumentException("Non-standard HTTP method: " + val + " Enable non-standard HTTP methods to use a custom method by setting Server.EnableCustomHTTPMethods to true."); }
                 this.Value = val.ToUpper();
             }
-            public readonly string Value;
-
+            public MethodArg(HTTPMethod method) => this.Value = method.ToString();
             public static explicit operator MethodArg(string method) => new MethodArg(method);
-            public static implicit operator MethodArg(HTTPMethod method) => new MethodArg(method.ToString());
+            public static implicit operator MethodArg(HTTPMethod method) => new MethodArg(method);
         }
 
         private struct RouteArg
@@ -166,21 +169,21 @@ namespace Alabaster
 
             private static void Add(MethodArg method, RouteArg route, RouteCallback_A callback)
             {
-                RouteAddingExceptions(method.Value, route.Value);
+                RouteAddingExceptions(method.Value, route.Value, callback);
                 routeCallbackCount++;
                 deferredRouteCallbacks.Enqueue(() => { routeCallbacks.Add((method, route), callback); });
             }
 
             private static void AddMethodCallback(MethodArg method, RouteCallback_A callback)
             {
-                RouteAddingExceptions(method.Value, null);
+                RouteAddingExceptions(method.Value, null, callback);
                 methodCallbackCount++;
                 deferredRouteCallbacks.Enqueue(() => { methodCallbacks.Add(method, callback); });
             }
 
             private static void AddUniversalCallback(RouteCallback_A callback)
             {
-                Util.InitExceptions();
+                RouteAddingExceptions(null, null, callback);
                 deferredUniversalCallbacks.Enqueue(callback);
             }
 
@@ -202,9 +205,10 @@ namespace Alabaster
                 return (result is PassThrough) ? null : result;
             }
 
-            private static void RouteAddingExceptions(string method, string route)
+            private static void RouteAddingExceptions(string method, string route, RouteCallback_A callback)
             {
                 Util.InitExceptions();
+                if (callback == null) { throw new ArgumentNullException("Callback cannot be null."); }
                 if (!isValid(method) || !isValid(route)) { throw new ArgumentException("Routes and methods cannot be empty or contain spaces."); }
                 bool isValid(string str) => str == null || str != string.Empty && !str.Contains(' ');
             }

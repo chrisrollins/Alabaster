@@ -80,6 +80,7 @@ namespace Alabaster
         }
 
         public static implicit operator Response(FileIO.FileData file) => new DataResponse(file.Data);
+        public static implicit operator Response(string str) => new StringResponse(str);
     }
 
     public sealed class RedirectResponse : Response

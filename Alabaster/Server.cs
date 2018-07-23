@@ -10,27 +10,30 @@ namespace Alabaster
 {
     public static partial class Server
     {
+        private static object configAccessLock = new object();
         private static ServerOptions _config;
         public static ServerOptions Config
         {
-            get => _config;
+            get
+            {
+                lock (configAccessLock)
+                {
+                    return _config;
+                }
+            }
             set
             {
                 Util.InitExceptions();
-                _config = value;
+                lock (configAccessLock)
+                {
+                    _config = value;
+                }
             }
         }
         private static HttpListener listener = new HttpListener();
-        private static Thread keepAliveThread = null;
-        internal static Thread baseThread = null;
         internal static bool initialized = false;
         internal static bool running = false;
-
-        static Server()
-        {
-            if(Interlocked.CompareExchange<Thread>(ref baseThread, Thread.CurrentThread, null) != null) { Util.ThreadExceptions(); }
-        }
-
+        
         public static void Start(int Port) => Start(new ServerOptions { Port = Port });        
 
         public static void Start(ServerOptions options)
@@ -39,9 +42,10 @@ namespace Alabaster
             Start();
         }
 
-        public static void Start()
+        public static void Start() => ServerThreadManager.Run(StartImpl);        
+
+        private static void StartImpl()
         {
-            Util.ThreadExceptions();
             if (!initialized) { Init(); }
             else if (!running) { LaunchListeners(); }
             
@@ -59,15 +63,14 @@ namespace Alabaster
                 if (Config.Port == 0) { throw new InvalidOperationException("Port not set."); }
 
                 Util.InitExceptions();
+                initialized = true;
                 Util.ProgressVisualizer("Initializing Server...", "Listening on port " + Config.Port,
                     InitializeOptions,
                     FileIO.Init,
                     Routing.Activate,
                     LaunchListeners,
-                    PreventProgramTermination,
                     GC.Collect
                 );
-                initialized = true;
             }
 
             void InitializeOptions()
@@ -119,19 +122,15 @@ namespace Alabaster
                 }
                 return result;
             }
-
-            void PreventProgramTermination()
-            {
-                keepAliveThread = new Thread(() => Thread.Sleep(Timeout.Infinite));
-                keepAliveThread.Start();
-            }
         }
 
         public static void Stop()
         {
-            Util.ThreadExceptions();
-            if (running) { running = false; }
-            else { throw new InvalidOperationException(); }
+            ServerThreadManager.Run(() =>
+            {
+                if (running) { running = false; }
+                else { throw new InvalidOperationException(); }
+            });
         }
     }
 }

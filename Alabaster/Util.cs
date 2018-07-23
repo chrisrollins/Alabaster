@@ -39,17 +39,10 @@ namespace Alabaster
             Console.CursorLeft = 0;
             Console.WriteLine(String.Join(null, '\n', endLabel, new string(' ', barLength)));
         }
-
+        
         internal static void InitExceptions(Action callback = null)
         {
-            ThreadExceptions();
             if (Server.initialized) { throw new InvalidOperationException("Cannot use initialization operations after server has started."); }
-            callback?.Invoke();
-        }
-
-        internal static void ThreadExceptions(Action callback = null)
-        {
-            if (Server.baseThread != Thread.CurrentThread) { throw new InvalidOperationException("Server setup must be done on one thread."); }
             callback?.Invoke();
         }
         

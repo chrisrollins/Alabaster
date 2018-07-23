@@ -21,11 +21,7 @@ namespace Alabaster
         public int Port
         {
             get => _port;
-            set
-            {
-                Util.InitExceptions();
-                _port = Util.Clamp(value, 1, UInt16.MaxValue);
-            }
+            set => _port = Util.Clamp(value, 1, UInt16.MaxValue);            
         }
 
         private Int64 _maximumCacheFileSize;
@@ -36,11 +32,8 @@ namespace Alabaster
                 if(_maximumCacheFileSize == 0) { _maximumCacheFileSize = 5 * 1024 * 1024; }
                 return _maximumCacheFileSize;
             }
-            set
-            {
-                Util.InitExceptions();
-                _maximumCacheFileSize = Util.Clamp(value, 1, Int64.MaxValue);
-            }
+            set => _maximumCacheFileSize = Util.Clamp(value, 1, Int64.MaxValue);
+            
         }
 
         private string _staticFilesBaseDirectory;

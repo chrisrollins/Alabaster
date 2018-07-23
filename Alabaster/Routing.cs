@@ -173,21 +173,27 @@ namespace Alabaster
             private static void Add(MethodArg method, RouteArg route, RouteCallback_A callback)
             {
                 RouteAddingExceptions(method.Value, route.Value, callback);
-                routeCallbackCount++;
-                deferredRouteCallbacks.Enqueue(() => { routeCallbacks.Add((method, route), callback); });
+                ServerThreadManager.Run(() =>
+                {
+                    routeCallbackCount++;
+                    deferredRouteCallbacks.Enqueue(() => { routeCallbacks.Add((method, route), callback); });
+                });
             }
 
             private static void AddMethodCallback(MethodArg method, RouteCallback_A callback)
             {
-                RouteAddingExceptions(method.Value, null, callback);
-                methodCallbackCount++;
-                deferredRouteCallbacks.Enqueue(() => { methodCallbacks.Add(method, callback); });
+                RouteAddingExceptions(method.Value, null, callback);                
+                ServerThreadManager.Run(() =>
+                {
+                    methodCallbackCount++;
+                    deferredRouteCallbacks.Enqueue(() => methodCallbacks.Add(method, callback));
+                });
             }
 
             private static void AddUniversalCallback(RouteCallback_A callback)
             {
                 RouteAddingExceptions(null, null, callback);
-                deferredUniversalCallbacks.Enqueue(callback);
+                ServerThreadManager.Run(() => deferredUniversalCallbacks.Enqueue(callback) );                
             }
 
             public static void Activate()

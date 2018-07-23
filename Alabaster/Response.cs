@@ -37,7 +37,7 @@ namespace Alabaster
 
         public Response AddSession(Session session)
         {
-            Cookie cookie = new Cookie(Session.CookieID, session.id.ToString());
+            Cookie cookie = new Cookie(Server.Config.ServerID, session.id.ToString());
             cookie.HttpOnly = true;           
             this.Cookies.Add(cookie);
             return this;
@@ -93,8 +93,7 @@ namespace Alabaster
         }
         internal override void Finish(ContextWrapper cw)
         {
-            HttpListenerResponse res = cw.Context.Response;
-            res.Redirect(redirectRoute);
+            cw.Context.Response.Redirect(redirectRoute);
             base.Finish(cw);
         }
     }

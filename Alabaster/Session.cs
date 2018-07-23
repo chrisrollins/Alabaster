@@ -33,7 +33,6 @@ namespace Alabaster
 
         [ThreadStatic] private static Random rand;
         private static ConcurrentDictionary<string, Session> sessions = new ConcurrentDictionary<string, Session>(Environment.ProcessorCount, 100);
-        internal static string CookieID = Server.Config.ServerID;
         
         public Session(string category, ValueType data)
         {

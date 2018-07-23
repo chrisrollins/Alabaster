@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -59,6 +60,7 @@ namespace Alabaster
 
                 Util.InitExceptions();
                 Util.ProgressVisualizer("Initializing Server...", "Listening on port " + Config.Port,
+                    InitializeOptions,
                     FileIO.Init,
                     Routing.Activate,
                     LaunchListeners,
@@ -66,6 +68,14 @@ namespace Alabaster
                     GC.Collect
                 );
                 initialized = true;
+            }
+
+            void InitializeOptions()
+            {
+                foreach(PropertyInfo field in Config.GetType().GetProperties())
+                {
+                    object temp = field.GetValue(Config);
+                }
             }
 
             void LaunchListeners()

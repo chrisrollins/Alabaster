@@ -109,7 +109,7 @@ namespace Alabaster
                 if (Interlocked.CompareExchange(ref parsed, 1, 0) == 1) { return; }
                 foreach (Cookie cookie in this.cookies)
                 {
-                    if (cookie.Name != Session.CookieID) { continue; }
+                    if (cookie.Name != Server.Config.ServerID) { continue; }
                     Session session = Session.GetSession(cookie.Value);
                     if (session != null) { this.sessions.TryAdd(session.category, session); }
                 }

@@ -26,10 +26,13 @@ namespace Alabaster
             this.Method = method;
             this.Callback = callback;
         }
+        public Controller(HTTPMethod method, string route, RouteCallback_B callback) : this(method, route, Server.Convert(callback)) { }
+        public Controller(HTTPMethod method, string route, RouteCallback_C callback) : this(method, route, Server.Convert(callback)) { }
+        public Controller(HTTPMethod method, string route, Response res) : this(method, route, Server.ResponseShortcut(res)) { }
         public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_A c) args) => new Controller(args.m, args.r, args.c);
-        public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_B c) args) => new Controller(args.m, args.r, Server.Convert(args.c));
-        public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_C c) args) => new Controller(args.m, args.r, Server.Convert(args.c));
-        public static implicit operator Controller((HTTPMethod m, string r, Response res) args) => new Controller(args.m, args.r, Server.ResponseShortcut(args.res));
+        public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_B c) args) => new Controller(args.m, args.r, args.c);
+        public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_C c) args) => new Controller(args.m, args.r, args.c);
+        public static implicit operator Controller((HTTPMethod m, string r, Response res) args) => new Controller(args.m, args.r, args.res);
     }
     
     public partial class Server

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 
 namespace Alabaster
 {
@@ -11,7 +12,7 @@ namespace Alabaster
         {
             get
             {
-                if (this._serverID == null) { this._serverID = new Guid().ToString(); }
+                Interlocked.CompareExchange(ref this._serverID, new Guid().ToString(), null);
                 return this._serverID;
             }
             set => this._serverID = value;
@@ -29,7 +30,7 @@ namespace Alabaster
         {
             get
             {
-                if(_maximumCacheFileSize == 0) { _maximumCacheFileSize = 5 * 1024 * 1024; }
+                Interlocked.CompareExchange(ref this._maximumCacheFileSize, 5 * 1024 * 1024, 0);
                 return _maximumCacheFileSize;
             }
             set => _maximumCacheFileSize = Util.Clamp(value, 1, Int64.MaxValue);
@@ -41,7 +42,7 @@ namespace Alabaster
         {
             get
             {
-                if(_staticFilesBaseDirectory == null) { _staticFilesBaseDirectory = ""; }
+                Interlocked.CompareExchange(ref this._staticFilesBaseDirectory, "", null);
                 return _staticFilesBaseDirectory;
             }
             set => _staticFilesBaseDirectory = value.TrimStart('/', '\\');

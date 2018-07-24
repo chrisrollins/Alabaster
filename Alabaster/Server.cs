@@ -75,9 +75,9 @@ namespace Alabaster
 
             void InitializeOptions()
             {
-                foreach(PropertyInfo field in Config.GetType().GetProperties())
+                foreach(PropertyInfo prop in Config.GetType().GetProperties())
                 {
-                    object temp = field.GetValue(Config);
+                    object temp = prop.GetValue(Config);
                 }
             }
 

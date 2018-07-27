@@ -109,12 +109,12 @@ namespace Alabaster
         public static void All<T>(RouteCallback_F<T> callback) where T : struct =>                                      Routing.AllBase(Convert(callback));
         public static void All(Response res) =>                                                                         Routing.AllBase(ResponseShortcut(res));
         
-        internal static RouteCallback_A Convert(RouteCallback_B callback) =>                                             (Request req) => { callback(req); return new PassThrough(); };
-        internal static RouteCallback_A Convert(RouteCallback_C callback) =>                                             (Request req) => { callback(); return new PassThrough(); };
-        internal static RouteCallback_A Convert<T>(RouteCallback_D<T> callback) where T : struct =>                      (Request req) => new StringResponse(callback(req).ToString());
-        internal static RouteCallback_A Convert<T>(RouteCallback_E<T> callback) where T : struct =>                      (Request req) => new StringResponse(String.Join(null, callback(req) ?? new T[] { }));
-        internal static RouteCallback_A Convert<T>(RouteCallback_F<T> callback) where T : struct =>                      (Request req) => new StringResponse(String.Join(null, callback() ?? new T[] { }));
-        internal static RouteCallback_A ResponseShortcut(Response res) =>                                                (Request req) => res;
+        internal static RouteCallback_A Convert(RouteCallback_B callback) =>                                            (Request req) => { callback(req); return new PassThrough(); };
+        internal static RouteCallback_A Convert(RouteCallback_C callback) =>                                            (Request req) => { callback(); return new PassThrough(); };
+        internal static RouteCallback_A Convert<T>(RouteCallback_D<T> callback) where T : struct =>                     (Request req) => new StringResponse(callback(req).ToString());
+        internal static RouteCallback_A Convert<T>(RouteCallback_E<T> callback) where T : struct =>                     (Request req) => new StringResponse(String.Join(null, callback(req) ?? new T[] { }));
+        internal static RouteCallback_A Convert<T>(RouteCallback_F<T> callback) where T : struct =>                     (Request req) => new StringResponse(String.Join(null, callback() ?? new T[] { }));
+        internal static RouteCallback_A ResponseShortcut(Response res) =>                                               (Request req) => res;
         
         private struct MethodArg
         {
@@ -132,8 +132,8 @@ namespace Alabaster
 
         private struct RouteArg
         {
-            public RouteArg(string val) => this.Value = string.Join(null, val, (val.Last() != '/') ? "/" : "").ToUpper();            
             public readonly string Value;
+            public RouteArg(string val) => this.Value = string.Join(null, val, (val.Last() != '/') ? "/" : "").ToUpper();
             public static explicit operator RouteArg(string s) => new RouteArg(s);
         }
 
@@ -224,14 +224,9 @@ namespace Alabaster
             
             private struct RoutingKey
             {
-                private RouteArg route;
-                private MethodArg method;
-
-                public RoutingKey(MethodArg method, RouteArg route)
-                {
-                    this.route = route;
-                    this.method = method;
-                }
+                private (RouteArg route, MethodArg method) data;
+                public override int GetHashCode() => data.GetHashCode();
+                public RoutingKey(MethodArg method, RouteArg route) => this.data = (route, method);                
                 public RoutingKey(string method, string route) : this((MethodArg)method, (RouteArg)route) { }
                 public RoutingKey(MethodArg method) : this(method, new RouteArg("")) { }
                 public RoutingKey(RouteArg route) : this(new MethodArg(""), route) { }

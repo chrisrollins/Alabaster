@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Alabaster
 {
-    public sealed class Request
+    public struct Request
     {
         internal ContextWrapper cw;
         internal HttpListenerRequest req { get => this.cw.Context.Request; }
@@ -25,10 +25,8 @@ namespace Alabaster
         internal Request(ContextWrapper cw)
         {
             this.cw = cw;
-            this.sessions = new SessionCollection(this.Cookies);            
+            this.sessions = new SessionCollection(cw.Context.Request.Cookies);            
         }
-                
-        private Request() { throw new InvalidOperationException(); }
 
         public int ClientCertificateError { get => this.req.ClientCertificateError; }
         public long ContentLength64 { get => this.req.ContentLength64; }

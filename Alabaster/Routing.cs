@@ -87,13 +87,13 @@ namespace Alabaster
         public static void Route<T>(HTTPMethod method, string route, RouteCallback_F<T> callback) where T : struct =>   Routing.RouteBase(method, (RouteArg)route, Convert(callback));
         public static void Route(HTTPMethod method, string route, Response res) =>                                      Routing.RouteBase(method, (RouteArg)route, ResponseShortcut(res));
         public static void Route(HTTPMethod method, string route, RouteCallback_A callback) =>                          Routing.RouteBase(method, (RouteArg)route, callback);
-        public static void All(string method, RouteCallback_A callback) =>                                              Routing.AllMethodBase((MethodArg)method, callback);
-        public static void All(string method, RouteCallback_B callback) =>                                              Routing.AllMethodBase((MethodArg)method, Convert(callback));
-        public static void All(string method, RouteCallback_C callback) =>                                              Routing.AllMethodBase((MethodArg)method, Convert(callback));
-        public static void All<T>(string method, RouteCallback_D<T> callback) where T : struct =>                       Routing.AllMethodBase((MethodArg)method, Convert(callback));
-        public static void All<T>(string method, RouteCallback_E<T> callback) where T : struct =>                       Routing.AllMethodBase((MethodArg)method, Convert(callback));
-        public static void All(string method, Response res) =>                                                          Routing.AllMethodBase((MethodArg)method, ResponseShortcut(res));
-        public static void All<T>(string method, RouteCallback_F<T> callback) where T : struct =>                       Routing.AllMethodBase((MethodArg)method, Convert(callback));
+        public static void Route(string route, RouteCallback_A callback) =>                                             AllMethodRoute((RouteArg)route, callback);
+        public static void Route(string route, RouteCallback_B callback) =>                                             AllMethodRoute((RouteArg)route, Convert(callback));
+        public static void Route(string route, RouteCallback_C callback) =>                                             AllMethodRoute((RouteArg)route, Convert(callback));
+        public static void Route<T>(string route, RouteCallback_D<T> callback) where T : struct =>                      AllMethodRoute((RouteArg)route, Convert(callback));
+        public static void Route<T>(string route, RouteCallback_E<T> callback) where T : struct =>                      AllMethodRoute((RouteArg)route, Convert(callback));
+        public static void Route(string route, Response res) =>                                                         AllMethodRoute((RouteArg)route, ResponseShortcut(res));
+        public static void Route<T>(string route, RouteCallback_F<T> callback) where T : struct =>                      AllMethodRoute((RouteArg)route, Convert(callback));
         public static void All(HTTPMethod method, RouteCallback_B callback) =>                                          Routing.AllMethodBase(method, Convert(callback));
         public static void All(HTTPMethod method, RouteCallback_C callback) =>                                          Routing.AllMethodBase(method, Convert(callback));
         public static void All<T>(HTTPMethod method, RouteCallback_D<T> callback) where T : struct =>                   Routing.AllMethodBase(method, Convert(callback));
@@ -108,6 +108,8 @@ namespace Alabaster
         public static void All<T>(RouteCallback_E<T> callback) where T : struct =>                                      Routing.AllBase(Convert(callback));
         public static void All<T>(RouteCallback_F<T> callback) where T : struct =>                                      Routing.AllBase(Convert(callback));
         public static void All(Response res) =>                                                                         Routing.AllBase(ResponseShortcut(res));
+
+        private static void AllMethodRoute(RouteArg route, RouteCallback_A callback) { foreach (HTTPMethod method in Enum.GetValues(typeof(HTTPMethod))) { Routing.RouteBase(method, route, callback); } }        
         
         internal static RouteCallback_A Convert(RouteCallback_B callback) =>                                            (Request req) => { callback(req); return new PassThrough(); };
         internal static RouteCallback_A Convert(RouteCallback_C callback) =>                                            (Request req) => { callback(); return new PassThrough(); };

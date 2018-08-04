@@ -157,9 +157,9 @@ namespace Alabaster
             private static Response ResolveUniversals(ContextWrapper ctx, RouteCallback_A[] callbacks)
             {
                 Response result = null;
-                for (int i = 0; i < UniversalCallbacksPre.Length; i++)
+                for (int i = 0; i < callbacks.Length; i++)
                 {
-                    result = Resolve(UniversalCallbacksPre[i], ctx);
+                    result = Resolve(callbacks[i], ctx);
                     if (result != null) { return null; }
                 }
                 return result;

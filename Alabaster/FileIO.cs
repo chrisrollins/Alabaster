@@ -14,7 +14,7 @@ namespace Alabaster
         private static bool whitelistMode = false;
         private static volatile bool initialized = false;
 
-        internal static void Init()
+        internal static void Initialize()
         {
             foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
             {

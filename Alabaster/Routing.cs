@@ -115,7 +115,7 @@ namespace Alabaster
         internal static RouteCallback_A Convert<T>(RouteCallback_E<T> callback) where T : struct =>                     (Request req) => new StringResponse(String.Join(null, callback(req) ?? new T[] { }));
         internal static RouteCallback_A Convert<T>(RouteCallback_F<T> callback) where T : struct =>                     (Request req) => new StringResponse(String.Join(null, callback() ?? new T[] { }));
         internal static RouteCallback_A ResponseShortcut(Response res) =>                                               (Request req) => res;
-        
+
         private struct MethodArg
         {
             public readonly string Value;
@@ -135,24 +135,31 @@ namespace Alabaster
             public readonly string Value;
             public RouteArg(string val) => this.Value = string.Join(null, val, (val.Last() != '/') ? "/" : "").ToUpper();
             public static explicit operator RouteArg(string s) => new RouteArg(s);
-        }
+        }  
 
         private static class Routing
         {
-            private static Dictionary<RoutingKey, RouteCallback_A> routeCallbacks;
-            private static Dictionary<RoutingKey, RouteCallback_A> methodCallbacks;
+            private enum OrderingPhase : byte { PreHandlers, MethodHandlers, RouteHandlers, CleanupHandlers };
+            internal static Dictionary<RoutingKey, RouteCallback_A> routeCallbacks;
+            internal static Dictionary<RoutingKey, RouteCallback_A> methodCallbacks;
             private static int methodCallbackCount = 0;
             private static int routeCallbackCount = 0;
-            private static RouteCallback_A[] UniversalCallbacks;
-            private static Queue<RouteCallback_A> deferredUniversalCallbacks = new Queue<RouteCallback_A>();
+            private static OrderingPhase phase = OrderingPhase.PreHandlers;
+            private static RouteCallback_A[] UniversalCallbacksPre;
+            private static RouteCallback_A[] UniversalCallbacksPost;
+            private static Queue<RouteCallback_A> deferredUniversalCallbacksPre = new Queue<RouteCallback_A>();
+            private static Queue<RouteCallback_A> deferredUniversalCallbacksPost = new Queue<RouteCallback_A>();
             private static Queue<Action> deferredRouteCallbacks = new Queue<Action>();
 
-            internal static Response ResolveUniversals(ContextWrapper ctx)
+            internal static Response ResolveUniversalsPre(ContextWrapper ctx) => ResolveUniversals(ctx, UniversalCallbacksPre);
+            internal static Response ResolveUniversalsPost(ContextWrapper ctx) => ResolveUniversals(ctx, UniversalCallbacksPost);
+
+            private static Response ResolveUniversals(ContextWrapper ctx, RouteCallback_A[] callbacks)
             {
                 Response result = null;
-                for (int i = 0; i < UniversalCallbacks.Length; i++)
+                for (int i = 0; i < UniversalCallbacksPre.Length; i++)
                 {
-                    result = Resolve(UniversalCallbacks[i], ctx);
+                    result = Resolve(UniversalCallbacksPre[i], ctx);
                     if (result != null) { return null; }
                 }
                 return result;
@@ -169,14 +176,16 @@ namespace Alabaster
             internal static void RouteBase(MethodArg method, RouteArg route, RouteCallback_A callback) => Add(method, route, callback);
             internal static void AllMethodBase(MethodArg method, RouteCallback_A callback) => AddMethodCallback(method, callback);
             internal static void AllBase(RouteCallback_A callback) => AddUniversalCallback(callback);
-
+            
             private static void Add(MethodArg method, RouteArg route, RouteCallback_A callback)
             {
                 RouteAddingExceptions(method.Value, route.Value, callback);
                 ServerThreadManager.Run(() =>
                 {
+                    if(phase == OrderingPhase.CleanupHandlers) { throw new InvalidOperationException("URL handlers cannot be added after cleanup handlers."); }
+                    phase = OrderingPhase.RouteHandlers;
                     routeCallbackCount++;
-                    deferredRouteCallbacks.Enqueue(() => { routeCallbacks.Add((method, route), callback); });
+                    deferredRouteCallbacks.Enqueue(() => routeCallbacks.Add((method, route), callback));
                 });
             }
 
@@ -185,6 +194,9 @@ namespace Alabaster
                 RouteAddingExceptions(method.Value, null, callback);                
                 ServerThreadManager.Run(() =>
                 {
+                    if (phase == OrderingPhase.RouteHandlers) { throw new InvalidOperationException("Method handlers cannot be added after URL handlers."); }
+                    if (phase == OrderingPhase.CleanupHandlers) { throw new InvalidOperationException("Method handlers cannot be added after cleanup handlers."); }
+                    phase = OrderingPhase.MethodHandlers;
                     methodCallbackCount++;
                     deferredRouteCallbacks.Enqueue(() => methodCallbacks.Add(method, callback));
                 });
@@ -193,17 +205,24 @@ namespace Alabaster
             private static void AddUniversalCallback(RouteCallback_A callback)
             {
                 RouteAddingExceptions(null, null, callback);
-                ServerThreadManager.Run(() => deferredUniversalCallbacks.Enqueue(callback) );                
+                ServerThreadManager.Run(() =>
+                {
+                    if (phase == OrderingPhase.MethodHandlers || phase == OrderingPhase.RouteHandlers) { phase = OrderingPhase.CleanupHandlers; }
+                    Queue<RouteCallback_A> queue = (phase == OrderingPhase.CleanupHandlers) ? deferredUniversalCallbacksPre : deferredUniversalCallbacksPost;
+                    queue.Enqueue(callback);
+                });
             }
 
-            public static void Activate()
+            public static void Initialize()
             {
                 routeCallbacks = new Dictionary<RoutingKey, RouteCallback_A>(routeCallbackCount);
                 methodCallbacks = new Dictionary<RoutingKey, RouteCallback_A>(methodCallbackCount);
-                UniversalCallbacks = deferredUniversalCallbacks.ToArray();
+                UniversalCallbacksPre = deferredUniversalCallbacksPre.ToArray();
+                UniversalCallbacksPost = deferredUniversalCallbacksPost.ToArray();
                 while (deferredRouteCallbacks.Count > 0) { deferredRouteCallbacks.Dequeue()(); }
                 deferredRouteCallbacks = null;
-                deferredUniversalCallbacks = null;
+                deferredUniversalCallbacksPre = null;
+                deferredUniversalCallbacksPost = null;
             }
 
             private static Response Resolve(RouteCallback_A callback, ContextWrapper cw, bool includeRequestWithFileExt = false)
@@ -222,7 +241,7 @@ namespace Alabaster
                 bool isValid(string str) => str == null || str != string.Empty && !str.Contains(' ');
             }
             
-            private struct RoutingKey
+            internal struct RoutingKey
             {
                 private (RouteArg route, MethodArg method) data;
                 public override int GetHashCode() => data.GetHashCode();

@@ -12,7 +12,7 @@ namespace Alabaster
         {
             get
             {
-                Interlocked.CompareExchange(ref this._serverID, new Guid().ToString(), null);
+                Interlocked.CompareExchange(ref this._serverID, Guid.NewGuid().ToString(), null);
                 return this._serverID;
             }
             set => this._serverID = value;

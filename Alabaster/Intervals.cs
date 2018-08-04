@@ -15,7 +15,7 @@ namespace Alabaster
         private static object syncLock = new object();
         private static int delay = 0;
         private const int hourMS = 3600000;
-        private const string IntervalThreadName = "IntervalScheduleThread";
+        private static ConcurrentDictionary<int, bool> IntervalThreadIDs = new ConcurrentDictionary<int, bool>();
 
         static Intervals()
         {
@@ -27,7 +27,8 @@ namespace Alabaster
         internal static void HourlyJob(IntervalCallback callback) => AddJob(callback, hourly);
         private static void AddJob(IntervalCallback callback, ConcurrentQueue<IntervalCallback> queue)
         {
-            if(Thread.CurrentThread.Name == IntervalThreadName) { throw new InvalidOperationException("Can't schedule job from a job callback. It would cause a deadlock."); }
+            IntervalThreadIDs.TryGetValue(Thread.CurrentThread.ManagedThreadId, out bool isIntervalThread);
+            if(isIntervalThread) { throw new InvalidOperationException("Can't schedule job from a job callback."); }
             lock (syncLock) { queue.Enqueue(callback); }
         }
         
@@ -63,8 +64,12 @@ namespace Alabaster
                 {
                     queue.TryDequeue(out IntervalCallback callback);
                     callback.SubtractTimes(1);
-                    Thread t = new Thread(() => callback.Work());
-                    t.Name = IntervalThreadName;
+                    Thread t = new Thread(() =>
+                    {
+                        callback.Work();
+                        IntervalThreadIDs.TryRemove(Thread.CurrentThread.ManagedThreadId, out bool _);
+                    });
+                    IntervalThreadIDs.TryAdd(t.ManagedThreadId, true);
                     t.Start();
                     if (callback.RemainingTimes > 0) { tempQueue.Enqueue(callback); }
                 }

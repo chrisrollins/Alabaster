@@ -42,13 +42,14 @@ namespace Alabaster
             Start();
         }
 
-        public static void Start() => ServerThreadManager.Run(StartImpl);        
-
-        private static void StartImpl()
+        public static void Start()
         {
-            if (!initialized) { Init(); }
-            else if (!running) { LaunchListeners(); }
-            
+            ServerThreadManager.Run(() =>
+            {
+                if (!initialized) { Init(); }
+                else if (!running) { LaunchListeners(); }
+            });
+
             void Init()
             {
                 listener.Prefixes.Add(String.Join(null, "http://*:", Config.Port.ToString(), "/"));
@@ -66,8 +67,8 @@ namespace Alabaster
                 initialized = true;
                 Util.ProgressVisualizer("Initializing Server...", "Listening on port " + Config.Port,
                     InitializeOptions,
-                    FileIO.Init,
-                    Routing.Activate,
+                    FileIO.Initialize,
+                    Routing.Initialize,
                     LaunchListeners,
                     GC.Collect
                 );
@@ -75,7 +76,7 @@ namespace Alabaster
 
             void InitializeOptions()
             {
-                foreach(PropertyInfo prop in Config.GetType().GetProperties())
+                foreach (PropertyInfo prop in Config.GetType().GetProperties())
                 {
                     object temp = prop.GetValue(Config);
                 }
@@ -101,10 +102,11 @@ namespace Alabaster
 
                 void HandleRequest(ContextWrapper cw)
                 {
-                    ResponseExceptionHandler(()=>
-                        Routing.ResolveUniversals(cw) ??
+                    ResponseExceptionHandler(() =>
+                        Routing.ResolveUniversalsPre(cw) ??
                         Routing.ResolveMethod(cw) ??
                         Routing.ResolveRoute(cw) ??
+                        Routing.ResolveUniversalsPost(cw) ??
                         new FileResponse(cw.Route)
                     ).Finish(cw);
                 }
@@ -114,7 +116,7 @@ namespace Alabaster
             {
                 Response result;
                 try { result = callback(); }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     Console.WriteLine("Exception in application code:");
                     Console.WriteLine(e);
@@ -122,7 +124,7 @@ namespace Alabaster
                 }
                 return result;
             }
-        }
+        }        
 
         public static void Stop()
         {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -37,56 +38,56 @@ namespace Alabaster
     
     public partial class Server
     {
-        public static void Routes(params Controller[] controllers) =>                                                   Array.ForEach(controllers, (Controller c) => Routing.RouteBase(c.Method, (RouteArg)c.Route, c.Callback));
-        public static void Get(string route, RouteCallback_A callback) =>                                               Routing.GetBase((RouteArg)route, callback);
-        public static void Get(string route, RouteCallback_B callback) =>                                               Routing.GetBase((RouteArg)route, Convert(callback));
-        public static void Get(string route, RouteCallback_C callback) =>                                               Routing.GetBase((RouteArg)route, Convert(callback));
-        public static void Get<T>(string route, RouteCallback_D<T> callback) where T : struct =>                        Routing.GetBase((RouteArg)route, Convert(callback));
-        public static void Get<T>(string route, RouteCallback_E<T> callback) where T : struct =>                        Routing.GetBase((RouteArg)route, Convert(callback));
-        public static void Get<T>(string route, RouteCallback_F<T> callback) where T : struct =>                        Routing.GetBase((RouteArg)route, Convert(callback));
-        public static void Get(string route, Response res) =>                                                           Routing.GetBase((RouteArg)route, ResponseShortcut(res));
-        public static void Post(string route, RouteCallback_A callback) =>                                              Routing.PostBase((RouteArg)route, callback);
-        public static void Post(string route, RouteCallback_B callback) =>                                              Routing.PostBase((RouteArg)route, Convert(callback));
-        public static void Post(string route, RouteCallback_C callback) =>                                              Routing.PostBase((RouteArg)route, Convert(callback));
-        public static void Post<T>(string route, RouteCallback_D<T> callback) where T : struct =>                       Routing.PostBase((RouteArg)route, Convert(callback));
-        public static void Post<T>(string route, RouteCallback_E<T> callback) where T : struct =>                       Routing.PostBase((RouteArg)route, Convert(callback));
-        public static void Post<T>(string route, RouteCallback_F<T> callback) where T : struct =>                       Routing.PostBase((RouteArg)route, Convert(callback));
-        public static void Post(string route, Response res) =>                                                          Routing.PostBase((RouteArg)route, ResponseShortcut(res));
-        public static void Patch(string route, RouteCallback_A callback) =>                                             Routing.PatchBase((RouteArg)route, callback);
-        public static void Patch(string route, RouteCallback_B callback) =>                                             Routing.PatchBase((RouteArg)route, Convert(callback));
-        public static void Patch(string route, RouteCallback_C callback) =>                                             Routing.PatchBase((RouteArg)route, Convert(callback));
-        public static void Patch<T>(string route, RouteCallback_D<T> callback) where T : struct =>                      Routing.PatchBase((RouteArg)route, Convert(callback));
-        public static void Patch<T>(string route, RouteCallback_E<T> callback) where T : struct =>                      Routing.PatchBase((RouteArg)route, Convert(callback));
-        public static void Patch<T>(string route, RouteCallback_F<T> callback) where T : struct =>                      Routing.PatchBase((RouteArg)route, Convert(callback));
-        public static void Patch(string route, Response res) =>                                                         Routing.PatchBase((RouteArg)route, ResponseShortcut(res));
-        public static void Put(string route, RouteCallback_A callback) =>                                               Routing.PutBase((RouteArg)route, callback);
-        public static void Put(string route, RouteCallback_B callback) =>                                               Routing.PutBase((RouteArg)route, Convert(callback));
-        public static void Put(string route, RouteCallback_C callback) =>                                               Routing.PutBase((RouteArg)route, Convert(callback));
-        public static void Put<T>(string route, RouteCallback_D<T> callback) where T : struct =>                        Routing.PutBase((RouteArg)route, Convert(callback));
-        public static void Put<T>(string route, RouteCallback_E<T> callback) where T : struct =>                        Routing.PutBase((RouteArg)route, Convert(callback));
-        public static void Put<T>(string route, RouteCallback_F<T> callback) where T : struct =>                        Routing.PutBase((RouteArg)route, Convert(callback));
-        public static void Put(string route, Response res) =>                                                           Routing.PutBase((RouteArg)route, ResponseShortcut(res));
-        public static void Delete(string route, RouteCallback_A callback) =>                                            Routing.DeleteBase((RouteArg)route, callback);
-        public static void Delete(string route, RouteCallback_B callback) =>                                            Routing.DeleteBase((RouteArg)route, Convert(callback));
-        public static void Delete(string route, RouteCallback_C callback) =>                                            Routing.DeleteBase((RouteArg)route, Convert(callback));
-        public static void Delete<T>(string route, RouteCallback_D<T> callback) where T : struct =>                     Routing.DeleteBase((RouteArg)route, Convert(callback));
-        public static void Delete<T>(string route, RouteCallback_E<T> callback) where T : struct =>                     Routing.DeleteBase((RouteArg)route, Convert(callback));
-        public static void Delete<T>(string route, RouteCallback_F<T> callback) where T : struct =>                     Routing.DeleteBase((RouteArg)route, Convert(callback));
-        public static void Delete(string route, Response res) =>                                                        Routing.DeleteBase((RouteArg)route, ResponseShortcut(res));
-        public static void Route(string method, string route, RouteCallback_A callback) =>                              Routing.RouteBase((MethodArg)method, (RouteArg)route, callback);
-        public static void Route(string method, string route, RouteCallback_B callback) =>                              Routing.RouteBase((MethodArg)method, (RouteArg)route, Convert(callback));
-        public static void Route(string method, string route, RouteCallback_C callback) =>                              Routing.RouteBase((MethodArg)method, (RouteArg)route, Convert(callback));
-        public static void Route<T>(string method, string route, RouteCallback_D<T> callback) where T : struct =>       Routing.RouteBase((MethodArg)method, (RouteArg)route, Convert(callback));
-        public static void Route<T>(string method, string route, RouteCallback_E<T> callback) where T : struct =>       Routing.RouteBase((MethodArg)method, (RouteArg)route, Convert(callback));
-        public static void Route<T>(string method, string route, RouteCallback_F<T> callback) where T : struct =>       Routing.RouteBase((MethodArg)method, (RouteArg)route, Convert(callback));
-        public static void Route(string method, string route, Response res) =>                                          Routing.RouteBase((MethodArg)method, (RouteArg)route, ResponseShortcut(res));
-        public static void Route(HTTPMethod method, string route, RouteCallback_B callback) =>                          Routing.RouteBase(method, (RouteArg)route, Convert(callback));
-        public static void Route(HTTPMethod method, string route, RouteCallback_C callback) =>                          Routing.RouteBase(method, (RouteArg)route, Convert(callback));
-        public static void Route<T>(HTTPMethod method, string route, RouteCallback_D<T> callback) where T : struct =>   Routing.RouteBase(method, (RouteArg)route, Convert(callback));
-        public static void Route<T>(HTTPMethod method, string route, RouteCallback_E<T> callback) where T : struct =>   Routing.RouteBase(method, (RouteArg)route, Convert(callback));
-        public static void Route<T>(HTTPMethod method, string route, RouteCallback_F<T> callback) where T : struct =>   Routing.RouteBase(method, (RouteArg)route, Convert(callback));
-        public static void Route(HTTPMethod method, string route, Response res) =>                                      Routing.RouteBase(method, (RouteArg)route, ResponseShortcut(res));
-        public static void Route(HTTPMethod method, string route, RouteCallback_A callback) =>                          Routing.RouteBase(method, (RouteArg)route, callback);
+        public static void Routes(params Controller[] controllers) =>                                                   Array.ForEach(controllers, (Controller c) => Routing.AddHandler(c.Method, (RouteArg)c.Route, c.Callback));
+        public static void Get(string route, RouteCallback_A callback) =>                                               Routing.AddHandler((RouteArg)route, callback);
+        public static void Get(string route, RouteCallback_B callback) =>                                               Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Get(string route, RouteCallback_C callback) =>                                               Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Get<T>(string route, RouteCallback_D<T> callback) where T : struct =>                        Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Get<T>(string route, RouteCallback_E<T> callback) where T : struct =>                        Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Get<T>(string route, RouteCallback_F<T> callback) where T : struct =>                        Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Get(string route, Response res) =>                                                           Routing.AddHandler((RouteArg)route, ResponseShortcut(res));
+        public static void Post(string route, RouteCallback_A callback) =>                                              Routing.AddHandler((RouteArg)route, callback);
+        public static void Post(string route, RouteCallback_B callback) =>                                              Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Post(string route, RouteCallback_C callback) =>                                              Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Post<T>(string route, RouteCallback_D<T> callback) where T : struct =>                       Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Post<T>(string route, RouteCallback_E<T> callback) where T : struct =>                       Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Post<T>(string route, RouteCallback_F<T> callback) where T : struct =>                       Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Post(string route, Response res) =>                                                          Routing.AddHandler((RouteArg)route, ResponseShortcut(res));
+        public static void Patch(string route, RouteCallback_A callback) =>                                             Routing.AddHandler((RouteArg)route, callback);
+        public static void Patch(string route, RouteCallback_B callback) =>                                             Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Patch(string route, RouteCallback_C callback) =>                                             Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Patch<T>(string route, RouteCallback_D<T> callback) where T : struct =>                      Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Patch<T>(string route, RouteCallback_E<T> callback) where T : struct =>                      Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Patch<T>(string route, RouteCallback_F<T> callback) where T : struct =>                      Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Patch(string route, Response res) =>                                                         Routing.AddHandler((RouteArg)route, ResponseShortcut(res));
+        public static void Put(string route, RouteCallback_A callback) =>                                               Routing.AddHandler((RouteArg)route, callback);
+        public static void Put(string route, RouteCallback_B callback) =>                                               Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Put(string route, RouteCallback_C callback) =>                                               Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Put<T>(string route, RouteCallback_D<T> callback) where T : struct =>                        Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Put<T>(string route, RouteCallback_E<T> callback) where T : struct =>                        Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Put<T>(string route, RouteCallback_F<T> callback) where T : struct =>                        Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Put(string route, Response res) =>                                                           Routing.AddHandler((RouteArg)route, ResponseShortcut(res));
+        public static void Delete(string route, RouteCallback_A callback) =>                                            Routing.AddHandler((RouteArg)route, callback);
+        public static void Delete(string route, RouteCallback_B callback) =>                                            Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Delete(string route, RouteCallback_C callback) =>                                            Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Delete<T>(string route, RouteCallback_D<T> callback) where T : struct =>                     Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Delete<T>(string route, RouteCallback_E<T> callback) where T : struct =>                     Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Delete<T>(string route, RouteCallback_F<T> callback) where T : struct =>                     Routing.AddHandler((RouteArg)route, Convert(callback));
+        public static void Delete(string route, Response res) =>                                                        Routing.AddHandler((RouteArg)route, ResponseShortcut(res));
+        public static void Route(string method, string route, RouteCallback_A callback) =>                              Routing.AddHandler((MethodArg)method, (RouteArg)route, callback);
+        public static void Route(string method, string route, RouteCallback_B callback) =>                              Routing.AddHandler((MethodArg)method, (RouteArg)route, Convert(callback));
+        public static void Route(string method, string route, RouteCallback_C callback) =>                              Routing.AddHandler((MethodArg)method, (RouteArg)route, Convert(callback));
+        public static void Route<T>(string method, string route, RouteCallback_D<T> callback) where T : struct =>       Routing.AddHandler((MethodArg)method, (RouteArg)route, Convert(callback));
+        public static void Route<T>(string method, string route, RouteCallback_E<T> callback) where T : struct =>       Routing.AddHandler((MethodArg)method, (RouteArg)route, Convert(callback));
+        public static void Route<T>(string method, string route, RouteCallback_F<T> callback) where T : struct =>       Routing.AddHandler((MethodArg)method, (RouteArg)route, Convert(callback));
+        public static void Route(string method, string route, Response res) =>                                          Routing.AddHandler((MethodArg)method, (RouteArg)route, ResponseShortcut(res));
+        public static void Route(HTTPMethod method, string route, RouteCallback_B callback) =>                          Routing.AddHandler(method, (RouteArg)route, Convert(callback));
+        public static void Route(HTTPMethod method, string route, RouteCallback_C callback) =>                          Routing.AddHandler(method, (RouteArg)route, Convert(callback));
+        public static void Route<T>(HTTPMethod method, string route, RouteCallback_D<T> callback) where T : struct =>   Routing.AddHandler(method, (RouteArg)route, Convert(callback));
+        public static void Route<T>(HTTPMethod method, string route, RouteCallback_E<T> callback) where T : struct =>   Routing.AddHandler(method, (RouteArg)route, Convert(callback));
+        public static void Route<T>(HTTPMethod method, string route, RouteCallback_F<T> callback) where T : struct =>   Routing.AddHandler(method, (RouteArg)route, Convert(callback));
+        public static void Route(HTTPMethod method, string route, Response res) =>                                      Routing.AddHandler(method, (RouteArg)route, ResponseShortcut(res));
+        public static void Route(HTTPMethod method, string route, RouteCallback_A callback) =>                          Routing.AddHandler(method, (RouteArg)route, callback);
         public static void Route(string route, RouteCallback_A callback) =>                                             AllMethodRoute((RouteArg)route, callback);
         public static void Route(string route, RouteCallback_B callback) =>                                             AllMethodRoute((RouteArg)route, Convert(callback));
         public static void Route(string route, RouteCallback_C callback) =>                                             AllMethodRoute((RouteArg)route, Convert(callback));
@@ -94,22 +95,22 @@ namespace Alabaster
         public static void Route<T>(string route, RouteCallback_E<T> callback) where T : struct =>                      AllMethodRoute((RouteArg)route, Convert(callback));
         public static void Route(string route, Response res) =>                                                         AllMethodRoute((RouteArg)route, ResponseShortcut(res));
         public static void Route<T>(string route, RouteCallback_F<T> callback) where T : struct =>                      AllMethodRoute((RouteArg)route, Convert(callback));
-        public static void All(HTTPMethod method, RouteCallback_B callback) =>                                          Routing.AllMethodBase(method, Convert(callback));
-        public static void All(HTTPMethod method, RouteCallback_C callback) =>                                          Routing.AllMethodBase(method, Convert(callback));
-        public static void All<T>(HTTPMethod method, RouteCallback_D<T> callback) where T : struct =>                   Routing.AllMethodBase(method, Convert(callback));
-        public static void All<T>(HTTPMethod method, RouteCallback_E<T> callback) where T : struct =>                   Routing.AllMethodBase(method, Convert(callback));
-        public static void All<T>(HTTPMethod method, RouteCallback_F<T> callback) where T : struct =>                   Routing.AllMethodBase(method, Convert(callback));
-        public static void All(HTTPMethod method, Response res) =>                                                      Routing.AllMethodBase(method, ResponseShortcut(res));
-        public static void All(HTTPMethod method, RouteCallback_A callback) =>                                          Routing.AllMethodBase(method, callback);
-        public static void All(RouteCallback_A callback) =>                                                             Routing.AllBase(callback);
-        public static void All(RouteCallback_B callback) =>                                                             Routing.AllBase(Convert(callback));
-        public static void All(RouteCallback_C callback) =>                                                             Routing.AllBase(Convert(callback));
-        public static void All<T>(RouteCallback_D<T> callback) where T : struct =>                                      Routing.AllBase(Convert(callback));
-        public static void All<T>(RouteCallback_E<T> callback) where T : struct =>                                      Routing.AllBase(Convert(callback));
-        public static void All<T>(RouteCallback_F<T> callback) where T : struct =>                                      Routing.AllBase(Convert(callback));
-        public static void All(Response res) =>                                                                         Routing.AllBase(ResponseShortcut(res));
+        public static void All(HTTPMethod method, RouteCallback_B callback) =>                                          Routing.AddHandler(method, Convert(callback));
+        public static void All(HTTPMethod method, RouteCallback_C callback) =>                                          Routing.AddHandler(method, Convert(callback));
+        public static void All<T>(HTTPMethod method, RouteCallback_D<T> callback) where T : struct =>                   Routing.AddHandler(method, Convert(callback));
+        public static void All<T>(HTTPMethod method, RouteCallback_E<T> callback) where T : struct =>                   Routing.AddHandler(method, Convert(callback));
+        public static void All<T>(HTTPMethod method, RouteCallback_F<T> callback) where T : struct =>                   Routing.AddHandler(method, Convert(callback));
+        public static void All(HTTPMethod method, Response res) =>                                                      Routing.AddHandler(method, ResponseShortcut(res));
+        public static void All(HTTPMethod method, RouteCallback_A callback) =>                                          Routing.AddHandler(method, callback);
+        public static void All(RouteCallback_A callback) =>                                                             Routing.AddHandler(callback);
+        public static void All(RouteCallback_B callback) =>                                                             Routing.AddHandler(Convert(callback));
+        public static void All(RouteCallback_C callback) =>                                                             Routing.AddHandler(Convert(callback));
+        public static void All<T>(RouteCallback_D<T> callback) where T : struct =>                                      Routing.AddHandler(Convert(callback));
+        public static void All<T>(RouteCallback_E<T> callback) where T : struct =>                                      Routing.AddHandler(Convert(callback));
+        public static void All<T>(RouteCallback_F<T> callback) where T : struct =>                                      Routing.AddHandler(Convert(callback));
+        public static void All(Response res) =>                                                                         Routing.AddHandler(ResponseShortcut(res));
 
-        private static void AllMethodRoute(RouteArg route, RouteCallback_A callback) { foreach (HTTPMethod method in Enum.GetValues(typeof(HTTPMethod))) { Routing.RouteBase(method, route, callback); } }        
+        private static void AllMethodRoute(RouteArg route, RouteCallback_A callback) { foreach (HTTPMethod method in Enum.GetValues(typeof(HTTPMethod))) { Routing.AddHandler(method, route, callback); } }        
         
         internal static RouteCallback_A Convert(RouteCallback_B callback) =>                                            (Request req) => { callback(req); return new PassThrough(); };
         internal static RouteCallback_A Convert(RouteCallback_C callback) =>                                            (Request req) => { callback(); return new PassThrough(); };
@@ -141,99 +142,75 @@ namespace Alabaster
 
         private static class Routing
         {
-            private enum OrderingPhase : byte { PreHandlers, MethodHandlers, RouteHandlers, CleanupHandlers };
-            internal static Dictionary<RoutingKey, RouteCallback_A> routeCallbacks;
-            internal static Dictionary<RoutingKey, RouteCallback_A> methodCallbacks;
-            private static int methodCallbackCount = 0;
-            private static int routeCallbackCount = 0;
-            private static OrderingPhase phase = OrderingPhase.PreHandlers;
-            private static RouteCallback_A[] UniversalCallbacksPre;
-            private static RouteCallback_A[] UniversalCallbacksPost;
-            private static Queue<RouteCallback_A> deferredUniversalCallbacksPre = new Queue<RouteCallback_A>();
-            private static Queue<RouteCallback_A> deferredUniversalCallbacksPost = new Queue<RouteCallback_A>();
-            private static Queue<Action> deferredRouteCallbacks = new Queue<Action>();
+            private static RouteCallback_A[] FinalizedHandlers;
+            private static List<RouteCallback_A> Handlers = new List<RouteCallback_A>(1024);
+            private static Queue<(MethodArg, RouteArg, RouteCallback_A)> currentHandlerGroup = new Queue<(MethodArg, RouteArg, RouteCallback_A)>(100);
+            private static int? lastHandlerType = null;
 
-            internal static Response ResolveUniversalsPre(ContextWrapper ctx) => ResolveUniversals(ctx, UniversalCallbacksPre);
-            internal static Response ResolveUniversalsPost(ContextWrapper ctx) => ResolveUniversals(ctx, UniversalCallbacksPost);
-
-            private static Response ResolveUniversals(ContextWrapper ctx, RouteCallback_A[] callbacks)
+            internal static void AddHandler(MethodArg method, RouteCallback_A callback) => AddHandler(method, (RouteArg)null, callback);
+            internal static void AddHandler(RouteArg route, RouteCallback_A callback) => AddHandler((MethodArg)null, route, callback);
+            internal static void AddHandler(RouteCallback_A callback) => AddHandler((MethodArg)null, (RouteArg)null, callback);
+            internal static void AddHandler(MethodArg method, RouteArg route, RouteCallback_A callback)
             {
-                Response result = null;
-                for (int i = 0; i < callbacks.Length; i++)
-                {
-                    result = Resolve(callbacks[i], ctx);
-                    if (result != null) { return null; }
-                }
-                return result;
-            }
-
-            internal static Response ResolveMethod(ContextWrapper cw) => methodCallbacks.TryGetValue(cw, out RouteCallback_A rc) ? Resolve(rc, cw) : null;
-            internal static Response ResolveRoute(ContextWrapper cw) => routeCallbacks.TryGetValue(cw, out RouteCallback_A rc) ? Resolve(rc, cw, true) : null;
-
-            internal static void GetBase(RouteArg route, RouteCallback_A callback) => Add(HTTPMethod.GET, route, callback);
-            internal static void PostBase(RouteArg route, RouteCallback_A callback) => Add(HTTPMethod.POST, route, callback);
-            internal static void PatchBase(RouteArg route, RouteCallback_A callback) => Add(HTTPMethod.PATCH, route, callback);
-            internal static void PutBase(RouteArg route, RouteCallback_A callback) => Add(HTTPMethod.PUT, route, callback);
-            internal static void DeleteBase(RouteArg route, RouteCallback_A callback) => Add(HTTPMethod.DELETE, route, callback);
-            internal static void RouteBase(MethodArg method, RouteArg route, RouteCallback_A callback) => Add(method, route, callback);
-            internal static void AllMethodBase(MethodArg method, RouteCallback_A callback) => AddMethodCallback(method, callback);
-            internal static void AllBase(RouteCallback_A callback) => AddUniversalCallback(callback);
-            
-            private static void Add(MethodArg method, RouteArg route, RouteCallback_A callback)
-            {
+                Util.InitExceptions();
                 RouteAddingExceptions(method.Value, route.Value, callback);
+                int currentHandlerType = GetHandlerType();
+
                 ServerThreadManager.Run(() =>
                 {
-                    if(phase == OrderingPhase.CleanupHandlers) { throw new InvalidOperationException("URL handlers cannot be added after cleanup handlers."); }
-                    phase = OrderingPhase.RouteHandlers;
-                    routeCallbackCount++;
-                    deferredRouteCallbacks.Enqueue(() => routeCallbacks.Add((method, route), callback));
+                    if (currentHandlerType != lastHandlerType) { ProcessHandlerQueue(); }
+                    currentHandlerGroup.Enqueue((method, route, callback));
+                    lastHandlerType = currentHandlerType;
                 });
+                
+                int GetHandlerType() => ((route.Value == null) ? 0 : 1000) + ((method.Value == null) ? 0 : (Array.IndexOf(Enum.GetNames(typeof(HTTPMethod)), method.Value) + 10));                
             }
 
-            private static void AddMethodCallback(MethodArg method, RouteCallback_A callback)
+            private static void ProcessHandlerQueue()
             {
-                RouteAddingExceptions(method.Value, null, callback);                
-                ServerThreadManager.Run(() =>
+                if (currentHandlerGroup.Count == 0) { return; }
+
+                if (lastHandlerType == 0)
                 {
-                    if (phase == OrderingPhase.RouteHandlers) { throw new InvalidOperationException("Method handlers cannot be added after URL handlers."); }
-                    if (phase == OrderingPhase.CleanupHandlers) { throw new InvalidOperationException("Method handlers cannot be added after cleanup handlers."); }
-                    phase = OrderingPhase.MethodHandlers;
-                    methodCallbackCount++;
-                    deferredRouteCallbacks.Enqueue(() => methodCallbacks.Add(method, callback));
-                });
-            }
-
-            private static void AddUniversalCallback(RouteCallback_A callback)
-            {
-                RouteAddingExceptions(null, null, callback);
-                ServerThreadManager.Run(() =>
+                    while (currentHandlerGroup.Count > 0)
+                    {
+                        Handlers.Add(currentHandlerGroup.Dequeue().Item3);
+                    }
+                }
+                else
                 {
-                    if (phase == OrderingPhase.MethodHandlers || phase == OrderingPhase.RouteHandlers) { phase = OrderingPhase.CleanupHandlers; }
-                    Queue<RouteCallback_A> queue = (phase == OrderingPhase.CleanupHandlers) ? deferredUniversalCallbacksPre : deferredUniversalCallbacksPost;
-                    queue.Enqueue(callback);
-                });
+                    Dictionary<RoutingKey, RouteCallback_A> dict = new Dictionary<RoutingKey, RouteCallback_A>(currentHandlerGroup.Count);
+                    do
+                    {
+                        (MethodArg m, RouteArg r, RouteCallback_A c) = currentHandlerGroup.Dequeue();
+                        RoutingKey key = (m, r);
+                        dict[key] = (dict.TryGetValue(key, out RouteCallback_A existingCallback)) ? (Request req) => existingCallback(req) ?? c(req) : c;                        
+                    } while (currentHandlerGroup.Count > 0);
+                    Handlers.Add((Request req) => dict.TryGetValue(req.cw, out RouteCallback_A handler) ? handler(req) : new PassThrough());
+                }
             }
 
-            public static void Initialize()
+            internal static void Initialize()
             {
-                routeCallbacks = new Dictionary<RoutingKey, RouteCallback_A>(routeCallbackCount);
-                methodCallbacks = new Dictionary<RoutingKey, RouteCallback_A>(methodCallbackCount);
-                UniversalCallbacksPre = deferredUniversalCallbacksPre.ToArray();
-                UniversalCallbacksPost = deferredUniversalCallbacksPost.ToArray();
-                while (deferredRouteCallbacks.Count > 0) { deferredRouteCallbacks.Dequeue()(); }
-                deferredRouteCallbacks = null;
-                deferredUniversalCallbacksPre = null;
-                deferredUniversalCallbacksPost = null;
+                ProcessHandlerQueue();
+                FinalizedHandlers = Handlers.ToArray();
+                Handlers = null;
             }
 
-            private static Response Resolve(RouteCallback_A callback, ContextWrapper cw, bool includeRequestWithFileExt = false)
+            internal static Response ResolveHandlers(ContextWrapper cw, bool includeRequestWithFileExt = false)
             {
                 if (!includeRequestWithFileExt && Util.GetFileExtension(cw.Route) != null) { return null; }
-                Response result = callback(new Request(cw));
-                result.Merge(cw);
+
+                Response result = null;
+                foreach(RouteCallback_A handler in FinalizedHandlers)
+                {
+                    result = handler(new Request(cw));
+                    result.Merge(cw);
+                    if(!(result is PassThrough)) { break; }
+                }
                 return (result is PassThrough) ? null : result;
             }
+
 
             private static void RouteAddingExceptions(string method, string route, RouteCallback_A callback)
             {
@@ -242,12 +219,12 @@ namespace Alabaster
                 if (!isValid(method) || !isValid(route)) { throw new ArgumentException("Routes and methods cannot be empty or contain spaces."); }
                 bool isValid(string str) => str == null || str != string.Empty && !str.Contains(' ');
             }
-            
+
             internal struct RoutingKey
             {
                 private (RouteArg route, MethodArg method) data;
                 public override int GetHashCode() => data.GetHashCode();
-                public RoutingKey(MethodArg method, RouteArg route) => this.data = (route, method);                
+                public RoutingKey(MethodArg method, RouteArg route) => this.data = (route, method);
                 public RoutingKey(string method, string route) : this((MethodArg)method, (RouteArg)route) { }
                 public RoutingKey(MethodArg method) : this(method, new RouteArg("")) { }
                 public RoutingKey(RouteArg route) : this(new MethodArg(""), route) { }

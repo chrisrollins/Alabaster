@@ -103,10 +103,7 @@ namespace Alabaster
                 void HandleRequest(ContextWrapper cw)
                 {
                     ResponseExceptionHandler(() =>
-                        Routing.ResolveUniversalsPre(cw) ??
-                        Routing.ResolveMethod(cw) ??
-                        Routing.ResolveRoute(cw) ??
-                        Routing.ResolveUniversalsPost(cw) ??
+                        Routing.ResolveHandlers(cw) ??
                         new FileResponse(cw.Route)
                     ).Finish(cw);
                 }

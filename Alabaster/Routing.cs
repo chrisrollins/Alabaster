@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Alabaster
@@ -13,7 +14,7 @@ namespace Alabaster
     public delegate T RouteCallback_D<T>(Request req) where T : struct;
     public delegate IEnumerable<T> RouteCallback_E<T>(Request req) where T : struct;
     public delegate IEnumerable<T> RouteCallback_F<T>() where T : struct;
-
+    
     public enum HTTPMethod : byte { GET, POST, PATCH, PUT, DELETE, HEAD, CONNECT, OPTIONS, TRACE };
 
     public struct Controller
@@ -34,6 +35,13 @@ namespace Alabaster
         public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_B c) args) => new Controller(args.m, args.r, args.c);
         public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_C c) args) => new Controller(args.m, args.r, args.c);
         public static implicit operator Controller((HTTPMethod m, string r, Response res) args) => new Controller(args.m, args.r, args.res);
+    }
+
+    public struct URLPatternMatch
+    {
+        public string PatternSpecifier;
+        public URLPatternMatch(string specifier) => this.PatternSpecifier = specifier;
+        public static explicit operator URLPatternMatch(string specifier) => new URLPatternMatch(specifier);
     }
     
     public partial class Server
@@ -74,6 +82,13 @@ namespace Alabaster
         public static void Delete<T>(string route, RouteCallback_E<T> callback) where T : struct =>                     Routing.AddHandler((RouteArg)route, Convert(callback));
         public static void Delete<T>(string route, RouteCallback_F<T> callback) where T : struct =>                     Routing.AddHandler((RouteArg)route, Convert(callback));
         public static void Delete(string route, Response res) =>                                                        Routing.AddHandler((RouteArg)route, ResponseShortcut(res));
+        public static void Route(string route, RouteCallback_A callback) =>                                             AllMethodRoute((RouteArg)route, callback);
+        public static void Route(string route, RouteCallback_B callback) =>                                             AllMethodRoute((RouteArg)route, Convert(callback));
+        public static void Route(string route, RouteCallback_C callback) =>                                             AllMethodRoute((RouteArg)route, Convert(callback));
+        public static void Route<T>(string route, RouteCallback_D<T> callback) where T : struct =>                      AllMethodRoute((RouteArg)route, Convert(callback));
+        public static void Route<T>(string route, RouteCallback_E<T> callback) where T : struct =>                      AllMethodRoute((RouteArg)route, Convert(callback));
+        public static void Route(string route, Response res) =>                                                         AllMethodRoute((RouteArg)route, ResponseShortcut(res));
+        public static void Route<T>(string route, RouteCallback_F<T> callback) where T : struct =>                      AllMethodRoute((RouteArg)route, Convert(callback));
         public static void Route(string method, string route, RouteCallback_A callback) =>                              Routing.AddHandler((MethodArg)method, (RouteArg)route, callback);
         public static void Route(string method, string route, RouteCallback_B callback) =>                              Routing.AddHandler((MethodArg)method, (RouteArg)route, Convert(callback));
         public static void Route(string method, string route, RouteCallback_C callback) =>                              Routing.AddHandler((MethodArg)method, (RouteArg)route, Convert(callback));
@@ -88,13 +103,6 @@ namespace Alabaster
         public static void Route<T>(HTTPMethod method, string route, RouteCallback_F<T> callback) where T : struct =>   Routing.AddHandler(method, (RouteArg)route, Convert(callback));
         public static void Route(HTTPMethod method, string route, Response res) =>                                      Routing.AddHandler(method, (RouteArg)route, ResponseShortcut(res));
         public static void Route(HTTPMethod method, string route, RouteCallback_A callback) =>                          Routing.AddHandler(method, (RouteArg)route, callback);
-        public static void Route(string route, RouteCallback_A callback) =>                                             AllMethodRoute((RouteArg)route, callback);
-        public static void Route(string route, RouteCallback_B callback) =>                                             AllMethodRoute((RouteArg)route, Convert(callback));
-        public static void Route(string route, RouteCallback_C callback) =>                                             AllMethodRoute((RouteArg)route, Convert(callback));
-        public static void Route<T>(string route, RouteCallback_D<T> callback) where T : struct =>                      AllMethodRoute((RouteArg)route, Convert(callback));
-        public static void Route<T>(string route, RouteCallback_E<T> callback) where T : struct =>                      AllMethodRoute((RouteArg)route, Convert(callback));
-        public static void Route(string route, Response res) =>                                                         AllMethodRoute((RouteArg)route, ResponseShortcut(res));
-        public static void Route<T>(string route, RouteCallback_F<T> callback) where T : struct =>                      AllMethodRoute((RouteArg)route, Convert(callback));
         public static void All(HTTPMethod method, RouteCallback_B callback) =>                                          Routing.AddHandler(method, Convert(callback));
         public static void All(HTTPMethod method, RouteCallback_C callback) =>                                          Routing.AddHandler(method, Convert(callback));
         public static void All<T>(HTTPMethod method, RouteCallback_D<T> callback) where T : struct =>                   Routing.AddHandler(method, Convert(callback));
@@ -110,8 +118,8 @@ namespace Alabaster
         public static void All<T>(RouteCallback_F<T> callback) where T : struct =>                                      Routing.AddHandler(Convert(callback));
         public static void All(Response res) =>                                                                         Routing.AddHandler(ResponseShortcut(res));
 
-        private static void AllMethodRoute(RouteArg route, RouteCallback_A callback) { foreach (HTTPMethod method in Enum.GetValues(typeof(HTTPMethod))) { Routing.AddHandler(method, route, callback); } }        
-        
+        private static void AllMethodRoute(RouteArg route, RouteCallback_A callback)                                    { foreach (HTTPMethod method in Enum.GetValues(typeof(HTTPMethod))) { Routing.AddHandler(method, route, callback); } }
+
         internal static RouteCallback_A Convert(RouteCallback_B callback) =>                                            (Request req) => { callback(req); return new PassThrough(); };
         internal static RouteCallback_A Convert(RouteCallback_C callback) =>                                            (Request req) => { callback(); return new PassThrough(); };
         internal static RouteCallback_A Convert<T>(RouteCallback_D<T> callback) where T : struct =>                     (Request req) => new StringResponse(callback(req).ToString());
@@ -125,7 +133,7 @@ namespace Alabaster
             static readonly string[] stdMethods = Enum.GetNames(typeof(HTTPMethod));
             public MethodArg(string val)
             {
-                if (!Server.Config.EnableCustomHTTPMethods && !stdMethods.Contains(val.ToUpper())) { throw new ArgumentException("Non-standard HTTP method: " + val + " Enable non-standard HTTP methods to use a custom method by setting Server.EnableCustomHTTPMethods to true."); }
+                if (!Server.Config.EnableCustomHTTPMethods && !stdMethods.Contains(val.ToUpper())) { throw new ArgumentException("Non-standard HTTP method: \"" + val + "\". Enable non-standard HTTP methods to use a custom method by setting Server.Config.EnableCustomHTTPMethods to true."); }
                 this.Value = val.ToUpper();
             }
             public MethodArg(HTTPMethod method) => this.Value = method.ToString();
@@ -144,8 +152,9 @@ namespace Alabaster
         {
             private static RouteCallback_A[] FinalizedHandlers;
             private static List<RouteCallback_A> Handlers = new List<RouteCallback_A>(1024);
-            private static Queue<(MethodArg, RouteArg, RouteCallback_A)> currentHandlerGroup = new Queue<(MethodArg, RouteArg, RouteCallback_A)>(100);
-            private static int? lastHandlerType = null;
+            private static Queue<(MethodArg method, RouteArg route, RouteCallback_A callback)> currentHandlerGroup = new Queue<(MethodArg, RouteArg, RouteCallback_A)>(100);
+            private enum HandlerType : byte { Universal, URL, StandardMethod, CustomMethod }
+            private static HandlerType? lastHandlerType = null;
 
             internal static void AddHandler(MethodArg method, RouteCallback_A callback) => AddHandler(method, (RouteArg)null, callback);
             internal static void AddHandler(RouteArg route, RouteCallback_A callback) => AddHandler((MethodArg)null, route, callback);
@@ -154,7 +163,7 @@ namespace Alabaster
             {
                 Util.InitExceptions();
                 RouteAddingExceptions(method.Value, route.Value, callback);
-                int currentHandlerType = GetHandlerType();
+                HandlerType currentHandlerType = GetHandlerType();
 
                 ServerThreadManager.Run(() =>
                 {
@@ -162,20 +171,37 @@ namespace Alabaster
                     currentHandlerGroup.Enqueue((method, route, callback));
                     lastHandlerType = currentHandlerType;
                 });
-                
-                int GetHandlerType() => ((route.Value == null) ? 0 : 1000) + ((method.Value == null) ? 0 : (Array.IndexOf(Enum.GetNames(typeof(HTTPMethod)), method.Value) + 10));                
+
+                HandlerType GetHandlerType()
+                {
+                    if (route.Value == null && method.Value == null) { return HandlerType.Universal; }
+                    if (route.Value != null) { return HandlerType.URL; }
+                    if (Array.IndexOf(Enum.GetNames(typeof(HTTPMethod)), method.Value) != -1) { return HandlerType.StandardMethod; }
+                    return HandlerType.CustomMethod;
+                }
             }
 
             private static void ProcessHandlerQueue()
             {
                 if (currentHandlerGroup.Count == 0) { return; }
 
-                if (lastHandlerType == 0)
+                if (lastHandlerType == HandlerType.Universal)
                 {
                     while (currentHandlerGroup.Count > 0)
                     {
-                        Handlers.Add(currentHandlerGroup.Dequeue().Item3);
+                        Handlers.Add(currentHandlerGroup.Dequeue().callback);
                     }
+                }
+                else if(lastHandlerType == HandlerType.StandardMethod || lastHandlerType == HandlerType.CustomMethod)
+                {
+                    Dictionary<string, RouteCallback_A> dict = new Dictionary<string, RouteCallback_A>(Enum.GetValues(typeof(HTTPMethod)).Length);
+                    do
+                    {
+                        (MethodArg m, RouteArg r, RouteCallback_A c) = currentHandlerGroup.Dequeue();
+                        string key = m.Value;
+                        dict[key] = (dict.TryGetValue(key, out RouteCallback_A existingCallback)) ? (Request req) => existingCallback(req) ?? c(req) : c;
+                    } while (currentHandlerGroup.Count > 0);
+                    Handlers.Add((Request req) => dict.TryGetValue(req.HttpMethod, out RouteCallback_A handler) ? handler(req) : new PassThrough());
                 }
                 else
                 {

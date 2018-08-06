@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Alabaster
 {
@@ -41,6 +42,8 @@ namespace Alabaster
 
         public static FileData GetFile(string file) => new FileData(LRUCache.GetStaticFileData((FilePath)file, (DirectoryPath)Server.Config.StaticFilesBaseDirectory));
         public static FileData GetFile(string file, string baseDirectory) => new FileData(LRUCache.GetStaticFileData((FilePath)file, (DirectoryPath)baseDirectory));
+        public static async Task<FileData> GetFileAsync(string file) => await new Task<FileData>(() => GetFile(file));
+        public static async Task<FileData> GetFileAsync(string file, string baseDirectory) => await new Task<FileData>(() => GetFile(file, baseDirectory));
 
         public struct FileData
         {

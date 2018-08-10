@@ -98,8 +98,6 @@ delegate Response RouteCallback_A(Request req)
 delegate void RouteCallback_B(Request req)  
 delegate Response RouteCallback_C()  
 delegate void RouteCallback_D()  
-delegate string RouteCallback_E(Request req)  
-delegate string RouteCallback_F()  
 delegate WebSocketMessageContext WebSocketCallback(WebSocketMessageContext context)  
 
 ### Classes:  

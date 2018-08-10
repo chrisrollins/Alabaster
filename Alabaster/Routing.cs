@@ -12,8 +12,6 @@ namespace Alabaster
     public delegate void RouteCallback_B(Request req);
     public delegate Response RouteCallback_C();
     public delegate void RouteCallback_D();
-    public delegate string RouteCallback_E(Request req);
-    public delegate string RouteCallback_F();
     
     public enum HTTPMethod : byte { GET, POST, PATCH, PUT, DELETE, HEAD, CONNECT, OPTIONS, TRACE };
 
@@ -31,15 +29,11 @@ namespace Alabaster
         public Controller(HTTPMethod method, string route, RouteCallback_B callback) : this(method, route, Server.RouteCallbackConverter.Convert(callback)) { }
         public Controller(HTTPMethod method, string route, RouteCallback_C callback) : this(method, route, Server.RouteCallbackConverter.Convert(callback)) { }
         public Controller(HTTPMethod method, string route, RouteCallback_D callback) : this(method, route, Server.RouteCallbackConverter.Convert(callback)) { }
-        public Controller(HTTPMethod method, string route, RouteCallback_E callback) : this(method, route, Server.RouteCallbackConverter.Convert(callback)) { }
-        public Controller(HTTPMethod method, string route, RouteCallback_F callback) : this(method, route, Server.RouteCallbackConverter.Convert(callback)) { }
         public Controller(HTTPMethod method, string route, Response res) : this(method, route, Server.RouteCallbackConverter.ResponseShortcut(res)) { }
         public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_A c) args) => new Controller(args.m, args.r, args.c);
         public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_B c) args) => new Controller(args.m, args.r, args.c);
         public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_C c) args) => new Controller(args.m, args.r, args.c);
         public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_D c) args) => new Controller(args.m, args.r, args.c);
-        public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_E c) args) => new Controller(args.m, args.r, args.c);
-        public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_F c) args) => new Controller(args.m, args.r, args.c);
         public static implicit operator Controller((HTTPMethod m, string r, Response res) args) => new Controller(args.m, args.r, args.res);
     }
 
@@ -67,12 +61,7 @@ namespace Alabaster
         public static implicit operator Response(double[] arr) => JoinArr(arr);
         public static implicit operator Response(decimal[] arr) => JoinArr(arr);
 
-        private static string JoinArr<T>(T[] arr) => "[" + string.Join(",", arr) + "]";
-
-        void test()
-        {
-            Server.Get("", () => { return 2; } );
-        }
+        private static string JoinArr<T>(T[] arr) => "[" + string.Join(",", arr ?? new T[] { }) + "]";
     }
         
     public partial class Server
@@ -144,8 +133,6 @@ namespace Alabaster
             internal static RouteCallback_A Convert(RouteCallback_B callback) => (Request req) => { callback(req); return new PassThrough(); };
             internal static RouteCallback_A Convert(RouteCallback_C callback) => (Request req) => callback();
             internal static RouteCallback_A Convert(RouteCallback_D callback) => (Request req) => { callback(); return new PassThrough(); };
-            internal static RouteCallback_A Convert(RouteCallback_E callback) => (Request req) => new StringResponse(callback(req) ?? "");
-            internal static RouteCallback_A Convert(RouteCallback_F callback) => (Request req) => new StringResponse(callback() ?? "");
             internal static RouteCallback_A ResponseShortcut(Response res) => (Request req) => res;
         }
 

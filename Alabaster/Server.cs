@@ -52,6 +52,7 @@ namespace Alabaster
 
             void Init()
             {
+                Util.InitExceptions();
                 listener.Prefixes.Add(String.Join(null, "http://*:", Config.Port.ToString(), "/"));
                 try { listener.Start(); }
                 catch (HttpListenerException e)
@@ -60,11 +61,7 @@ namespace Alabaster
                     Console.WriteLine("Exception message: " + e.Message);
                     return;
                 }
-
                 if (Config.Port == 0) { throw new InvalidOperationException("Port not set."); }
-
-                Util.InitExceptions();
-                initialized = true;
                 Util.ProgressVisualizer("Initializing Server...", "Listening on port " + Config.Port,
                     InitializeOptions,
                     FileIO.Initialize,
@@ -72,6 +69,7 @@ namespace Alabaster
                     LaunchListeners,
                     GC.Collect
                 );
+                initialized = true;
             }
 
             void InitializeOptions()

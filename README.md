@@ -96,10 +96,10 @@ async Task<string> Client.Request(string method, string url, string body, Scheme
 
 delegate Response RouteCallback_A(Request req)  
 delegate void RouteCallback_B(Request req)  
-delegate void RouteCallback_C()  
-delegate T RouteCallback_D<T>(Request req) where T : struct  
-delegate IEnumerable<T> RouteCallback_E<T>(Request req) where T : struct  
-delegate IEnumerable<T> RouteCallback_F<T>() where T : struct  
+delegate Response RouteCallback_C()  
+delegate void RouteCallback_D()  
+delegate string RouteCallback_E(Request req)  
+delegate string RouteCallback_F()  
 delegate WebSocketMessageContext WebSocketCallback(WebSocketMessageContext context)  
 
 ### Classes:  

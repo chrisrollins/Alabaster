@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Alabaster
 {
-    public abstract class Response
+    public abstract partial class Response
     {
         protected byte[] data;
         public virtual byte[] Body { get => this.data; }
@@ -37,6 +37,10 @@ namespace Alabaster
 
         public Response AddSession(Session session)
         {
+            Server.Get("", (req) => {
+
+                return new DataResponse(null);
+            });
             Cookie cookie = new Cookie(Server.Config.ServerID, session.id.ToString());
             cookie.HttpOnly = true;           
             this.Cookies.Add(cookie);
@@ -78,9 +82,6 @@ namespace Alabaster
             res.OutputStream.Write(data, 0, data.Length);
             res.OutputStream.Close();
         }
-
-        public static implicit operator Response(FileIO.FileData file) => new DataResponse(file.Data);
-        public static implicit operator Response(string str) => new StringResponse(str);
     }
 
     public sealed class RedirectResponse : Response

@@ -143,7 +143,7 @@ namespace Alabaster
                 if (!Server.Config.EnableCustomHTTPMethods && !stdMethods.Contains(val.ToUpper())) { throw new ArgumentException("Non-standard HTTP method: \"" + val + "\". Enable non-standard HTTP methods to use a custom method by setting Server.Config.EnableCustomHTTPMethods to true."); }
                 this.Value = val.ToUpper();
             }
-            private MethodArg(int n) => this.Value = "0";            
+            private MethodArg(int n) => this.Value = "#";            
             internal static MethodArg NullMethod = new MethodArg(0);
             public MethodArg(HTTPMethod method) => this.Value = method.ToString();
             public static explicit operator MethodArg(string method) => new MethodArg(method);
@@ -155,9 +155,11 @@ namespace Alabaster
             public readonly string Value;
             public RouteArg(string route)
             {
-                RouteValidator.EnforceValidation(route);               
-                this.Value = string.Join(null, route, (route.Last() != '/') ? "/" : "").ToUpper();
+                RouteValidator.EnforceValidation(route);
+                this.Value = string.Join(null, route, (route.Last() != '/') ? "/" : "");
             }
+            private RouteArg(int n) => this.Value = "#";
+            internal static RouteArg NullRoute = new RouteArg(0);
             public static explicit operator RouteArg(string s) => new RouteArg(s);
         }
 
@@ -257,7 +259,7 @@ namespace Alabaster
                         dict[key] = (dict.TryGetValue(key, out RouteCallback_A existingCallback)) ? (Request req) => existingCallback(req) ?? c(req) : c;
                     } while (currentHandlerGroup.Count > 0);                    
                     Handlers.Add((Request req) => dict.TryGetValue((RouteArg)req.cw.Route, out RouteCallback_A handler) ? handler(req) : new PassThrough());
-                }                
+                }
             }
 
             internal static void Initialize()
@@ -296,10 +298,10 @@ namespace Alabaster
                 public override int GetHashCode() => data.GetHashCode();
                 public RoutingKey(MethodArg method, RouteArg route) => this.data = (route, method);
                 public RoutingKey(string method, string route) : this((MethodArg)method, (RouteArg)route) { }
-                public RoutingKey(MethodArg method) : this(method, new RouteArg("")) { }
-                public RoutingKey(RouteArg route) : this(new MethodArg(""), route) { }
+                public RoutingKey(MethodArg method) : this(method, RouteArg.NullRoute) { }
+                public RoutingKey(RouteArg route) : this(MethodArg.NullMethod, route) { }
                 public RoutingKey(ContextWrapper cw) : this(cw.Context.Request.HttpMethod, cw.Context.Request.Url.AbsolutePath) { }
-                public static implicit operator RoutingKey((MethodArg method, RouteArg route) bundle) => new RoutingKey(bundle.method, bundle.route);
+                public static implicit operator RoutingKey((MethodArg m, RouteArg r) args) => new RoutingKey(args.m, args.r);
                 public static implicit operator RoutingKey(MethodArg method) => new RoutingKey(method);
                 public static implicit operator RoutingKey(RouteArg route) => new RoutingKey(route);
                 public static implicit operator RoutingKey(ContextWrapper cw) => new RoutingKey(cw);

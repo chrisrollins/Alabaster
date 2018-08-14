@@ -6,8 +6,8 @@ namespace Alabaster
     public struct ServerOptions
     {
         public bool EnableCustomHTTPMethods;
-        private string _serverID;
 
+        private string _serverID;        
         public string ServerID
         {
             get

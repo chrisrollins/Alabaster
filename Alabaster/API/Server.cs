@@ -100,21 +100,23 @@ namespace Alabaster
 
                 void HandleRequest(ContextWrapper cw)
                 {
-                    ResponseExceptionHandler(() =>
+                    ResponseExceptionHandler(cw, () =>
                         Routing.ResolveHandlers(cw) ??
                         new FileResponse(cw.Route)
                     ).Finish(cw);
                 }
             }
 
-            Response ResponseExceptionHandler(Func<Response> callback)
+            Response ResponseExceptionHandler(ContextWrapper cw, Func<Response> callback)
             {
                 Response result;
                 try { result = callback(); }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Exception in application code:");
+                    Console.WriteLine("Exception while handling request:");
                     Console.WriteLine(e);
+                    Console.WriteLine("Request URL path: \"" + cw.Route + "\"");
+                    Console.WriteLine("Request HTTP method: \"" + cw.Context.Request.HttpMethod + "\"");
                     result = new EmptyResponse(500);
                 }
                 return result;

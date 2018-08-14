@@ -138,9 +138,9 @@ namespace Alabaster
         {
             public readonly string Value;
             static readonly string[] stdMethods = Enum.GetNames(typeof(HTTPMethod));
-            public MethodArg(string val)
+            public MethodArg(string val, bool validate = true)
             {
-                if (!Server.Config.EnableCustomHTTPMethods && !stdMethods.Contains(val.ToUpper())) { throw new ArgumentException("Non-standard HTTP method: \"" + val + "\". Enable non-standard HTTP methods to use a custom method by setting Server.Config.EnableCustomHTTPMethods to true."); }
+                if (validate && !Server.Config.EnableCustomHTTPMethods && !stdMethods.Contains(val.ToUpper())) { throw new ArgumentException("Non-standard HTTP method: \"" + val + "\". Enable non-standard HTTP methods to use a custom method by setting Server.Config.EnableCustomHTTPMethods to true."); }
                 this.Value = val.ToUpper();
             }
             private MethodArg(int n) => this.Value = "#";            
@@ -153,9 +153,9 @@ namespace Alabaster
         private struct RouteArg
         {
             public readonly string Value;
-            public RouteArg(string route)
+            public RouteArg(string route, bool validate = true)
             {
-                RouteValidator.EnforceValidation(route);
+                if (validate) { RouteValidator.EnforceValidation(route); }
                 this.Value = string.Join(null, route, (route.Last() != '/') ? "/" : "");
             }
             private RouteArg(int n) => this.Value = "#";

@@ -40,6 +40,16 @@ namespace Alabaster
             Console.WriteLine(String.Join(null, '\n', endLabel, new string(' ', barLength)));
         }
 
+        internal static string ReplaceMultiple(string str, string oldChars, char replacement)
+        {
+            char[] newChars = str.ToCharArray();
+            for(int i = 0; i < newChars.Length; i++)
+            {
+                if(oldChars.Contains(newChars[i])) { newChars[i] = replacement; }
+            }
+            return new string(newChars);
+        }
+
         internal static void ThrowIf(bool condition, Exception e)
         {
             if (!condition) { throw e; }

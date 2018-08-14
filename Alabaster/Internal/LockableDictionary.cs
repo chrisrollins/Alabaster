@@ -5,15 +5,17 @@ using System.Runtime.Serialization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 namespace Alabaster
 {
     internal class LockableDictionary<TKey, TValue>
     {
-        private Dictionary<TKey, ValueContainer> dict;
+        private ConcurrentDictionary<TKey, ValueContainer> dict;
+        private object SetLockLock = new object();
 
-        internal LockableDictionary() => this.dict = new Dictionary<TKey, ValueContainer>();
-        internal LockableDictionary(int capacity) => this.dict = new Dictionary<TKey, ValueContainer>(capacity);
+        internal LockableDictionary() => this.dict = new ConcurrentDictionary<TKey, ValueContainer>();
+        internal LockableDictionary(int capacity) => this.dict = new ConcurrentDictionary<TKey, ValueContainer>(Environment.ProcessorCount, capacity);
 
         public TValue this[TKey key]
         {
@@ -44,9 +46,12 @@ namespace Alabaster
 
         private void SetLock(TKey key, bool state)
         {
-            if (!dict.TryGetValue(key, out ValueContainer container)) { container = new ValueContainer(); }
-            container.Locked = state;
-            dict[key] = container;
+            lock (SetLockLock)
+            {
+                if (!dict.TryGetValue(key, out ValueContainer container)) { container = new ValueContainer(); }
+                container.Locked = state;
+                dict[key] = container;
+            }
         }
 
         public int Count => this.dict.Count;

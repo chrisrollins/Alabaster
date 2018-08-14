@@ -14,7 +14,7 @@ namespace Alabaster
     public delegate void RouteCallback_D();
     
     public enum HTTPMethod : byte { GET, POST, PATCH, PUT, DELETE, HEAD, CONNECT, OPTIONS, TRACE };
-
+    
     public struct Controller
     {
         public string Route;
@@ -153,9 +153,13 @@ namespace Alabaster
         private struct RouteArg
         {
             public readonly string Value;
-            public RouteArg(string val) => this.Value = string.Join(null, val, (val.Last() != '/') ? "/" : "").ToUpper();
+            public RouteArg(string route)
+            {
+                RouteValidator.EnforceValidation(route);               
+                this.Value = string.Join(null, route, (route.Last() != '/') ? "/" : "").ToUpper();
+            }
             public static explicit operator RouteArg(string s) => new RouteArg(s);
-        }  
+        }
 
         private static class Routing
         {

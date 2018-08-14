@@ -50,6 +50,8 @@ namespace Alabaster
             sessions[this.id] = this;
         }
 
+        public static implicit operator Session((string category, ValueType data) args) => new Session(args.category, args.data);
+
         internal static Session GetSession(string id)
         {
             sessions.TryGetValue(id, out Session session);

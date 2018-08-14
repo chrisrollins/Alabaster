@@ -39,6 +39,11 @@ namespace Alabaster
             Console.CursorLeft = 0;
             Console.WriteLine(String.Join(null, '\n', endLabel, new string(' ', barLength)));
         }
+
+        internal static void ThrowIf(bool condition, Exception e)
+        {
+            if (!condition) { throw e; }
+        }
         
         internal static void InitExceptions(Action callback = null)
         {

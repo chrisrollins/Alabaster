@@ -8,13 +8,13 @@ namespace Alabaster
 {
     public struct URLPatternMatch
     {
-        public string PatternSpecifier;
+        public readonly string PatternSpecifier;
         public URLPatternMatch(string specifier) => this.PatternSpecifier = specifier;
         public static explicit operator URLPatternMatch(string specifier) => new URLPatternMatch(specifier);
 
 
         // * match all characters (eg. /api*)
-        // /[]/ encloses parameter name (eg. /api/[foo] or /api/[foo]/)
+        // /[]/ encloses parameter name (eg. /api/[foo] or /api/[foo]/) only alphanumeric, underscore, and hyphen allowed
         // 
 
     }

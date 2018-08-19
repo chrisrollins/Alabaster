@@ -40,14 +40,24 @@ namespace Alabaster
             Console.WriteLine(String.Join(null, '\n', endLabel, new string(' ', barLength)));
         }
 
-        internal static string ReplaceMultiple(string str, string oldChars, char replacement)
+        internal static string ReplaceMultiple(string str, string toReplace, char replacement)
         {
             char[] newChars = str.ToCharArray();
-            for(int i = 0; i < newChars.Length; i++)
+            for (int i = 0; i < newChars.Length; i++)
             {
-                if(oldChars.Contains(newChars[i])) { newChars[i] = replacement; }
+                if (toReplace.Contains(newChars[i])) { newChars[i] = replacement; }
             }
             return new string(newChars);
+        }
+
+        internal static string RemoveMultiple(string str, string toRemove)
+        {
+            List<char> newChars = new List<char>(str.Length);
+            for (int i = 0; i < str.Length; i++)
+            {
+                if (!toRemove.Contains(newChars[i])) { newChars.Add(toRemove[i]); }
+            }
+            return string.Join(null, newChars);
         }
 
         internal static void ThrowIf(bool condition, Exception e)

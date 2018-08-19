@@ -116,7 +116,7 @@ namespace Alabaster
                     Console.WriteLine("Exception while handling request:");
                     Console.WriteLine(e);
                     Console.WriteLine("Request URL path: \"" + cw.Route + "\"");
-                    Console.WriteLine("Request HTTP method: \"" + cw.Context.Request.HttpMethod + "\"");
+                    Console.WriteLine("Request HTTP method: \"" + cw.HttpMethod + "\"");
                     result = new EmptyResponse(500);
                 }
                 return result;

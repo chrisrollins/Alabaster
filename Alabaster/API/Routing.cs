@@ -30,11 +30,24 @@ namespace Alabaster
         public Controller(HTTPMethod method, string route, RouteCallback_C callback) : this(method, route, Server.RouteCallbackConverter.Convert(callback)) { }
         public Controller(HTTPMethod method, string route, RouteCallback_D callback) : this(method, route, Server.RouteCallbackConverter.Convert(callback)) { }
         public Controller(HTTPMethod method, string route, Response res) : this(method, route, Server.RouteCallbackConverter.ResponseShortcut(res)) { }
+
+        public Controller(HTTPMethod method, RoutePatternMatch route, RouteCallback_A callback) : this(method, null, route.CreateCallback(callback)) { }
+        public Controller(HTTPMethod method, RoutePatternMatch route, RouteCallback_B callback) : this(method, null, route.CreateCallback(callback)) { }
+        public Controller(HTTPMethod method, RoutePatternMatch route, RouteCallback_C callback) : this(method, null, route.CreateCallback(callback)) { }
+        public Controller(HTTPMethod method, RoutePatternMatch route, RouteCallback_D callback) : this(method, null, route.CreateCallback(callback)) { }
+        public Controller(HTTPMethod method, RoutePatternMatch route, Response res) : this(method, null, route.CreateCallback(res)) { }
+
         public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_A c) args) => new Controller(args.m, args.r, args.c);
         public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_B c) args) => new Controller(args.m, args.r, args.c);
         public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_C c) args) => new Controller(args.m, args.r, args.c);
         public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_D c) args) => new Controller(args.m, args.r, args.c);
         public static implicit operator Controller((HTTPMethod m, string r, Response res) args) => new Controller(args.m, args.r, args.res);
+
+        public static implicit operator Controller((HTTPMethod m, RoutePatternMatch r, RouteCallback_A c) args) => new Controller(args.m, args.r, args.c);
+        public static implicit operator Controller((HTTPMethod m, RoutePatternMatch r, RouteCallback_B c) args) => new Controller(args.m, args.r, args.c);
+        public static implicit operator Controller((HTTPMethod m, RoutePatternMatch r, RouteCallback_C c) args) => new Controller(args.m, args.r, args.c);
+        public static implicit operator Controller((HTTPMethod m, RoutePatternMatch r, RouteCallback_D c) args) => new Controller(args.m, args.r, args.c);
+        public static implicit operator Controller((HTTPMethod m, RoutePatternMatch r, Response res) args) => new Controller(args.m, args.r, args.res);
     }
 
     public abstract partial class Response
@@ -63,7 +76,7 @@ namespace Alabaster
 
         private static string JoinArr<T>(T[] arr) => "[" + string.Join(",", arr ?? new T[] { }) + "]";
     }
-        
+            
     public partial class Server
     {
         public static void Routes(params Controller[] controllers) =>                                                   Array.ForEach(controllers, (Controller c) => Routing.AddHandler(c.Method, (RouteArg)c.Route, c.Callback));
@@ -105,19 +118,59 @@ namespace Alabaster
         public static void Route(HTTPMethod method, string route, RouteCallback_B callback) =>                          Routing.AddHandler(method, (RouteArg)route, callback);
         public static void Route(HTTPMethod method, string route, RouteCallback_C callback) =>                          Routing.AddHandler(method, (RouteArg)route, callback);
         public static void Route(HTTPMethod method, string route, RouteCallback_D callback) =>                          Routing.AddHandler(method, (RouteArg)route, callback);
-        public static void Route(HTTPMethod method, string route, Response res) =>                                      Routing.AddHandler(method, (RouteArg)route, res);
         public static void Route(HTTPMethod method, string route, RouteCallback_A callback) =>                          Routing.AddHandler(method, (RouteArg)route, callback);
+        public static void Route(HTTPMethod method, string route, Response res) =>                                      Routing.AddHandler(method, (RouteArg)route, res);
         public static void All(HTTPMethod method, RouteCallback_B callback) =>                                          Routing.AddHandler(method, callback);
         public static void All(HTTPMethod method, RouteCallback_C callback) =>                                          Routing.AddHandler(method, callback);
         public static void All(HTTPMethod method, RouteCallback_D callback) =>                                          Routing.AddHandler(method, callback);
-        public static void All(HTTPMethod method, Response res) =>                                                      Routing.AddHandler(method, res);
         public static void All(HTTPMethod method, RouteCallback_A callback) =>                                          Routing.AddHandler(method, callback);
+        public static void All(HTTPMethod method, Response res) =>                                                      Routing.AddHandler(method, res);
         public static void All(RouteCallback_A callback) =>                                                             Routing.AddHandler(callback);
         public static void All(RouteCallback_B callback) =>                                                             Routing.AddHandler(callback);
         public static void All(RouteCallback_C callback) =>                                                             Routing.AddHandler(callback);
         public static void All(RouteCallback_D callback) =>                                                             Routing.AddHandler(callback);
         public static void All(Response res) =>                                                                         Routing.AddHandler(res);
-     
+        public static void Get(RoutePatternMatch route, RouteCallback_A callback) =>                                    Routing.AddHandler(HTTPMethod.GET, route, callback);
+        public static void Get(RoutePatternMatch route, RouteCallback_B callback) =>                                    Routing.AddHandler(HTTPMethod.GET, route, callback);
+        public static void Get(RoutePatternMatch route, RouteCallback_C callback) =>                                    Routing.AddHandler(HTTPMethod.GET, route, callback);
+        public static void Get(RoutePatternMatch route, RouteCallback_D callback) =>                                    Routing.AddHandler(HTTPMethod.GET, route, callback);
+        public static void Get(RoutePatternMatch route, Response res) =>                                                Routing.AddHandler(HTTPMethod.GET, route, res);
+        public static void Post(RoutePatternMatch route, RouteCallback_A callback) =>                                   Routing.AddHandler(HTTPMethod.POST, route, callback);
+        public static void Post(RoutePatternMatch route, RouteCallback_B callback) =>                                   Routing.AddHandler(HTTPMethod.POST, route, callback);
+        public static void Post(RoutePatternMatch route, RouteCallback_C callback) =>                                   Routing.AddHandler(HTTPMethod.POST, route, callback);
+        public static void Post(RoutePatternMatch route, RouteCallback_D callback) =>                                   Routing.AddHandler(HTTPMethod.POST, route, callback);
+        public static void Post(RoutePatternMatch route, Response res) =>                                               Routing.AddHandler(HTTPMethod.POST, route, res);
+        public static void Patch(RoutePatternMatch route, RouteCallback_A callback) =>                                  Routing.AddHandler(HTTPMethod.PATCH, route, callback);
+        public static void Patch(RoutePatternMatch route, RouteCallback_B callback) =>                                  Routing.AddHandler(HTTPMethod.PATCH, route, callback);
+        public static void Patch(RoutePatternMatch route, RouteCallback_C callback) =>                                  Routing.AddHandler(HTTPMethod.PATCH, route, callback);
+        public static void Patch(RoutePatternMatch route, RouteCallback_D callback) =>                                  Routing.AddHandler(HTTPMethod.PATCH, route, callback);
+        public static void Patch(RoutePatternMatch route, Response res) =>                                              Routing.AddHandler(HTTPMethod.PATCH, route, res);
+        public static void Put(RoutePatternMatch route, RouteCallback_A callback) =>                                    Routing.AddHandler(HTTPMethod.PUT, route, callback);
+        public static void Put(RoutePatternMatch route, RouteCallback_B callback) =>                                    Routing.AddHandler(HTTPMethod.PUT, route, callback);
+        public static void Put(RoutePatternMatch route, RouteCallback_C callback) =>                                    Routing.AddHandler(HTTPMethod.PUT, route, callback);
+        public static void Put(RoutePatternMatch route, RouteCallback_D callback) =>                                    Routing.AddHandler(HTTPMethod.PUT, route, callback);
+        public static void Put(RoutePatternMatch route, Response res) =>                                                Routing.AddHandler(HTTPMethod.PUT, route, res);
+        public static void Delete(RoutePatternMatch route, RouteCallback_A callback) =>                                 Routing.AddHandler(HTTPMethod.DELETE, route, callback);
+        public static void Delete(RoutePatternMatch route, RouteCallback_B callback) =>                                 Routing.AddHandler(HTTPMethod.DELETE, route, callback);
+        public static void Delete(RoutePatternMatch route, RouteCallback_C callback) =>                                 Routing.AddHandler(HTTPMethod.DELETE, route, callback);
+        public static void Delete(RoutePatternMatch route, RouteCallback_D callback) =>                                 Routing.AddHandler(HTTPMethod.DELETE, route, callback);
+        public static void Delete(RoutePatternMatch route, Response res) =>                                             Routing.AddHandler(HTTPMethod.DELETE, route, res);
+        public static void Route(RoutePatternMatch route, RouteCallback_A callback) =>                                  Routing.AddHandler(route, callback);
+        public static void Route(RoutePatternMatch route, RouteCallback_B callback) =>                                  Routing.AddHandler(route, callback);
+        public static void Route(RoutePatternMatch route, RouteCallback_C callback) =>                                  Routing.AddHandler(route, callback);
+        public static void Route(RoutePatternMatch route, RouteCallback_D callback) =>                                  Routing.AddHandler(route, callback);
+        public static void Route(RoutePatternMatch route, Response res) =>                                              Routing.AddHandler(route, res);
+        public static void Route(string method, RoutePatternMatch route, RouteCallback_A callback) =>                   Routing.AddHandler((MethodArg)method, route, callback);
+        public static void Route(string method, RoutePatternMatch route, RouteCallback_B callback) =>                   Routing.AddHandler((MethodArg)method, route, callback);
+        public static void Route(string method, RoutePatternMatch route, RouteCallback_C callback) =>                   Routing.AddHandler((MethodArg)method, route, callback);
+        public static void Route(string method, RoutePatternMatch route, RouteCallback_D callback) =>                   Routing.AddHandler((MethodArg)method, route, callback);
+        public static void Route(string method, RoutePatternMatch route, Response res) =>                               Routing.AddHandler((MethodArg)method, route, res);
+        public static void Route(HTTPMethod method, RoutePatternMatch route, RouteCallback_B callback) =>               Routing.AddHandler(method, route, callback);
+        public static void Route(HTTPMethod method, RoutePatternMatch route, RouteCallback_C callback) =>               Routing.AddHandler(method, route, callback);
+        public static void Route(HTTPMethod method, RoutePatternMatch route, RouteCallback_D callback) =>               Routing.AddHandler(method, route, callback);
+        public static void Route(HTTPMethod method, RoutePatternMatch route, RouteCallback_A callback) =>               Routing.AddHandler(method, route, callback);
+        public static void Route(HTTPMethod method, RoutePatternMatch route, Response res) =>                           Routing.AddHandler(method, route, res);
+
         internal struct RouteCallbackConverter
         {
             internal RouteCallback_A Callback;
@@ -143,8 +196,6 @@ namespace Alabaster
                 if (validate && !Server.Config.EnableCustomHTTPMethods && !stdMethods.Contains(val.ToUpper())) { throw new ArgumentException("Non-standard HTTP method: \"" + val + "\". Enable non-standard HTTP methods to use a custom method by setting Server.Config.EnableCustomHTTPMethods to true."); }
                 this.Value = val.ToUpper();
             }
-            private MethodArg(int n) => this.Value = "#";            
-            internal static MethodArg NullMethod = new MethodArg(0);
             public MethodArg(HTTPMethod method) => this.Value = method.ToString();
             public static explicit operator MethodArg(string method) => new MethodArg(method);
             public static implicit operator MethodArg(HTTPMethod method) => new MethodArg(method);
@@ -158,8 +209,6 @@ namespace Alabaster
                 if (validate) { RouteValidator.EnforceValidation(route); }
                 this.Value = string.Join(null, route, (route.Last() != '/') ? "/" : "");
             }
-            private RouteArg(int n) => this.Value = "#";
-            internal static RouteArg NullRoute = new RouteArg(0);
             public static explicit operator RouteArg(string s) => new RouteArg(s);
         }
 
@@ -171,6 +220,8 @@ namespace Alabaster
             private enum HandlerType : byte { Universal, URL, URL_AllMethods, StandardMethod, CustomMethod }
             private static HandlerType? lastHandlerType = null;
 
+            internal static void AddHandler(RoutePatternMatch rp, RouteCallbackConverter rc) => AddHandler((MethodArg)null, rp, rc);
+            internal static void AddHandler(MethodArg method, RoutePatternMatch rp, RouteCallbackConverter rc) => AddHandler(method, rp.CreateCallback(rc.Callback));
             internal static void AddHandler(MethodArg method, RouteCallbackConverter rc) => AddHandler(method, (RouteArg)null, rc);
             internal static void AddHandler(RouteArg route, RouteCallbackConverter rc) => AddHandler((MethodArg)null, route, rc);
             internal static void AddHandler(RouteCallbackConverter rc) => AddHandler((MethodArg)null, (RouteArg)null, rc);
@@ -298,8 +349,8 @@ namespace Alabaster
                 public override int GetHashCode() => data.GetHashCode();
                 public RoutingKey(MethodArg method, RouteArg route) => this.data = (route, method);
                 public RoutingKey(string method, string route) : this((MethodArg)method, (RouteArg)route) { }
-                public RoutingKey(MethodArg method) : this(method, RouteArg.NullRoute) { }
-                public RoutingKey(RouteArg route) : this(MethodArg.NullMethod, route) { }
+                public RoutingKey(MethodArg method) : this(method, (RouteArg)null) { }
+                public RoutingKey(RouteArg route) : this((MethodArg)null, route) { }
                 public RoutingKey(ContextWrapper cw) : this(cw.Context.Request.HttpMethod, cw.Context.Request.Url.AbsolutePath) { }
                 public static implicit operator RoutingKey((MethodArg m, RouteArg r) args) => new RoutingKey(args.m, args.r);
                 public static implicit operator RoutingKey(MethodArg method) => new RoutingKey(method);

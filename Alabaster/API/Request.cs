@@ -26,6 +26,7 @@ namespace Alabaster
         {
             this.cw = cw;
             this.sessions = new SessionCollection(cw.Context.Request.Cookies);
+            this.Parameters = new (string, string)[0];
         }
 
         public int ClientCertificateError { get => this.req.ClientCertificateError; }
@@ -59,6 +60,8 @@ namespace Alabaster
         public TransportContext TransportContext { get => this.req.TransportContext; }
 
         public string Body { get => GetBodyAsync().Result; }
+
+        public (string Name, string Value)[] Parameters { get; internal set; }
                 
         public async Task<string> GetBodyAsync(int maximumSize = 104857600)
         {

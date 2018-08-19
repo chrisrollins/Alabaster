@@ -11,7 +11,7 @@ namespace Alabaster
     {
         private const string allowedCharacters = "                                 !  $% '()*+,-. 0123456789       ABCDEFGHIJKLMNOPQRSTUVWXYZ    _ abcdefghijklmnopqrstuvwxyz";
         private static readonly ConcurrentDictionary<string, ValidationInfo> cachedResults = new ConcurrentDictionary<string, ValidationInfo>(Environment.ProcessorCount, 100);
-
+        
         internal static void EnforceValidation(string route) => GetValidationInfo(route).Enforce();
         internal static bool IsValid(string route) => GetValidationInfo(route).Valid;
         internal static ValidationInfo GetValidationInfo(string route)

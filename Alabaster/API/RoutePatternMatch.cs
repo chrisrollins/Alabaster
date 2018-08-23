@@ -22,7 +22,7 @@ namespace Alabaster
         const string patternSpecifierChars = ":*";
         const string parameterAllowedCharacters = "                                             -  0123456789       ABCDEFGHIJKLMNOPQRSTUVWXYZ    _ abcdefghijklmnopqrstuvwxyz";
 
-        internal RouteCallback_A CreateCallback(Server.RouteCallbackConverter cb)
+        internal RouteCallback_A CreateCallback(RouteCallback cb)
         {
             RoutePatternMatch This = this;
             return (Request req) =>

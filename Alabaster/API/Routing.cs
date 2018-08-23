@@ -7,79 +7,12 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Alabaster
-{
-    public delegate Response RouteCallback_A(Request req);
-    public delegate void RouteCallback_B(Request req);
-    public delegate Response RouteCallback_C();
-    public delegate void RouteCallback_D();
-    
+{        
     public enum HTTPMethod : byte { GET, POST, PATCH, PUT, DELETE, HEAD, CONNECT, OPTIONS, TRACE };
-    
-    public struct Controller
-    {
-        public string Route;
-        public HTTPMethod Method;
-        public RouteCallback_A Callback;
-        public Controller(HTTPMethod method, string route, RouteCallback_A callback)
-        {
-            this.Route = route;
-            this.Method = method;
-            this.Callback = callback;
-        }
-        public Controller(HTTPMethod method, string route, RouteCallback_B callback) : this(method, route, Server.RouteCallbackConverter.Convert(callback)) { }
-        public Controller(HTTPMethod method, string route, RouteCallback_C callback) : this(method, route, Server.RouteCallbackConverter.Convert(callback)) { }
-        public Controller(HTTPMethod method, string route, RouteCallback_D callback) : this(method, route, Server.RouteCallbackConverter.Convert(callback)) { }
-        public Controller(HTTPMethod method, string route, Response res) : this(method, route, Server.RouteCallbackConverter.ResponseShortcut(res)) { }
-
-        public Controller(HTTPMethod method, RoutePatternMatch route, RouteCallback_A callback) : this(method, null, route.CreateCallback(callback)) { }
-        public Controller(HTTPMethod method, RoutePatternMatch route, RouteCallback_B callback) : this(method, null, route.CreateCallback(callback)) { }
-        public Controller(HTTPMethod method, RoutePatternMatch route, RouteCallback_C callback) : this(method, null, route.CreateCallback(callback)) { }
-        public Controller(HTTPMethod method, RoutePatternMatch route, RouteCallback_D callback) : this(method, null, route.CreateCallback(callback)) { }
-        public Controller(HTTPMethod method, RoutePatternMatch route, Response res) : this(method, null, route.CreateCallback(res)) { }
-
-        public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_A c) args) => new Controller(args.m, args.r, args.c);
-        public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_B c) args) => new Controller(args.m, args.r, args.c);
-        public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_C c) args) => new Controller(args.m, args.r, args.c);
-        public static implicit operator Controller((HTTPMethod m, string r, RouteCallback_D c) args) => new Controller(args.m, args.r, args.c);
-        public static implicit operator Controller((HTTPMethod m, string r, Response res) args) => new Controller(args.m, args.r, args.res);
-
-        public static implicit operator Controller((HTTPMethod m, RoutePatternMatch r, RouteCallback_A c) args) => new Controller(args.m, args.r, args.c);
-        public static implicit operator Controller((HTTPMethod m, RoutePatternMatch r, RouteCallback_B c) args) => new Controller(args.m, args.r, args.c);
-        public static implicit operator Controller((HTTPMethod m, RoutePatternMatch r, RouteCallback_C c) args) => new Controller(args.m, args.r, args.c);
-        public static implicit operator Controller((HTTPMethod m, RoutePatternMatch r, RouteCallback_D c) args) => new Controller(args.m, args.r, args.c);
-        public static implicit operator Controller((HTTPMethod m, RoutePatternMatch r, Response res) args) => new Controller(args.m, args.r, args.res);
-    }
-
-    public abstract partial class Response
-    {
-        public static implicit operator Response(FileIO.FileData file) => new DataResponse(file.Data);
-        public static implicit operator Response(byte[] bytes) => new DataResponse(bytes);
-        public static implicit operator Response(byte b) => new DataResponse(new byte[] { b });
-        public static implicit operator Response(string str) => new StringResponse(str);
-        public static implicit operator Response(char c) => new StringResponse(c.ToString());
-        public static implicit operator Response(Int64 n) => new StringResponse(n.ToString());
-        public static implicit operator Response(Int32 n) => new StringResponse(n.ToString());
-        public static implicit operator Response(Int16 n) => new StringResponse(n.ToString());
-        public static implicit operator Response(UInt64 n) => new StringResponse(n.ToString());
-        public static implicit operator Response(UInt32 n) => new StringResponse(n.ToString());
-        public static implicit operator Response(UInt16 n) => new StringResponse(n.ToString());
-        public static implicit operator Response(Int64[] arr) => JoinArr(arr);
-        public static implicit operator Response(Int32[] arr) => JoinArr(arr);
-        public static implicit operator Response(Int16[] arr) => JoinArr(arr);
-        public static implicit operator Response(UInt64[] arr) => JoinArr(arr);
-        public static implicit operator Response(UInt32[] arr) => JoinArr(arr);
-        public static implicit operator Response(UInt16[] arr) => JoinArr(arr);
-        public static implicit operator Response(char[] arr) => JoinArr(arr);
-        public static implicit operator Response(float[] arr) => JoinArr(arr);
-        public static implicit operator Response(double[] arr) => JoinArr(arr);
-        public static implicit operator Response(decimal[] arr) => JoinArr(arr);
-
-        private static string JoinArr<T>(T[] arr) => "[" + string.Join(",", arr ?? new T[] { }) + "]";
-    }
-            
-    public partial class Server
-    {
-        public static void Routes(params Controller[] controllers) =>                                                   Array.ForEach(controllers, (Controller c) => Routing.AddHandler(c.Method, (RouteArg)c.Route, c.Callback));
+           
+    public static partial class Server
+    {        
+        public static void Routes(params Controller[] controllers) =>                                                   Array.ForEach(controllers, (Controller c) => Routing.AddHandler((MethodArg)c.Method, (RouteArg)c.Route, c.Callback));
         public static void Get(string route, RouteCallback_A callback) =>                                               Routing.AddHandler(HTTPMethod.GET, (RouteArg)route, callback);
         public static void Get(string route, RouteCallback_B callback) =>                                               Routing.AddHandler(HTTPMethod.GET, (RouteArg)route, callback);
         public static void Get(string route, RouteCallback_C callback) =>                                               Routing.AddHandler(HTTPMethod.GET, (RouteArg)route, callback);
@@ -171,22 +104,6 @@ namespace Alabaster
         public static void Route(HTTPMethod method, RoutePatternMatch route, RouteCallback_D callback) =>               Routing.AddHandler(method, route, callback);
         public static void Route(HTTPMethod method, RoutePatternMatch route, Response res) =>                           Routing.AddHandler(method, route, res);
 
-        internal struct RouteCallbackConverter
-        {
-            internal RouteCallback_A Callback;
-            internal RouteCallbackConverter(RouteCallback_A cb) => this.Callback = cb;
-            public static implicit operator RouteCallbackConverter(RouteCallback_A cb) => new RouteCallbackConverter(cb);
-            public static implicit operator RouteCallbackConverter(RouteCallback_B cb) => new RouteCallbackConverter(Convert(cb));
-            public static implicit operator RouteCallbackConverter(RouteCallback_C cb) => new RouteCallbackConverter(Convert(cb));
-            public static implicit operator RouteCallbackConverter(RouteCallback_D cb) => new RouteCallbackConverter(Convert(cb));
-            public static implicit operator RouteCallbackConverter(Response res) => new RouteCallbackConverter(ResponseShortcut(res));
-
-            internal static RouteCallback_A Convert(RouteCallback_B callback) => (Request req) => { callback(req); return new PassThrough(); };
-            internal static RouteCallback_A Convert(RouteCallback_C callback) => (Request req) => callback();
-            internal static RouteCallback_A Convert(RouteCallback_D callback) => (Request req) => { callback(); return new PassThrough(); };
-            internal static RouteCallback_A ResponseShortcut(Response res) => (Request req) => res;
-        }
-
         private struct MethodArg
         {
             public readonly string Value;
@@ -224,12 +141,12 @@ namespace Alabaster
             private enum HandlerType : byte { Universal, URL, URL_AllMethods, StandardMethod, CustomMethod }
             private static HandlerType? lastHandlerType = null;
 
-            internal static void AddHandler(RoutePatternMatch rp, RouteCallbackConverter rc) => AddHandler((MethodArg)null, rp, rc);
-            internal static void AddHandler(MethodArg method, RoutePatternMatch rp, RouteCallbackConverter rc) => AddHandler(method, rp.CreateCallback(rc.Callback));
-            internal static void AddHandler(MethodArg method, RouteCallbackConverter rc) => AddHandler(method, (RouteArg)null, rc);
-            internal static void AddHandler(RouteArg route, RouteCallbackConverter rc) => AddHandler((MethodArg)null, route, rc);
-            internal static void AddHandler(RouteCallbackConverter rc) => AddHandler((MethodArg)null, (RouteArg)null, rc);
-            internal static void AddHandler(MethodArg method, RouteArg route, RouteCallbackConverter rc)
+            internal static void AddHandler(RoutePatternMatch rp, RouteCallback rc) => AddHandler((MethodArg)null, rp, rc);
+            internal static void AddHandler(MethodArg method, RoutePatternMatch rp, RouteCallback rc) => AddHandler(method, rp.CreateCallback(rc.Callback));
+            internal static void AddHandler(MethodArg method, RouteCallback rc) => AddHandler(method, (RouteArg)null, rc);
+            internal static void AddHandler(RouteArg route, RouteCallback rc) => AddHandler((MethodArg)null, route, rc);
+            internal static void AddHandler(RouteCallback rc) => AddHandler((MethodArg)null, (RouteArg)null, rc);
+            internal static void AddHandler(MethodArg method, RouteArg route, RouteCallback rc)
             {
                 Util.InitExceptions();
                 RouteCallback_A callback = rc.Callback;

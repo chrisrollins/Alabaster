@@ -82,6 +82,30 @@ namespace Alabaster
             res.OutputStream.Write(data, 0, data.Length);
             res.OutputStream.Close();
         }
+
+        public static implicit operator Response(FileIO.FileData file) => new DataResponse(file.Data);
+        public static implicit operator Response(byte[] bytes) => new DataResponse(bytes);
+        public static implicit operator Response(byte b) => new DataResponse(new byte[] { b });
+        public static implicit operator Response(string str) => new StringResponse(str);
+        public static implicit operator Response(char c) => new StringResponse(c.ToString());
+        public static implicit operator Response(Int64 n) => new StringResponse(n.ToString());
+        public static implicit operator Response(Int32 n) => new StringResponse(n.ToString());
+        public static implicit operator Response(Int16 n) => new StringResponse(n.ToString());
+        public static implicit operator Response(UInt64 n) => new StringResponse(n.ToString());
+        public static implicit operator Response(UInt32 n) => new StringResponse(n.ToString());
+        public static implicit operator Response(UInt16 n) => new StringResponse(n.ToString());
+        public static implicit operator Response(Int64[] arr) => JoinArr(arr);
+        public static implicit operator Response(Int32[] arr) => JoinArr(arr);
+        public static implicit operator Response(Int16[] arr) => JoinArr(arr);
+        public static implicit operator Response(UInt64[] arr) => JoinArr(arr);
+        public static implicit operator Response(UInt32[] arr) => JoinArr(arr);
+        public static implicit operator Response(UInt16[] arr) => JoinArr(arr);
+        public static implicit operator Response(char[] arr) => JoinArr(arr);
+        public static implicit operator Response(float[] arr) => JoinArr(arr);
+        public static implicit operator Response(double[] arr) => JoinArr(arr);
+        public static implicit operator Response(decimal[] arr) => JoinArr(arr);
+
+        private static string JoinArr<T>(T[] arr) => "[" + string.Join(",", arr ?? new T[] { }) + "]";
     }
 
     public sealed class RedirectResponse : Response

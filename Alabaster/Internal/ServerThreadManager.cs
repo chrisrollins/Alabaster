@@ -20,6 +20,10 @@ namespace Alabaster
             }
         });
 
-        public static void Run(Action callback) => ActionQueue.Add(callback);        
+        public static void Run(Action callback)
+        {
+            if(MainThread.ThreadState == ThreadState.Unstarted) { MainThread.Start(); }
+            ActionQueue.Add(callback);
+        }
     }
 }

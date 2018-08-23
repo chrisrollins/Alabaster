@@ -120,10 +120,10 @@ namespace Alabaster
         public static void Route(HTTPMethod method, string route, RouteCallback_D callback) =>                          Routing.AddHandler(method, (RouteArg)route, callback);
         public static void Route(HTTPMethod method, string route, RouteCallback_A callback) =>                          Routing.AddHandler(method, (RouteArg)route, callback);
         public static void Route(HTTPMethod method, string route, Response res) =>                                      Routing.AddHandler(method, (RouteArg)route, res);
+        public static void All(HTTPMethod method, RouteCallback_A callback) =>                                          Routing.AddHandler(method, callback);
         public static void All(HTTPMethod method, RouteCallback_B callback) =>                                          Routing.AddHandler(method, callback);
         public static void All(HTTPMethod method, RouteCallback_C callback) =>                                          Routing.AddHandler(method, callback);
         public static void All(HTTPMethod method, RouteCallback_D callback) =>                                          Routing.AddHandler(method, callback);
-        public static void All(HTTPMethod method, RouteCallback_A callback) =>                                          Routing.AddHandler(method, callback);
         public static void All(HTTPMethod method, Response res) =>                                                      Routing.AddHandler(method, res);
         public static void All(RouteCallback_A callback) =>                                                             Routing.AddHandler(callback);
         public static void All(RouteCallback_B callback) =>                                                             Routing.AddHandler(callback);
@@ -165,10 +165,10 @@ namespace Alabaster
         public static void Route(string method, RoutePatternMatch route, RouteCallback_C callback) =>                   Routing.AddHandler((MethodArg)method, route, callback);
         public static void Route(string method, RoutePatternMatch route, RouteCallback_D callback) =>                   Routing.AddHandler((MethodArg)method, route, callback);
         public static void Route(string method, RoutePatternMatch route, Response res) =>                               Routing.AddHandler((MethodArg)method, route, res);
+        public static void Route(HTTPMethod method, RoutePatternMatch route, RouteCallback_A callback) =>               Routing.AddHandler(method, route, callback);
         public static void Route(HTTPMethod method, RoutePatternMatch route, RouteCallback_B callback) =>               Routing.AddHandler(method, route, callback);
         public static void Route(HTTPMethod method, RoutePatternMatch route, RouteCallback_C callback) =>               Routing.AddHandler(method, route, callback);
         public static void Route(HTTPMethod method, RoutePatternMatch route, RouteCallback_D callback) =>               Routing.AddHandler(method, route, callback);
-        public static void Route(HTTPMethod method, RoutePatternMatch route, RouteCallback_A callback) =>               Routing.AddHandler(method, route, callback);
         public static void Route(HTTPMethod method, RoutePatternMatch route, Response res) =>                           Routing.AddHandler(method, route, res);
 
         internal struct RouteCallbackConverter

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -58,6 +59,16 @@ namespace Alabaster
                 if (!toRemove.Contains(newChars[i])) { newChars.Add(toRemove[i]); }
             }
             return string.Join(null, newChars);
+        }
+
+        internal static string[] GetNamesFromFields(params FieldInfo[] fields)
+        {
+            string[] names = new string[fields.Length];
+            for(int i = 0; i < fields.Length; i++)
+            {
+                names[i] = fields[i].Name;
+            }
+            return names;
         }
 
         internal static void ThrowIf(bool condition, Exception e)

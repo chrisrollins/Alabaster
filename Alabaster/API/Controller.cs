@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -56,5 +57,32 @@ namespace Alabaster
         public static implicit operator Controller((HTTPMethod m, RoutePatternMatch r, RouteCallback_C c) args) =>  new Controller(args.m, args.r, args.c);
         public static implicit operator Controller((HTTPMethod m, RoutePatternMatch r, RouteCallback_D c) args) =>  new Controller(args.m, args.r, args.c);
         public static implicit operator Controller((HTTPMethod m, RoutePatternMatch r, Response res) args) =>       new Controller(args.m, args.r, args.res);
+        public static implicit operator Controller((string r, RouteCallback_A c) args) =>                           (null, args.r, args.c);
+        public static implicit operator Controller((string r, RouteCallback_B c) args) =>                           (null, args.r, args.c);
+        public static implicit operator Controller((string r, RouteCallback_C c) args) =>                           (null, args.r, args.c);
+        public static implicit operator Controller((string r, RouteCallback_D c) args) =>                           (null, args.r, args.c);
+        public static implicit operator Controller((string r, Response res) args) =>                                (null, args.r, args.res);
+        public static implicit operator Controller((RoutePatternMatch r, RouteCallback_A c) args) =>                (null, args.r, args.c);
+        public static implicit operator Controller((RoutePatternMatch r, RouteCallback_B c) args) =>                (null, args.r, args.c);
+        public static implicit operator Controller((RoutePatternMatch r, RouteCallback_C c) args) =>                (null, args.r, args.c);
+        public static implicit operator Controller((RoutePatternMatch r, RouteCallback_D c) args) =>                (null, args.r, args.c);
+        public static implicit operator Controller((RoutePatternMatch r, Response res) args) =>                     (null, args.r, args.res);
+        public static implicit operator Controller(RouteCallback_A c) =>                                            (null, null, c);
+        public static implicit operator Controller(RouteCallback_B c) =>                                            (null, null, c);
+        public static implicit operator Controller(RouteCallback_C c) =>                                            (null, null, c);
+        public static implicit operator Controller(RouteCallback_D c) =>                                            (null, null, c);
+        public static implicit operator Controller(Response res) =>                                                 (null, null, res);
+    }
+
+    public struct PartialController
+    {
+        public string Route;
+        public RouteCallback_A Callback;
+        public static implicit operator PartialController((string r, RouteCallback_A c) args) => new PartialController { Route = args.r, Callback = args.c };
+        public static implicit operator PartialController((string r, RouteCallback_B c) args) => (args.r, RouteCallback.Convert(args.c));
+        public static implicit operator PartialController((string r, RouteCallback_C c) args) => (args.r, RouteCallback.Convert(args.c));
+        public static implicit operator PartialController((string r, RouteCallback_D c) args) => (args.r, RouteCallback.Convert(args.c));
+        public static implicit operator PartialController((string r, Response res) args) => (args.r, RouteCallback.ResponseShortcut(args.res));
+        public static implicit operator PartialController(Controller c) => (c.Route, c.Callback);
     }
 }

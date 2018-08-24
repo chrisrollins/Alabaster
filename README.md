@@ -35,16 +35,21 @@ Int64 Server.Config.MaximumCacheFileSize
 ### Functions:  
 
 ###### Server:  
+void Server.Get(string route, params PartialControllers[] controllers)  
 void Server.Get(string route, RouteCallback_A/B/C/D callback)  
 void Server.Get(string route, Response res)  
+void Server.Delete(string route, params PartialControllers[] controllers)  
 void Server.Delete(string route, RouteCallback_A/B/C/D callback)  
 void Server.Delete(string route, Response res)  
+void Server.Patch(string route, params PartialControllers[] controllers)  
 void Server.Patch(string route, RouteCallback_A/B/C/D callback)  
 void Server.Patch(string route, Response res)  
+void Server.Post(string route, params PartialControllers[] controllers)  
 void Server.Post(string route, RouteCallback_A/B/C/D callback)  
 void Server.Post(string route, Response res)  
+void Server.Put(string route, params PartialControllers[] controllers)  
 void Server.Put(string route, RouteCallback_A/B/C/D callback)  
-void Server.Put(string route, Response res)  
+void Server.Put(string route, Response res)   
 void Server.Route(string method, string route, RouteCallback_A/B/C/D callback)  
 void Server.Route(string method, string route, Response res)  
 void Server.Route(HTTPMethod method, string route, RouteCallback_A/B/C/D callback)  
@@ -120,6 +125,7 @@ class WebSocketConnection
 
 struct ServerOptions  
 struct Controller  
+struct PartialController  
 struct FileIO.FileData
 
 ### Enums:  

@@ -6,13 +6,19 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
+
 namespace Alabaster
-{        
+{
     public enum HTTPMethod : byte { GET, POST, PATCH, PUT, DELETE, HEAD, CONNECT, OPTIONS, TRACE };
-           
+    
     public static partial class Server
-    {        
+    {
         public static void Routes(params Controller[] controllers) =>                                                   Array.ForEach(controllers, (Controller c) => Routing.AddHandler((MethodArg)c.Method, (RouteArg)c.Route, c.Callback));
+        public static void Get(params PartialController[] controllers) =>                                               Array.ForEach(controllers, (PartialController c) => Routing.AddHandler(HTTPMethod.GET, (RouteArg)c.Route, c.Callback));
+        public static void Post(params PartialController[] controllers) =>                                              Array.ForEach(controllers, (PartialController c) => Routing.AddHandler(HTTPMethod.POST, (RouteArg)c.Route, c.Callback));
+        public static void Patch(params PartialController[] controllers) =>                                             Array.ForEach(controllers, (PartialController c) => Routing.AddHandler(HTTPMethod.PATCH, (RouteArg)c.Route, c.Callback));
+        public static void Put(params PartialController[] controllers) =>                                               Array.ForEach(controllers, (PartialController c) => Routing.AddHandler(HTTPMethod.PUT, (RouteArg)c.Route, c.Callback));
+        public static void Delete(params PartialController[] controllers) =>                                            Array.ForEach(controllers, (PartialController c) => Routing.AddHandler(HTTPMethod.DELETE, (RouteArg)c.Route, c.Callback));
         public static void Get(string route, RouteCallback_A callback) =>                                               Routing.AddHandler(HTTPMethod.GET, (RouteArg)route, callback);
         public static void Get(string route, RouteCallback_B callback) =>                                               Routing.AddHandler(HTTPMethod.GET, (RouteArg)route, callback);
         public static void Get(string route, RouteCallback_C callback) =>                                               Routing.AddHandler(HTTPMethod.GET, (RouteArg)route, callback);

@@ -25,11 +25,12 @@ namespace Alabaster
         internal RouteCallback_A CreateCallback(RouteCallback cb)
         {
             RoutePatternMatch This = this;
+            RouteCallback_A callback = cb.Callback;
             return (Request req) =>
             {
                 RoutePatternMatchResult result = This.Compare(req.cw.Route);
                 req.Parameters = result.Parameters;
-                return (result.Match) ? cb.Callback(req) : new PassThrough();
+                return (result.Match) ? callback(req) : new PassThrough();
             };
         }
 

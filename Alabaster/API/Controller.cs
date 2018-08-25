@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace Alabaster
 {
-    public struct Controller
+    public readonly struct Controller
     {
-        public string Route;
-        public string Method;
-        public RouteCallback_A Callback;
+        public readonly string Route;
+        public readonly string Method;
+        public readonly RouteCallback_A Callback;
         public Controller(string method, string route, RouteCallback_A callback)
         {
             this.Route = route;
@@ -74,11 +74,16 @@ namespace Alabaster
         public static implicit operator Controller(Response res) =>                                                 (null, null, res);
     }
 
-    public struct PartialController
+    public readonly struct PartialController
     {
-        public string Route;
-        public RouteCallback_A Callback;
-        public static implicit operator PartialController((string r, RouteCallback_A c) args) => new PartialController { Route = args.r, Callback = args.c };
+        public readonly string Route;
+        public readonly RouteCallback_A Callback;
+        public PartialController(string route, RouteCallback_A callback)
+        {
+            this.Route = route;
+            this.Callback = callback;
+        }
+        public static implicit operator PartialController((string r, RouteCallback_A c) args) => new PartialController(args.r, args.c);
         public static implicit operator PartialController((string r, RouteCallback_B c) args) => (args.r, RouteCallback.Convert(args.c));
         public static implicit operator PartialController((string r, RouteCallback_C c) args) => (args.r, RouteCallback.Convert(args.c));
         public static implicit operator PartialController((string r, RouteCallback_D c) args) => (args.r, RouteCallback.Convert(args.c));

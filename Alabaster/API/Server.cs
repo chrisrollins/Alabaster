@@ -93,33 +93,27 @@ namespace Alabaster
                 {
                     while (running)
                     {
-                        HttpListenerContext ctx = Server.listener.GetContext();
-                        stp.QueueWork(() => HandleRequest(new ContextWrapper(ctx)));
+                        stp.QueueWork(() => HandleRequest(new ContextWrapper(listener.GetContext())));
                     }
                 }
 
                 void HandleRequest(ContextWrapper cw)
                 {
-                    ResponseExceptionHandler(cw, () =>
-                        Routing.ResolveHandlers(cw) ??
-                        new FileResponse(cw.Route)
-                    ).Finish(cw);
+                    Response result;
+                    try
+                    {
+                        result = Routing.ResolveHandlers(cw) ?? new FileResponse(cw.Route);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("Exception while handling request:");
+                        Console.WriteLine(e);
+                        Console.WriteLine("Request URL path: \"" + cw.Route + "\"");
+                        Console.WriteLine("Request HTTP method: \"" + cw.HttpMethod + "\"");
+                        result = new EmptyResponse(500);
+                    }
+                    result.Finish(cw);
                 }
-            }
-
-            Response ResponseExceptionHandler(ContextWrapper cw, Func<Response> callback)
-            {
-                Response result;
-                try { result = callback(); }
-                catch (Exception e)
-                {
-                    Console.WriteLine("Exception while handling request:");
-                    Console.WriteLine(e);
-                    Console.WriteLine("Request URL path: \"" + cw.Route + "\"");
-                    Console.WriteLine("Request HTTP method: \"" + cw.HttpMethod + "\"");
-                    result = new EmptyResponse(500);
-                }
-                return result;
             }
         }        
 

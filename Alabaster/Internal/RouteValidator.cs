@@ -41,7 +41,7 @@ namespace Alabaster
             }
         }
         
-        internal struct ValidationInfo
+        internal readonly struct ValidationInfo
         {
             public readonly bool Valid;
             public readonly ValidationError[] Errors;

@@ -9,13 +9,16 @@ using System.Collections.Concurrent;
 
 namespace Alabaster
 {
-    internal class LockableDictionary<TKey, TValue>
+    internal sealed class LockableDictionary<TKey, TValue>
     {
-        private ConcurrentDictionary<TKey, ValueContainer> dict;
-        private object SetLockLock = new object();
+        private readonly ConcurrentDictionary<TKey, ValueContainer> dict;
+        private readonly object SetLockLock = new object();
 
-        internal LockableDictionary() => this.dict = new ConcurrentDictionary<TKey, ValueContainer>();
-        internal LockableDictionary(int capacity) => this.dict = new ConcurrentDictionary<TKey, ValueContainer>(Environment.ProcessorCount, capacity);
+        internal LockableDictionary() : this(10) { }
+        internal LockableDictionary(int capacity)
+        {
+            this.dict = new ConcurrentDictionary<TKey, ValueContainer>(Environment.ProcessorCount, capacity);
+        }
 
         public TValue this[TKey key]
         {

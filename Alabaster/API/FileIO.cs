@@ -10,8 +10,8 @@ namespace Alabaster
 {
     public static class FileIO
     {
-        private static ConcurrentDictionary<string, string> extensionPaths = new ConcurrentDictionary<string, string>(2, 100);
-        private static LockableDictionary<IPath, bool> allowedPaths = new LockableDictionary<IPath, bool>(100);
+        private static readonly ConcurrentDictionary<string, string> extensionPaths = new ConcurrentDictionary<string, string>(2, 100);
+        private static readonly LockableDictionary<IPath, bool> allowedPaths = new LockableDictionary<IPath, bool>(100);
         private static bool whitelistMode = false;
         private static volatile bool initialized = false;
 
@@ -47,11 +47,11 @@ namespace Alabaster
 
         public struct FileData
         {
-            public byte[] Data { get; private set; }
+            internal readonly byte[] Data;
+            public byte this[int i] { get => this.Data[i]; }
             internal FileData(byte[] data) => this.Data = data;
         }
 
-        //private
         private static void AddPath(IPath p, bool allowed) => allowedPaths[p] = allowed;
         private static bool IsPathAllowed(IPath p)
         {

@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 
 namespace Alabaster
 {
-    internal class SmartThreadPool
+    internal sealed class SmartThreadPool
     {
         private readonly int concurrency;
-        private ConcurrentQueue<Action> workQueue = new ConcurrentQueue<Action>();
-        private ConcurrentBag<WorkerThread> availableThreads = new ConcurrentBag<WorkerThread>();
-        private ConcurrentDictionary<WorkerThread, bool> runningThreads = new ConcurrentDictionary<WorkerThread, bool>();
-        private object CheckConcurrencyLock = new object();
-        private object CheckSuspendedLock = new object();
+        private readonly ConcurrentQueue<Action> workQueue = new ConcurrentQueue<Action>();
+        private readonly ConcurrentBag<WorkerThread> availableThreads = new ConcurrentBag<WorkerThread>();
+        private readonly ConcurrentDictionary<WorkerThread, bool> runningThreads = new ConcurrentDictionary<WorkerThread, bool>();
+        private readonly object CheckConcurrencyLock = new object();
+        private readonly object CheckSuspendedLock = new object();
         private readonly bool autoExpand;
 
         public SmartThreadPool(int concurrency, int initialThreadCount, bool autoExpand)
@@ -35,7 +35,7 @@ namespace Alabaster
             {
                 while (true)
                 {
-                    runningThreads.TryAdd(wt, true);
+                    this.runningThreads.TryAdd(wt, true);
                     while (this.workQueue.TryDequeue(out Action work)) { work(); }
                     this.runningThreads.TryRemove(wt, out _);
                     this.availableThreads.Add(wt);
@@ -47,13 +47,14 @@ namespace Alabaster
 
         public void QueueWork(Action work)
         {
+            ConcurrentBag<WorkerThread> at = this.availableThreads;
+            bool autoExpand = this.autoExpand;
             this.workQueue.Enqueue(work);
-
             lock (CheckConcurrencyLock)
             {
                 if (runningThreads.Count < this.concurrency)
                 {
-                    Start();
+                    StartWork();
                     return;
                 }
             }
@@ -65,14 +66,14 @@ namespace Alabaster
                 {
                     if (thread.InternalThread.ThreadState == ThreadState.Running) { running++; }
                 }
-                if (running < this.concurrency) { Start(); }
+                if (running < this.concurrency) { StartWork(); }
             }            
 
-            void Start()
+            void StartWork()
             {
                 WorkerThread thread;
-                bool haveThread = availableThreads.TryTake(out thread);
-                if(!haveThread && this.autoExpand)
+                bool haveThread = at.TryTake(out thread);
+                if(!haveThread && autoExpand)
                 {
                     thread = GenerateThread();
                     haveThread = true;

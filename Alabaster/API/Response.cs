@@ -15,7 +15,7 @@ namespace Alabaster
         public string StatusDescription;
         public CookieCollection Cookies = new CookieCollection();
         private bool? _KeepAlive;
-        private int? _StatusCode;
+        protected int? _StatusCode;
         
         public bool KeepAlive
         {
@@ -23,7 +23,7 @@ namespace Alabaster
             set => this._KeepAlive = value;
         }
 
-        public int StatusCode
+        public virtual int StatusCode
         {
             get => this._StatusCode ?? 200;
             set => this._StatusCode = value;
@@ -158,6 +158,12 @@ namespace Alabaster
             }
         }
 
+        public override int StatusCode
+        {
+            get => (this.Body == null) ? 404 : this._StatusCode ?? 200;
+            set => this._StatusCode = value;
+        }
+
         public FileResponse(string fileName) : this(fileName, Server.Config.StaticFilesBaseDirectory) { }
 
         public FileResponse(string fileName, string baseDirectory)
@@ -165,7 +171,6 @@ namespace Alabaster
             this.data = null;
             this.fileName = fileName;
             this.baseDirectory = baseDirectory;
-            this.StatusCode = (this.data == null) ? 404 : 200;
         }
     }
 

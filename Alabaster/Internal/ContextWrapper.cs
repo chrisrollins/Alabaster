@@ -15,7 +15,11 @@ namespace Alabaster
             set => this.data = value;
         }
 
-        internal ContextWrapper(HttpListenerContext ctx) => this.Context = ctx;
+        internal ContextWrapper(HttpListenerContext ctx)
+        {
+            this.Context = ctx;
+            this.data = null;
+        }
 
         internal string Route => this.Context.Request.Url.AbsolutePath;
         internal string HttpMethod => this.Context.Request.HttpMethod;

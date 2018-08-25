@@ -11,7 +11,7 @@ namespace Alabaster
     public delegate Response RouteCallback_C();
     public delegate void RouteCallback_D();
 
-    internal struct RouteCallback
+    internal ref struct RouteCallback
     {
         internal RouteCallback_A Callback;
         internal RouteCallback(RouteCallback_A cb) => this.Callback = cb;

@@ -64,7 +64,7 @@ namespace Alabaster
                 if (Config.Port == 0) { throw new InvalidOperationException("Port not set."); }
                 Util.ProgressVisualizer("Initializing Server...", "Listening on port " + Config.Port,
                     InitializeOptions,
-                    FileIO.Initialize,
+                    FileIO.InitializeFileRequestHandler,
                     Routing.Initialize,
                     LaunchListeners,
                     GC.Collect
@@ -102,7 +102,7 @@ namespace Alabaster
                     Response result;
                     try
                     {
-                        result = Routing.ResolveHandlers(cw) ?? new FileResponse(cw.Route);
+                        result = Routing.ResolveHandlers(cw) ?? new EmptyResponse(400);
                     }
                     catch (Exception e)
                     {

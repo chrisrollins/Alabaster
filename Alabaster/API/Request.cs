@@ -11,12 +11,12 @@ using System.Threading.Tasks;
 
 namespace Alabaster
 {
-    public partial struct Request
+    public struct Request
     {
-        internal ContextWrapper cw;
+        internal readonly ContextWrapper cw;
         internal HttpListenerRequest req { get => this.cw.Context.Request; }
         internal HttpListenerResponse res { get => this.cw.Context.Response; }
-        private SessionCollection sessions;        
+        private readonly SessionCollection sessions;        
 
         public Session[] Sessions { get => this.sessions.SessionList; }
         public string[] SessionCategories { get => this.sessions.CategoryList; }
@@ -58,9 +58,9 @@ namespace Alabaster
         public Version ProtocolVersion { get => this.req.ProtocolVersion; }
         public CookieCollection Cookies { get => this.req.Cookies; }
         public TransportContext TransportContext { get => this.req.TransportContext; }
+        public string Route => this.cw.Route;
 
         public string Body { get => GetBodyAsync().Result; }
-
         public (string Name, string Value)[] Parameters { get; internal set; }
                 
         public async Task<string> GetBodyAsync(int maximumSize = 104857600)

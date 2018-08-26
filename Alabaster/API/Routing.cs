@@ -247,10 +247,8 @@ namespace Alabaster
                 Handlers = null;
             }
 
-            internal static Response ResolveHandlers(ContextWrapper cw, bool includeRequestWithFileExt = false)
+            internal static Response ResolveHandlers(ContextWrapper cw)
             {
-                if (!includeRequestWithFileExt && Util.GetFileExtension(cw.Route) != null) { return null; }
-
                 Response result = null;
                 foreach(RouteCallback_A handler in FinalizedHandlers)
                 {
@@ -260,7 +258,6 @@ namespace Alabaster
                 }
                 return (result is PassThrough) ? null : result;
             }
-
 
             private static void RouteAddingExceptions(string method, string route, RouteCallback_A callback)
             {

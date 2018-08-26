@@ -14,8 +14,8 @@ namespace Alabaster
         private static readonly LockableDictionary<IPath, bool> allowedPaths = new LockableDictionary<IPath, bool>(100);
         private static bool whitelistMode = false;
         private static volatile bool initialized = false;
-
-        internal static void Initialize()
+        
+        static FileIO()
         {
             foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
             {
@@ -23,7 +23,16 @@ namespace Alabaster
                 allowedPaths[path] = false;
                 allowedPaths.Lock(path);
             }
-            initialized = true;
+        }
+
+        public static void InitializeFileRequestHandler()
+        {
+            ServerThreadManager.Run(() =>
+            {
+                if(initialized) { return; }
+                initialized = true;
+                Server.All((Request req) => (Util.GetFileExtension(req.Route) != null) ? (Response)GetFile(req.Route) : new PassThrough());
+            });
         }
 
         public static void AllowFiles(params string[] files) => Array.ForEach(files, (string f) => AddPath(new FilePath(f), true));
@@ -44,7 +53,7 @@ namespace Alabaster
         public static FileData GetFile(string file, string baseDirectory) => new FileData(LRUCache.GetStaticFileData((FilePath)file, (DirectoryPath)baseDirectory));
         public static async Task<FileData> GetFileAsync(string file) => await new Task<FileData>(() => GetFile(file));
         public static async Task<FileData> GetFileAsync(string file, string baseDirectory) => await new Task<FileData>(() => GetFile(file, baseDirectory));
-
+        
         public struct FileData
         {
             internal readonly byte[] Data;

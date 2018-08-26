@@ -83,17 +83,17 @@ namespace Alabaster
             res.OutputStream.Close();
         }
 
-        public static implicit operator Response(FileIO.FileData file) => new DataResponse(file.Data);
+        public static implicit operator Response(FileIO.FileData file) => new FileResponse(file);
         public static implicit operator Response(byte[] bytes) => new DataResponse(bytes);
         public static implicit operator Response(byte b) => new DataResponse(new byte[] { b });
         public static implicit operator Response(string str) => new StringResponse(str);
         public static implicit operator Response(char c) => new StringResponse(c.ToString());
-        public static implicit operator Response(Int64 n) => new StringResponse(n.ToString());
-        public static implicit operator Response(Int32 n) => new StringResponse(n.ToString());
-        public static implicit operator Response(Int16 n) => new StringResponse(n.ToString());
-        public static implicit operator Response(UInt64 n) => new StringResponse(n.ToString());
-        public static implicit operator Response(UInt32 n) => new StringResponse(n.ToString());
-        public static implicit operator Response(UInt16 n) => new StringResponse(n.ToString());
+        public static implicit operator Response(Int64 n) => new EmptyResponse((Int32)n);
+        public static implicit operator Response(Int32 n) => new EmptyResponse(n);
+        public static implicit operator Response(Int16 n) => new EmptyResponse(n);
+        public static implicit operator Response(UInt64 n) => new EmptyResponse((Int32)n);
+        public static implicit operator Response(UInt32 n) => new EmptyResponse((Int32)n);
+        public static implicit operator Response(UInt16 n) => new EmptyResponse(n);
         public static implicit operator Response(Int64[] arr) => JoinArr(arr);
         public static implicit operator Response(Int32[] arr) => JoinArr(arr);
         public static implicit operator Response(Int16[] arr) => JoinArr(arr);
@@ -164,8 +164,8 @@ namespace Alabaster
             set => this._StatusCode = value;
         }
 
+        public FileResponse(FileIO.FileData file) => this.data = file.Data;
         public FileResponse(string fileName) : this(fileName, Server.Config.StaticFilesBaseDirectory) { }
-
         public FileResponse(string fileName, string baseDirectory)
         {
             this.data = null;
@@ -176,7 +176,7 @@ namespace Alabaster
 
     public sealed class EmptyResponse : Response
     {
-        public EmptyResponse(int status)
+        public EmptyResponse(Int32 status)
         {
             this.StatusCode = status;
             this.data = null;

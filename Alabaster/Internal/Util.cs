@@ -61,11 +61,6 @@ namespace Alabaster
             return string.Join(null, newChars);
         }
         
-        internal static void ThrowIf(bool condition, Exception e)
-        {
-            if (!condition) { throw e; }
-        }
-        
         internal static void InitExceptions(Action callback = null)
         {
             if (Server.initialized) { throw new InvalidOperationException("Cannot use initialization operations after server has started."); }

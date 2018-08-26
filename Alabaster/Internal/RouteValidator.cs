@@ -51,7 +51,7 @@ namespace Alabaster
                 this.Valid = valid;
                 this.Errors = errors;
             }
-            public void Enforce() => Util.ThrowIf(!this.Valid, new FormatException("Route Validation Errors: \n" + string.Join("\n", this.Errors)));
+            public void Enforce() { if (!this.Valid) { throw new FormatException("Route Validation Errors: \n" + string.Join("\n", this.Errors)); } }
             public static implicit operator ValidationInfo(ValidationError[] e) => new ValidationInfo(e.Length == 0, e);
             public static implicit operator ValidationInfo(List<ValidationError> e) => e.ToArray();
             

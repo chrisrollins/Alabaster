@@ -66,6 +66,7 @@ namespace Alabaster
                     InitializeOptions,
                     FileIO.InitializeFileRequestHandler,
                     Routing.Initialize,
+                    FinalizeExceptionHandlers,
                     LaunchListeners,
                     GC.Collect
                 );
@@ -100,18 +101,8 @@ namespace Alabaster
                 void HandleRequest(ContextWrapper cw)
                 {
                     Response result;
-                    try
-                    {
-                        result = Routing.ResolveHandlers(cw);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine("Exception while handling request:");
-                        Console.WriteLine(e);
-                        Console.WriteLine("Request URL path: \"" + cw.Route + "\"");
-                        Console.WriteLine("Request HTTP method: \"" + cw.HttpMethod + "\"");
-                        result = new EmptyResponse(500);
-                    }
+                    try { result = Routing.ResolveHandlers(cw); }
+                    catch (Exception e) { result = ResolveException(e, cw); }
                     result.Finish(cw);
                 }
             }

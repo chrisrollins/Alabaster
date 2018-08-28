@@ -15,7 +15,7 @@ namespace Alabaster
         public string StatusDescription;
         public CookieCollection Cookies = new CookieCollection();
         private bool? _KeepAlive;
-        protected int? _StatusCode;
+        internal int? _StatusCode;
         
         public bool KeepAlive
         {
@@ -175,7 +175,7 @@ namespace Alabaster
     }
 
     public sealed class EmptyResponse : Response
-    {
+    {      
         public EmptyResponse(Int32 status)
         {
             this.StatusCode = status;
@@ -186,7 +186,6 @@ namespace Alabaster
     public sealed class PassThrough : Response
     {
         public PassThrough() : this(null, 200) { }
-        public PassThrough(byte[] data) : this(data, (data == null) ? 404 : 200) { }
         public PassThrough(byte[] data, int status)
         {
             this.data = data;

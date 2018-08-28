@@ -102,7 +102,7 @@ namespace Alabaster
                     Response result;
                     try
                     {
-                        result = Routing.ResolveHandlers(cw) ?? new EmptyResponse(400);
+                        result = Routing.ResolveHandlers(cw);
                     }
                     catch (Exception e)
                     {

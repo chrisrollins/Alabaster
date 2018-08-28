@@ -256,7 +256,7 @@ namespace Alabaster
                     result.Merge(cw);
                     if(!(result is PassThrough)) { break; }
                 }
-                return (result is PassThrough) ? null : result;
+                return (result is PassThrough) ? (result._StatusCode ?? 400) : result;
             }
 
             private static void RouteAddingExceptions(string method, string route, RouteCallback_A callback)

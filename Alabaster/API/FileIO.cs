@@ -29,9 +29,14 @@ namespace Alabaster
         {
             ServerThreadManager.Run(() =>
             {
-                if(initialized) { return; }
+                if (initialized) { return; }
                 initialized = true;
-                Server.All((Request req) => (Util.GetFileExtension(req.Route) != null) ? (Response)GetFile(req.Route) : new PassThrough());
+                Server.All((Request req) =>
+                {
+                    if(Util.GetFileExtension(req.Route) == null) { return new PassThrough(); }
+                    FileData file = GetFile(req.Route);
+                    return (file.Data != null) ? (Response)file : new PassThrough(null, 404);
+                });
             });
         }
 

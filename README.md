@@ -62,6 +62,7 @@ void Server.All(HTTPMethod method, Response res)
 void Server.All(RouteCallback_A/B/C/D callback)  
 void Server.All(Response res)  
 void Server.AttachWebSocketModule(string route, WebSocketModule module)  
+void Server.AddExceptionHandler<T>(ExceptionHandler callback) where T : Exception  
 void Server.Start()  
 void Server.Start(int Port)  
 void Server.Start(ServerOptions options)  
@@ -104,6 +105,7 @@ delegate void RouteCallback_B(Request req)
 delegate Response RouteCallback_C()  
 delegate void RouteCallback_D()  
 delegate WebSocketMessageContext WebSocketCallback(WebSocketMessageContext context)  
+public delegate Response ExceptionHandler(ExceptionInfo exceptionInfo)  
 
 ### Classes:  
 
@@ -127,6 +129,7 @@ struct ServerOptions
 struct Controller  
 struct PartialController  
 struct FileIO.FileData
+struct ExceptionInfo  
 
 ### Enums:  
 Client.Scheme { HTTP, HTTPS }  

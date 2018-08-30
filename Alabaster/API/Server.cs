@@ -94,7 +94,8 @@ namespace Alabaster
                 {
                     while (running)
                     {
-                        stp.QueueWork(() => HandleRequest(new ContextWrapper(listener.GetContext())));
+                        ContextWrapper cw = new ContextWrapper(listener.GetContext());
+                        stp.QueueWork(() => HandleRequest(cw));
                     }
                 }
 

@@ -38,13 +38,16 @@ namespace Alabaster
             internal Response Resolve(ExceptionInfo exceptionInfo) => (exceptionInfo.Exception.GetType() == this.ExceptionType) ? Handler(exceptionInfo) : new PassThrough();
         }
 
-        public static void AddExceptionHandler<T>(ExceptionHandler callback) where T : Exception => ServerThreadManager.Run(() => AddExceptionHandlerInternal<T>(callback));
-        private static void AddExceptionHandlerInternal<T>(ExceptionHandler callback) where T : Exception
+        public static void AddExceptionHandler<T>(ExceptionHandler callback) where T : Exception
         {
-            Util.InitExceptions();
-            exceptionHandlerAddList.Add((callback, typeof(T)));            
+            ServerThreadManager.Run(() =>
+            {
+                Util.InitExceptions();
+                AddExceptionHandlerInternal<T>(callback);
+            });
         }
-
+        private static void AddExceptionHandlerInternal<T>(ExceptionHandler callback) where T : Exception => exceptionHandlerAddList.Add((callback, typeof(T)));            
+        
         private static Response ResolveException(Exception e, ContextWrapper cw) => ResolveException((e, new Request(cw)));
         private static Response ResolveException(ExceptionInfo exceptionInfo)
         {

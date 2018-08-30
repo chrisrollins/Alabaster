@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace Alabaster
 {
@@ -13,7 +14,7 @@ namespace Alabaster
         private static readonly ConcurrentDictionary<string, string> extensionPaths = new ConcurrentDictionary<string, string>(2, 100);
         private static readonly LockableDictionary<IPath, bool> allowedPaths = new LockableDictionary<IPath, bool>(100);
         private static bool whitelistMode = false;
-        private static volatile bool initialized = false;
+        private static long initialized = 0;
         
         static FileIO()
         {
@@ -27,17 +28,13 @@ namespace Alabaster
 
         public static void InitializeFileRequestHandler()
         {
-            ServerThreadManager.Run(() =>
+            if(Interlocked.CompareExchange(ref initialized, 1, 0) == 1) { return; }            
+            Routing.AddHandlerInternal((MethodArg)null, (RouteArg)null, (Request req) =>
             {
-                if (initialized) { return; }
-                initialized = true;
-                Server.All((Request req) =>
-                {
-                    if(Util.GetFileExtension(req.Route) == null) { return new PassThrough(); }
-                    FileData file = GetFile(req.Route);
-                    return (file.Data != null) ? (Response)file : new PassThrough(null, 404);
-                });
-            });
+                if(Util.GetFileExtension(req.Route) == null) { return new PassThrough(); }
+                FileData file = GetFile(req.Route);
+                return (file.Data != null) ? (Response)file : new PassThrough(null, 404);
+            });            
         }
 
         public static void AllowFiles(params string[] files) => Array.ForEach(files, (string f) => AddPath(new FilePath(f), true));
@@ -145,7 +142,7 @@ namespace Alabaster
             
             public static byte[] GetStaticFileData(FilePath file, DirectoryPath baseDir)
             {
-                if(!initialized) { throw new InvalidOperationException("Server not yet initialized."); }
+                if(Interlocked.Read(ref initialized) == 0) { throw new InvalidOperationException("Server not yet initialized."); }
                 FilePath fullPath = (FilePath)(baseDir + file);
                 if (!IsFileValid(fullPath)) { return null; }
                 return (fileDict.TryGetValue(fullPath, out CachedFile result) == true) ? GetFromCache() : LoadFromDisk();

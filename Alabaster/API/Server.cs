@@ -26,15 +26,15 @@ namespace Alabaster
             }
             set
             {
-                Util.InitExceptions();
                 lock (configAccessLock)
                 {
-                    _config = value;
+                    if (!optionsInitialized) { _config = value; }
                 }
             }
         }
         private static HttpListener listener = new HttpListener();
         internal static bool initialized = false;
+        internal static volatile bool optionsInitialized = false;
         internal static bool running = false;
         
         public static void Start(int Port) => Start(new ServerOptions { Port = Port });        
@@ -79,9 +79,13 @@ namespace Alabaster
 
             void InitializeOptions()
             {
-                foreach (PropertyInfo prop in Config.GetType().GetProperties())
+                lock (configAccessLock)
                 {
-                    object temp = prop.GetValue(Config);
+                    optionsInitialized = true;
+                    foreach (PropertyInfo prop in Config.GetType().GetProperties())
+                    {
+                        object temp = prop.GetValue(Config);
+                    }
                 }
             }
 

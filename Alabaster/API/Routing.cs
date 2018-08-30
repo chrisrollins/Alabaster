@@ -132,8 +132,9 @@ namespace Alabaster
         public readonly string Value;
         public RouteArg(string route, bool validate = true)
         {
+            route = route?.Replace('\\', '/');
             if (validate && route != null) { RouteValidator.EnforceValidation(route); }
-            this.Value = (route == null) ? null : string.Join(null, route, (route.Last() != '/') ? "/" : "");
+            this.Value = (route == null) ? null : string.Join(null, (route.First() != '/') ? "/" : "", route, (route.Last() != '/') ? "/" : "");
         }
         public static explicit operator RouteArg(string s) => new RouteArg(s);
     }

@@ -8,9 +8,7 @@ using System.Threading.Tasks;
 
 
 namespace Alabaster
-{
-    public enum HTTPMethod : byte { GET, POST, PATCH, PUT, DELETE, HEAD, CONNECT, OPTIONS, TRACE };
-    
+{    
     public static partial class Server
     {
         public static void Routes(params Controller[] controllers) =>                                                   Array.ForEach(controllers, (Controller c) => Routing.AddHandler((MethodArg)c.Method, (RouteArg)c.Route, c.Callback));

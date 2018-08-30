@@ -7,6 +7,17 @@ namespace Alabaster
     {
         public bool EnableCustomHTTPMethods;
 
+        public int _schemesEnabled;
+        public HTTPScheme SchemesEnabled
+        {
+            get
+            {
+                Interlocked.CompareExchange(ref this._schemesEnabled, (int)HTTPScheme.HTTP, 0);
+                return (HTTPScheme)this._schemesEnabled;
+            }
+            set => this._schemesEnabled = (int)value;
+        }
+
         private string _serverID;        
         public string ServerID
         {

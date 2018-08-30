@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace Alabaster
 {
+    [Flags] public enum HTTPScheme : byte { HTTP = 1, HTTPS = 2 };
+    public enum HTTPMethod : byte { GET, POST, PATCH, PUT, DELETE, HEAD, CONNECT, OPTIONS, TRACE };
+
     public static partial class Server
     {
         private static object configAccessLock = new object();
@@ -53,7 +56,8 @@ namespace Alabaster
             void Init()
             {
                 Util.InitExceptions();
-                listener.Prefixes.Add(String.Join(null, "http://*:", Config.Port.ToString(), "/"));
+                if ((Config.SchemesEnabled & HTTPScheme.HTTP) == HTTPScheme.HTTP) { listener.Prefixes.Add(String.Join(null, "http://*:", Config.Port.ToString(), "/")); }
+                if ((Config.SchemesEnabled & HTTPScheme.HTTPS) == HTTPScheme.HTTPS) { listener.Prefixes.Add(String.Join(null, "https://*:", Config.Port.ToString(), "/")); }
                 try { listener.Start(); }
                 catch (HttpListenerException e)
                 {

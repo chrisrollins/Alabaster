@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net471</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <ApplicationIcon />
     <OutputType>Library</OutputType>
     <StartupObject></StartupObject>
@@ -25,6 +25,7 @@
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="mscorlib" />
     <Reference Include="System.Net.Http" />
   </ItemGroup>
 </Project>

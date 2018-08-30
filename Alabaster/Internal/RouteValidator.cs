@@ -20,6 +20,8 @@ namespace Alabaster
 
             string[] sections = route.Split('\\', '/');
             List<ValidationInfo.ValidationError> Errors = new List<ValidationInfo.ValidationError>(sections.Length);
+            if (sections[0] == "") { sections[0] = "_"; }
+            if (sections[sections.Length - 1] == "") { sections[sections.Length - 1] = "_"; }
             foreach (string section in sections)
             {
                 ValidationInfo.ValidationError? err = validateSection(section);

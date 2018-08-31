@@ -9,6 +9,11 @@ using System.Threading.Tasks;
 
 namespace Alabaster
 {
+    using RouteCallback_A = Func<Request, Response>;
+    using RouteCallback_B = Action<Request>;
+    using RouteCallback_C = Func<Response>;
+    using RouteCallback_D = Action;
+
     public static partial class Server
     {
         public static void Routes(params Controller[] controllers) => Array.ForEach(controllers, (Controller c) => Routing.AddHandler((MethodArg)c.Method, (RouteArg)c.Route, c.Callback));
@@ -229,7 +234,8 @@ namespace Alabaster
                     RoutingKey key = (m, r);
                     dict[key] = (dict.TryGetValue(key, out RouteCallback_A existingCallback)) ? (Request req) => existingCallback(req) ?? c(req) : c;
                 } while (currentHandlerGroup.Count > 0);
-                Handlers.Add((Request req) => dict.TryGetValue(req.cw, out RouteCallback_A handler) ? handler(req) : new PassThrough());
+                Handlers.Add((Request req) => (RouteValidator.IsValid(req.Route) && dict.TryGetValue(req.cw, out RouteCallback_A handler)) ? handler(req) : new PassThrough());
+                
             }
 
             void URL_AllMethods()
@@ -240,7 +246,7 @@ namespace Alabaster
                     (_, RouteArg key, RouteCallback_A c) = currentHandlerGroup.Dequeue();
                     dict[key] = (dict.TryGetValue(key, out RouteCallback_A existingCallback)) ? (Request req) => existingCallback(req) ?? c(req) : c;
                 } while (currentHandlerGroup.Count > 0);                    
-                Handlers.Add((Request req) => dict.TryGetValue((RouteArg)req.cw.Route, out RouteCallback_A handler) ? handler(req) : new PassThrough());
+                Handlers.Add((Request req) => (RouteValidator.IsValid(req.Route) && dict.TryGetValue((RouteArg)req.Route, out RouteCallback_A handler)) ? handler(req) : new PassThrough());
             }
         }
 

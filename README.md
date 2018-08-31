@@ -100,6 +100,8 @@ async Task<string> Client.Request(string method, string url, string body, Scheme
 
 ### Delegates:  
 
+note: Some or all of these are currently implemented as Func or Action types.  
+
 delegate Response RouteCallback_A(Request req)  
 delegate void RouteCallback_B(Request req)  
 delegate Response RouteCallback_C()  

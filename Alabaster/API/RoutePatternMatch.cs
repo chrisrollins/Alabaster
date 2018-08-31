@@ -6,6 +6,11 @@ using System.Threading.Tasks;
 
 namespace Alabaster
 {
+    using RouteCallback_A = Func<Request, Response>;
+    using RouteCallback_B = Action<Request>;
+    using RouteCallback_C = Func<Response>;
+    using RouteCallback_D = Action;
+
     // * match all characters (eg. /api*)
     // : parameter (eg. /api/:foo or /api/:foo/) only alphanumeric, underscore, and hyphen allowed
     // 

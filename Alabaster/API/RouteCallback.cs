@@ -4,12 +4,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace Alabaster
 {
-    public delegate Response RouteCallback_A(Request req);
-    public delegate void RouteCallback_B(Request req);
-    public delegate Response RouteCallback_C();
-    public delegate void RouteCallback_D();
+    using RouteCallback_A = Func<Request, Response>;
+    using RouteCallback_B = Action<Request>;
+    using RouteCallback_C = Func<Response>;
+    using RouteCallback_D = Action;
+
+    //public delegate Response RouteCallback_A(Request req);
+    //public delegate void RouteCallback_B(Request req);
+    //public delegate Response RouteCallback_C();
+    //public delegate void RouteCallback_D();
 
     internal ref struct RouteCallback
     {

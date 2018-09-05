@@ -14,7 +14,7 @@ namespace Alabaster
     // * match all characters (eg. /api*)
     // : parameter (eg. /api/:foo or /api/:foo/) only alphanumeric, underscore, and hyphen allowed
     // 
-    public struct RoutePatternMatch
+    public readonly struct RoutePatternMatch
     {
         public readonly string Specifier;
         public RoutePatternMatch(string specifier)
@@ -122,7 +122,7 @@ namespace Alabaster
         private static string Normalize(string s) => s.Replace('\\', '/').Trim('/');
     }
 
-    internal struct RoutePatternMatchResult
+    internal readonly ref struct RoutePatternMatchResult
     {
         public readonly string InputString;
         public readonly RoutePatternMatch Pattern;

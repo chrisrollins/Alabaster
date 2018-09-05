@@ -51,16 +51,33 @@ namespace Alabaster
         public static bool RemoveFileExtensionDirectory(string extension) => extensionPaths.TryRemove(extension, out _);
         public static string GetFileExtensionDirectory(string extension) => extensionPaths[extension];
 
-        public static FileData GetFile(string file) => new FileData(LRUCache.GetStaticFileData((FilePath)file, (DirectoryPath)Server.Config.StaticFilesBaseDirectory));
-        public static FileData GetFile(string file, string baseDirectory) => new FileData(LRUCache.GetStaticFileData((FilePath)file, (DirectoryPath)baseDirectory));
-        public static async Task<FileData> GetFileAsync(string file) => await new Task<FileData>(() => GetFile(file));
-        public static async Task<FileData> GetFileAsync(string file, string baseDirectory) => await new Task<FileData>(() => GetFile(file, baseDirectory));
-        
+        public static FileData GetFile(string file) => new FileData(file, Server.Config.StaticFilesBaseDirectory);
+        public static FileData GetFile(string file, string baseDirectory) => new FileData(file, baseDirectory);
+        public static async Task<FileData> GetFileAsync(string file) => await new Task<FileData>(() => new FileData(file, Server.Config.StaticFilesBaseDirectory, true));
+        public static async Task<FileData> GetFileAsync(string file, string baseDirectory) => await new Task<FileData>(() => new FileData(file, baseDirectory, true));
+
         public struct FileData
         {
-            internal readonly byte[] Data;
-            public byte this[int i] { get => this.Data[i]; }
-            internal FileData(byte[] data) => this.Data = data;
+            private byte[] data;
+            internal byte[] Data
+            {
+                get
+                {
+                    if (this.data == null) { this.data = LRUCache.GetStaticFileData((FilePath)this.FilePath, (DirectoryPath)Server.Config.StaticFilesBaseDirectory); }
+                    return this.data;
+                }
+            }            
+            public byte this[int i] => this.Data[i];
+            public readonly string BaseDirectory;
+            public readonly string FilePath;
+            public string FullPath => this.BaseDirectory + this.FilePath;
+            internal FileData(string path, string baseDir, bool preload = false)
+            {
+                this.FilePath = path;
+                this.BaseDirectory = baseDir;
+                this.data = null;
+                if (preload) { _ = this.Data; }
+            }
         }
 
         private static void AddPath(IPath p, bool allowed) => allowedPaths[p] = allowed;

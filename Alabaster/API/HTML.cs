@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 namespace Alabaster
 {
@@ -15,10 +16,14 @@ namespace Alabaster
 
     public class HTML : HTMLBase
     {
+        [Flags] public enum RenderOptions : byte { NONE = 0, PRETTY = 1 };
+
         internal ConcurrentDictionary<string, List<Tag>> tagsByClass = new ConcurrentDictionary<string, List<Tag>>(Environment.ProcessorCount, 100);
         internal ConcurrentDictionary<string, List<Tag>> tagsByTagName = new ConcurrentDictionary<string, List<Tag>>(Environment.ProcessorCount, 100);
         internal ConcurrentDictionary<string, Tag> tagsByID = new ConcurrentDictionary<string, Tag>(Environment.ProcessorCount, 100);
+
         public Tag RootElement { get; protected internal set; }
+
         internal HTML() => this.RootElement = new Tag(this);
         public static HTML FromHTMLFile(string file) => new HTML().ParseHTML(Encoding.UTF8.GetString(FileIO.GetFile(file).Data));
         public static HTML FromString(string str) => new HTML().ParseHTML(str);
@@ -35,26 +40,31 @@ namespace Alabaster
 
         public Tag GetElementByID(string id) => (id != null && tagsByID.TryGetValue(id, out Tag el)) ? ((el.Document == this) ? el : null) : null;
         public Tag[] GetElementsByClassName(string className) => tagsByClass.TryGetValue(className, out List<Tag> tags) ? tags.FindAll((Tag t) => t.Document == this).ToArray() : new Tag[] { };
-        public Tag[] GetElementsByTagName(string tagName) => tagsByTagName.TryGetValue(tagName, out List<Tag> tags) ? tags.FindAll((Tag t) => t.Document == this).ToArray() : new Tag[] { };        
-        
-        public string Render()
+        public Tag[] GetElementsByTagName(string tagName) => tagsByTagName.TryGetValue(tagName, out List<Tag> tags) ? tags.FindAll((Tag t) => t.Document == this).ToArray() : new Tag[] { };
+
+        public string Render(RenderOptions options = RenderOptions.NONE)
         {
+            bool Pretty = (options & RenderOptions.PRETTY) == RenderOptions.PRETTY;
             StringBuilder sb = new StringBuilder();
-            AddTag(this.RootElement);
+            AddNode(this.RootElement);
             return sb.ToString();
 
-            void AddTag(Tag tag)
+            void AddNode(Node node, int depth = 0)
             {
-                if(tag != this.RootElement)
+                if (Pretty) { for (int i = 0; i < depth; i++) { sb.Append("    "); } }
+                if (node is Tag)
                 {
-                    if (!string.IsNullOrEmpty(tag.Name)) { sb.Append("<").Append(tag.Name).Append(tag.Attributes.ToString()).Append(">"); }
-                    else { sb.Append(tag.Content); }
+                    Tag tag = node as Tag;
+                    if (node != this.RootElement)
+                    {
+                        sb.Append("<").Append(tag.Name).Append(tag.Attributes.ToString()).Append(">");
+                        if (Pretty) { sb.Append("\n"); }
+                    }
+                    foreach (Tag child in tag.Children) { AddNode(child, depth + 1); }
+                    sb.Append("</").Append(tag.Name).Append(">");
                 }
-                foreach(Tag child in tag.Children)
-                {
-                    AddTag(child);
-                }
-                if (!string.IsNullOrEmpty(tag.Name)) { sb.Append("</").Append(tag.Name).Append(">"); }
+                else { sb.Append((node as TextNode).Content); }
+                if (Pretty) { sb.Append("\n"); }
             }
         }
 
@@ -80,8 +90,7 @@ namespace Alabaster
                     if (NextChar() == '/') { Next = ParsingClosingTag; }
                     else if (isHTMLAlphaNumeric(NextChar()))
                     {
-                        Tag text = new Tag((string)null);
-                        text.Content = CurrentSubstring();
+                        TextNode text = new TextNode(CurrentSubstring());
                         currentTag.AddChild(text);
                         currentSubstringStart = position + 1;
                         Next = ParsingTagName;
@@ -145,12 +154,27 @@ namespace Alabaster
 
         private const string WhiteSpaceChars = "\u0009\u000A\u000C\u000D\u0020";
         private static bool isHTMLWhiteSpace(char c) => WhiteSpaceChars.IndexOf(c) != -1;        
+        
+        public abstract class Node : HTMLBase
+        {
+            internal Node() { }
+        }
 
-        public sealed class Tag : HTMLBase
+        public sealed class TextNode : Node
+        {
+            private string content;
+            public string Content
+            {
+                get => this.content;
+                set => Interlocked.Exchange(ref this.content, value);                
+            }
+            public TextNode(string content) => this.Content = content;
+        }
+
+        public sealed class Tag : Node
         {
             private static readonly ConcurrentDictionary<(Tag tag, TagAttributeKey key), string> tagAttributes = new ConcurrentDictionary<(Tag, TagAttributeKey), string>(Environment.ProcessorCount, 100);
             public string Name;
-            public string Content = "";
             private HTMLBase parent;
             public Tag Parent
             {
@@ -160,12 +184,11 @@ namespace Alabaster
                     else { return null; }
                 }
                 private set => this.parent = value;
-                
             }
             public HTMLBase Document { get => (this.Parent != null) ? this.Parent.Document : this.parent; }
             public bool IsImmutable { get => this.Document is ImmutableHTML; }
-            private readonly List<Tag> children;
-            public Tag[] Children => children.ToArray();
+            private readonly List<Node> children;
+            public Node[] Children => children.ToArray();
             public AttributeCollection Attributes
             {
                 get
@@ -190,8 +213,7 @@ namespace Alabaster
             {
                 this.Name = original.Name;
                 this.parent = original.parent;
-                this.Content = original.Content;
-                this.children = new List<Tag>(this.children.Capacity);
+                this.children = new List<Node>(this.children.Capacity);
                 foreach(Tag child in this.children)
                 {
                     this.children.Add(child.Copy());
@@ -204,37 +226,35 @@ namespace Alabaster
                 get => tagAttributes.TryGetValue((this, AttributeName), out string val) ? val : null;
                 set
                 {
-                    if (!this.IsImmutable)
+                    if(this.IsImmutable) { return; }
+                    TagAttributeKey key = AttributeName;
+                    HTML doc = this.Document as HTML;
+                    switch(key.Value)
                     {
-                        TagAttributeKey key = AttributeName;
-                        HTML doc = this.Document as HTML;
-                        switch(key.Value)
-                        {
-                            case "id":
-                                if(doc.GetElementByID(this["id"]) != null) { doc.tagsByID.TryRemove(this["id"], out _); }
-                                doc.tagsByID[value] = this;
-                                break;
-                            case "class":
-                                string[] classes = value.Split(WhiteSpaceChars.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-                                string[] oldClasses = this["class"].Split(WhiteSpaceChars.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-                                foreach (string className in oldClasses)
+                        case "id":
+                            if(doc.GetElementByID(this["id"]) != null) { doc.tagsByID.TryRemove(this["id"], out _); }
+                            doc.tagsByID[value] = this;
+                            break;
+                        case "class":
+                            string[] classes = value.Split(WhiteSpaceChars.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                            string[] oldClasses = this["class"].Split(WhiteSpaceChars.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                            foreach (string className in oldClasses)
+                            {
+                                if(doc.tagsByClass.TryGetValue(className, out List<Tag> tags)) { tags.Remove(this); }
+                            }
+                            foreach (string className in classes)
+                            {
+                                doc.tagsByClass.TryGetValue(className, out List<Tag> tags);
+                                if (tags == null)
                                 {
-                                    if(doc.tagsByClass.TryGetValue(className, out List<Tag> tags)) { tags.Remove(this); }
+                                    tags = new List<Tag>(5);
+                                    doc.tagsByClass[className] = tags;
                                 }
-                                foreach (string className in classes)
-                                {
-                                    doc.tagsByClass.TryGetValue(className, out List<Tag> tags);
-                                    if (tags == null)
-                                    {
-                                        tags = new List<Tag>(5);
-                                        doc.tagsByClass[className] = tags;
-                                    }
-                                    tags.Add(this);
-                                }
-                                break;
-                        }
-                        tagAttributes[(this, AttributeName)] = value;
+                                tags.Add(this);
+                            }
+                            break;                            
                     }
+                    tagAttributes[(this, AttributeName)] = value;                    
                 }
             }
 
@@ -242,13 +262,13 @@ namespace Alabaster
 
             public void AddAttributes(string attributes)
             {
-                if(this.IsImmutable) { return; }
-                if(attributes.Contains("\0")) { attributes = String.Join(null, attributes.Split('\0')); }
+                if(this.IsImmutable || string.IsNullOrWhiteSpace(attributes)) { return; }
+                if(attributes.IndexOf('\0') != -1) { attributes = String.Join(null, attributes.Split('\0')); }
                 string[] tokens = GetTokens();
                 int position = 0;
                 while(position < tokens.Length)
                 {
-                    if(tokens[position + 1] == "=" && position < (tokens.Length + 2))
+                    if(position < (tokens.Length - 2) && tokens[position + 1] == "=")
                     {
                         this[tokens[position]] = tokens[position + 2];
                         position += 2;
@@ -295,6 +315,20 @@ namespace Alabaster
                     }
                     return results;
                 }
+            }
+
+            public bool AppendTextNode(string text)
+            {
+                if (this.IsImmutable) { return false; }
+                TextNode node = new TextNode(text);
+                return this.AddChild(node);
+            }
+
+            public bool AddChild(TextNode text)
+            {
+                if (this.IsImmutable) { return false; }
+                this.children.Add(text);
+                return true;
             }
 
             public bool AddChild(Tag child)

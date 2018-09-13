@@ -37,10 +37,6 @@ namespace Alabaster
 
         public Response AddSession(Session session)
         {
-            Server.Get("", (req) => {
-
-                return new DataResponse(null);
-            });
             Cookie cookie = new Cookie(Server.Config.ServerID, session.id.ToString());
             cookie.HttpOnly = true;           
             this.Cookies.Add(cookie);
@@ -81,8 +77,9 @@ namespace Alabaster
             res.ContentLength64 = data.Length;
             res.OutputStream.Write(data, 0, data.Length);
             res.OutputStream.Close();
+            this.AdditionalFinishTasks(new Request(cw), this);
         }
-
+        
         public static implicit operator Response(FileIO.FileData file) => new FileResponse(file);
         public static implicit operator Response(byte[] bytes) => new DataResponse(bytes);
         public static implicit operator Response(byte b) => new DataResponse(new byte[] { b });

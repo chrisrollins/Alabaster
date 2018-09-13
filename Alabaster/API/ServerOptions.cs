@@ -5,9 +5,9 @@ namespace Alabaster
 {
     public struct ServerOptions
     {
-        public bool EnableCustomHTTPMethods;
+        public bool EnableCustomHTTPMethods { get; set; }
 
-        public int _schemesEnabled;
+        private int _schemesEnabled;
         public HTTPScheme SchemesEnabled
         {
             get

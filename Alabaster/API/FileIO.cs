@@ -159,7 +159,6 @@ namespace Alabaster
             
             public static byte[] GetStaticFileData(FilePath file, DirectoryPath baseDir)
             {
-                if(Interlocked.Read(ref initialized) == 0) { throw new InvalidOperationException("Server not yet initialized."); }
                 FilePath fullPath = (FilePath)(baseDir + file);
                 if (!IsFileValid(fullPath)) { return null; }
                 return (fileDict.TryGetValue(fullPath, out CachedFile result) == true) ? GetFromCache() : LoadFromDisk();

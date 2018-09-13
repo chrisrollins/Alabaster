@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Alabaster
 {
@@ -73,7 +74,7 @@ namespace Alabaster
         public static implicit operator Controller(RouteCallback_D c) =>                                            (null, null, c);
         public static implicit operator Controller(Response res) =>                                                 (null, null, res);
     }
-
+    
     public readonly struct PartialController
     {
         public readonly string Route;
@@ -90,4 +91,6 @@ namespace Alabaster
         public static implicit operator PartialController((string r, Response res) args) => (args.r, RouteCallback.ResponseShortcut(args.res));
         public static implicit operator PartialController(Controller c) => (c.Route, c.Callback);
     }
+
+
 }

@@ -144,20 +144,20 @@ namespace Alabaster
 
             private class LRUNode
             {
-                public static object LRULock = new object();
-                public static volatile int Count = 0;
-                public static volatile LRUNode End = new LRUNode(null);
-                public static volatile LRUNode NewestNode = End;
-                public CachedFile file;
-                public LRUNode Next;
-                public LRUNode Previous;
-                public LRUNode(CachedFile data) => this.file = data;
+                internal static object LRULock = new object();
+                internal static volatile int Count = 0;
+                internal static volatile LRUNode End = new LRUNode(null);
+                internal static volatile LRUNode NewestNode = End;
+                internal CachedFile file;
+                internal LRUNode Next;
+                internal LRUNode Previous;
+                internal LRUNode(CachedFile data) => this.file = data;
             }
 
             private static int CacheSize = 100;
             private static ConcurrentDictionary<FilePath, CachedFile> fileDict = new ConcurrentDictionary<FilePath, CachedFile>(Environment.ProcessorCount, CacheSize);
             
-            public static byte[] GetStaticFileData(FilePath file, DirectoryPath baseDir)
+            internal static byte[] GetStaticFileData(FilePath file, DirectoryPath baseDir)
             {
                 FilePath fullPath = (FilePath)(baseDir + file);
                 if (!IsFileValid(fullPath)) { return null; }

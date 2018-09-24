@@ -102,7 +102,7 @@ namespace Alabaster
         public static implicit operator Response(double[] arr) => JoinArr(arr);
         public static implicit operator Response(decimal[] arr) => JoinArr(arr);
 
-        private static string JoinArr<T>(T[] arr) => "[" + string.Join(",", arr ?? new T[] { }) + "]";
+        private static string JoinArr<T>(T[] arr) => string.Join(null, "[", string.Join(",", arr ?? new T[] { }), "]");
     }
 
     public sealed class RedirectResponse : Response

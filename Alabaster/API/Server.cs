@@ -56,8 +56,8 @@ namespace Alabaster
             void Init()
             {
                 Util.InitExceptions();
-                if ((Config.SchemesEnabled & HTTPScheme.HTTP) == HTTPScheme.HTTP) { listener.Prefixes.Add(String.Join(null, "http://*:", Config.Port.ToString(), "/")); }
-                if ((Config.SchemesEnabled & HTTPScheme.HTTPS) == HTTPScheme.HTTPS) { listener.Prefixes.Add(String.Join(null, "https://*:", Config.Port.ToString(), "/")); }
+                if ((Config.SchemesEnabled & HTTPScheme.HTTP) == HTTPScheme.HTTP) { listener.Prefixes.Add(string.Join(null, "http://*:", Config.Port.ToString(), "/")); }
+                if ((Config.SchemesEnabled & HTTPScheme.HTTPS) == HTTPScheme.HTTPS) { listener.Prefixes.Add(string.Join(null, "https://*:", Config.Port.ToString(), "/")); }
                 try { listener.Start(); }
                 catch (HttpListenerException e)
                 {

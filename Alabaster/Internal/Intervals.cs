@@ -7,6 +7,7 @@ using System.Threading;
 
 namespace Alabaster
 {
+    //this class can run jobs hourly or daily while the server is running. it's used to implement Session lifetimes.
     internal static class Intervals
     {
         private static ConcurrentQueue<IntervalCallback> hourly = new ConcurrentQueue<IntervalCallback>();

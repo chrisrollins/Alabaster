@@ -7,6 +7,14 @@ using System.Threading.Tasks;
 
 namespace Alabaster
 {
+    //this class is used to run the request handlers.
+    //new worker threads may only be launched when the current number of active worker threads is below the concurrency value passed to the constructor (should be Environment.ProcessorCount)
+    //suspended threads (ie. waiting for I/O) do not count towards the limit.
+    //there are several reasons this has been implemented instead of relying upon the built in .NET features
+    // 1 - Tasks and async/await use the .NET threadpool by default.
+    // 2 - the .NET threadpool counts suspended threads towards its concurrency limit, which makes it necessary to set a high concurrency limit.
+    // 3 - the .NET threadpool is global, so it may be changed by application code. async/await and Tasks may be used by application code and use some of the concurrency.
+    //this implementation is independent of what the application does and the application may use the .NET threadpool however it needs to.
     internal sealed class SmartThreadPool
     {
         private readonly int concurrency;

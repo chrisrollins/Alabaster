@@ -299,3 +299,12 @@ __pycache__/
 
 
 # End of https://www.gitignore.io/api/visualstudio
+
+################
+# Custom stuff #
+################
+
+#Other projects in solution that I don't need on github
+AlabasterTestApp
+HTML Programming Model
+Limbo

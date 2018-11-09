@@ -59,14 +59,15 @@ namespace Alabaster
         public struct FileData
         {
             private byte[] data;
-            internal byte[] Data
+            public byte[] Data
             {
                 get
                 {
-                    if (this.data == null) { this.data = LRUCache.GetStaticFileData((FilePath)this.FilePath, (DirectoryPath)Server.Config.StaticFilesBaseDirectory); }
+                    if (this.data == null) { this.data = LRUCache.GetStaticFileData((FilePath)this.FilePath, (DirectoryPath)this.BaseDirectory); }
                     return this.data;
                 }
-            }            
+            }
+            public bool Found => ((FilePath)this.FullPath).Valid;
             public byte this[int i] => this.Data[i];
             public readonly string BaseDirectory;
             public readonly string FilePath;
@@ -100,6 +101,7 @@ namespace Alabaster
             public FilePath(string val) => this.Value = val.Replace('\\', '/');
             public DirectoryPath GetDirectory() => new DirectoryPath(this.Value.Substring(0, Util.Clamp(this.Value.LastIndexOf('/'), 0, int.MaxValue)));
             public static explicit operator FilePath(string path) => new FilePath(path);
+            public bool Valid => IsPathAllowed(this) && IsPathAllowed(this.GetDirectory()) && File.Exists(this.Value);            
         }
 
         private struct DirectoryPath : IPath
@@ -108,7 +110,7 @@ namespace Alabaster
             public DirectoryPath(string val)
             {
                 this.Value = val.Replace('\\', '/');
-                if (val == "" || val[val.Length - 1] != '/') { this.Value += "/"; }
+                //if (val == "" || val[val.Length - 1] != '/') { this.Value += "/"; }
             }
             public DirectoryPath GetDirectory() => this;
             public static IPath operator +(DirectoryPath p1, IPath p2)
@@ -160,7 +162,7 @@ namespace Alabaster
             internal static byte[] GetStaticFileData(FilePath file, DirectoryPath baseDir)
             {
                 FilePath fullPath = (FilePath)(baseDir + file);
-                if (!IsFileValid(fullPath)) { return null; }
+                if (!fullPath.Valid) { return null; }
                 return (fileDict.TryGetValue(fullPath, out CachedFile result) == true) ? GetFromCache() : LoadFromDisk();
 
                 byte[] LoadFromDisk()
@@ -182,8 +184,6 @@ namespace Alabaster
                     byte[] data = result?.Data;
                     return (data != null && File.GetLastWriteTime(fullPath.Value) > result.Timestamp) ? data : LoadFromDisk();
                 }
-
-                bool IsFileValid(FilePath filePathValid) => IsPathAllowed(filePathValid) && IsPathAllowed(filePathValid.GetDirectory()) && File.Exists(fullPath.Value);
 
                 void LRUPrepend()
                 {

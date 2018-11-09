@@ -10,19 +10,12 @@ namespace Alabaster
 {
     public sealed class Session : IDisposable
     {
-        private ValueType data;
-        private object dataSync = new object();
+        private readonly ConcurrentDictionary<string, object> sessionData = new ConcurrentDictionary<string, object>();
         
-        public ValueType Data
+        private ValueType this[string key]
         {
-            get { lock (dataSync) { return data; } }
-            set
-            {
-                lock (dataSync)
-                {
-                    data = value;
-                }
-            }
+            get => (this.sessionData.TryGetValue(key, out object result) ? (ValueType)result : default);
+            set => this.sessionData[key] = value;
         }
         
         internal readonly string id;
@@ -34,10 +27,9 @@ namespace Alabaster
         [ThreadStatic] private static Random rand;
         private static ConcurrentDictionary<string, Session> sessions = new ConcurrentDictionary<string, Session>(Environment.ProcessorCount, 100);
         
-        public Session(string category, ValueType data)
+        public Session(string category)
         {
             this.category = category ?? throw new ArgumentNullException("Category must not be null.");
-            this.data = data ?? throw new ArgumentNullException("Data cannot be null.");
             this.id = GenerateSessionID();
             this.intervalCallback = new Intervals.IntervalCallback();
             this.intervalCallback.SetTimes(defaultDuration);
@@ -49,9 +41,7 @@ namespace Alabaster
             Intervals.DailyJob(this.intervalCallback);
             sessions[this.id] = this;
         }
-
-        public static implicit operator Session((string category, ValueType data) args) => new Session(args.category, args.data);
-
+        
         internal static Session GetSession(string id)
         {
             sessions.TryGetValue(id, out Session session);

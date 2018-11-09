@@ -9,6 +9,9 @@ using System.Collections.Concurrent;
 
 namespace Alabaster
 {
+    //This class is a thread safe dictionary (wrapping over a ConcurrentDictionary) which allows keys to be locked or unlocked.
+    //if a key is locked, the associated value cannot be changed.
+    //this class is used by FileIO to prevent certain files (the server executable and dlls) from being accessed.
     internal sealed class LockableDictionary<TKey, TValue>
     {
         private readonly ConcurrentDictionary<TKey, ValueContainer> dict;

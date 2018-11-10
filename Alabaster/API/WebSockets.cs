@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace Alabaster
 {
-    public delegate WebSocketMessageContext WebSocketCallback(WebSocketMessageContext context);
+    public delegate void WebSocketCallback(WebSocketMessageContext context);
 
-    public sealed class WebSocketMessageContext
+    public readonly struct WebSocketMessageContext
     {
         public readonly WebSocketConnection Connection;
         public readonly WebSocketModule Module;
@@ -34,7 +34,6 @@ namespace Alabaster
             this.Module = module;
         }
 
-        private WebSocketMessageContext() { }
         public override string ToString() => Encoding.UTF8.GetString(this.Data);
     }
 
@@ -43,7 +42,7 @@ namespace Alabaster
         internal const int WSDataSize = 2048;
         internal const int WSHeaderSize = 256;
         private WebSocketCallback[] NumberedEvents = new WebSocketCallback[256];
-        private Dictionary<string, WebSocketCallback> NamedEvents = new Dictionary<string, WebSocketCallback>(100);
+        private ConcurrentDictionary<string, WebSocketCallback> NamedEvents = new ConcurrentDictionary<string, WebSocketCallback>(Environment.ProcessorCount, 100);
         private WebSocketCallback connectEvent;
         private WebSocketCallback disconnectEvent;
         public readonly WebSocketChannel MainChannel;
@@ -232,8 +231,13 @@ namespace Alabaster
 
     public partial class Server
     {
+        private static ConcurrentBag<WebSocketModule> attachedWSModules = new ConcurrentBag<WebSocketModule>();
+        public static WebSocketModule[] AttachedWebSocketModules => attachedWSModules.ToArray();
+        
         public static void AttachWebSocketModule(string route, WebSocketModule module)
-            => Get(route, (Request req)
-                => (req.IsWebSocketRequest) ? (Response)(new WebSocketHandshake(module, req.cw.Context)) : new PassThrough() );        
+        { 
+            Get(route, (Request req) => (req.IsWebSocketRequest) ? (Response)(new WebSocketHandshake(module, req.cw.Context)) : new PassThrough());
+            attachedWSModules.Add(module);
+        }
     }
 }

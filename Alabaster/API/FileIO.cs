@@ -31,7 +31,7 @@ namespace Alabaster
             if(Interlocked.CompareExchange(ref initialized, 1, 0) == 1) { return; }            
             Routing.AddHandlerInternal((MethodArg)null, (RouteArg)null, (Request req) =>
             {
-                if(Util.GetFileExtension(req.Route) == null) { return new PassThrough(); }
+                if(Util.GetFileExtension(req.Route) == null) { return PassThrough.Default; }
                 FileData file = GetFile(req.Route);
                 return (file.Data != null) ? (Response)file : new PassThrough(null, 404);
             });            

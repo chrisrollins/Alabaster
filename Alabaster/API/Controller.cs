@@ -84,13 +84,18 @@ namespace Alabaster
             this.Route = route;
             this.Callback = callback;
         }
+        public PartialController(RoutePatternMatch route, RouteCallback_A callback) : this(null, route.CreateCallback(callback)) { }
         public static implicit operator PartialController((string r, RouteCallback_A c) args) => new PartialController(args.r, args.c);
         public static implicit operator PartialController((string r, RouteCallback_B c) args) => (args.r, RouteCallback.Convert(args.c));
         public static implicit operator PartialController((string r, RouteCallback_C c) args) => (args.r, RouteCallback.Convert(args.c));
         public static implicit operator PartialController((string r, RouteCallback_D c) args) => (args.r, RouteCallback.Convert(args.c));
         public static implicit operator PartialController((string r, Response res) args) => (args.r, RouteCallback.ResponseShortcut(args.res));
+        public static implicit operator PartialController((RoutePatternMatch r, RouteCallback_A c) args) => new PartialController(args.r, args.c);
+        public static implicit operator PartialController((RoutePatternMatch r, RouteCallback_B c) args) => (args.r, RouteCallback.Convert(args.c));
+        public static implicit operator PartialController((RoutePatternMatch r, RouteCallback_C c) args) => (args.r, RouteCallback.Convert(args.c));
+        public static implicit operator PartialController((RoutePatternMatch r, RouteCallback_D c) args) => (args.r, RouteCallback.Convert(args.c));
+        public static implicit operator PartialController((RoutePatternMatch r, Response res) args) => (args.r, RouteCallback.ResponseShortcut(args.res));
         public static implicit operator PartialController(Controller c) => (c.Route, c.Callback);
     }
-
 
 }

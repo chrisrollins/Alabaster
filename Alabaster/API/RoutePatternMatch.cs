@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -34,8 +35,12 @@ namespace Alabaster
             return (Request req) =>
             {
                 RoutePatternMatchResult result = This.Compare(req.cw.Route);
-                req.Parameters = result.Parameters;
-                return (result.Match) ? callback(req) : new PassThrough();
+                req.Parameters = new NameValueCollection(result.Parameters.Length);
+                foreach((string name, string value) in result.Parameters)
+                {
+                    req.Parameters.Add(name, value);
+                }
+                return (result.Match) ? callback(req) : PassThrough.Default;
             };
         }
 
@@ -50,10 +55,11 @@ namespace Alabaster
 
             bool ValidateParam(string paramStr)
             {
-                if(paramStr[0] != ':') { return false; }
+                if(string.IsNullOrEmpty(paramStr) || paramStr[0] != ':') { return false; }
                 for(int i = 1; i < paramStr.Length; i++)
                 {
-                    if(parameterAllowedCharacters[paramStr[i]] == ' ') { return false; }
+                    char current = paramStr[i];
+                    if (current >= parameterAllowedCharacters.Length || current < 0 || parameterAllowedCharacters[current] == ' ') { return false; }
                 }
                 return true;
             }
@@ -101,8 +107,8 @@ namespace Alabaster
                         int pNameEnd = this.Specifier.IndexOf('/', i);
                         if(pNameEnd == -1) { pNameEnd = this.Specifier.Length - 1; }
                         if(pValueEnd == -1) { pValueEnd = reqUrl.Length - 1; }
-                        string name = this.Specifier.Substring(i, (pNameEnd - i));
-                        string value = reqUrl.Substring(inputStrPosition, (pValueEnd - inputStrPosition));
+                        string name = this.Specifier.Substring(i + 1, (pNameEnd - i));
+                        string value = reqUrl.Substring(inputStrPosition, (pValueEnd - inputStrPosition + 1));
                         par.Add((name, value));
                         inputStrPosition = pValueEnd + 1;
                         if(inputStrPosition >= reqUrl.Length) { return Result(true); }

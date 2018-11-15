@@ -27,9 +27,9 @@ namespace Alabaster
         public static implicit operator RouteCallback(RouteCallback_C cb) => Convert(cb);
         public static implicit operator RouteCallback(Response res) => ResponseShortcut(res);
 
-        internal static RouteCallback_A Convert(RouteCallback_B callback) => (Request req) => { callback(req); return new PassThrough(); };
+        internal static RouteCallback_A Convert(RouteCallback_B callback) => (Request req) => { callback(req); return PassThrough.Default; };
         internal static RouteCallback_A Convert(RouteCallback_C callback) => (Request req) => callback();
-        internal static RouteCallback_A Convert(RouteCallback_D callback) => (Request req) => { callback(); return new PassThrough(); };
+        internal static RouteCallback_A Convert(RouteCallback_D callback) => (Request req) => { callback(); return PassThrough.Default; };
         internal static RouteCallback_A ResponseShortcut(Response res) => (Request req) => res;
     }
 }

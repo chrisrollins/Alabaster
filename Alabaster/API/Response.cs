@@ -103,6 +103,8 @@ namespace Alabaster
         public static implicit operator Response(decimal[] arr) => JoinArr(arr);
 
         private static string JoinArr<T>(T[] arr) => string.Join(null, "[", string.Join(",", arr ?? new T[] { }), "]");
+
+        public static Response Default = new EmptyResponse(400);
     }
 
     public sealed class RedirectResponse : Response
@@ -118,6 +120,7 @@ namespace Alabaster
             cw.Context.Response.Redirect(redirectRoute);
             base.Finish(cw);
         }
+        public static new Response Default = new RedirectResponse("/");
     }
 
     public sealed class StringResponse : Response
@@ -127,7 +130,8 @@ namespace Alabaster
             this.data = Encoding.UTF8.GetBytes(response);
             this.StatusCode = status;
         }
-        public static implicit operator StringResponse(string str) => new StringResponse(str);        
+        public static implicit operator StringResponse(string str) => new StringResponse(str);
+        public static new Response Default = new StringResponse("");
     }
 
     public sealed class DataResponse : Response
@@ -140,6 +144,7 @@ namespace Alabaster
         }
         public static implicit operator DataResponse(byte[] bytes) => new DataResponse(bytes);
         public static implicit operator DataResponse(FileIO.FileData file) => new DataResponse(file.Data);
+        public static new Response Default = new DataResponse(new byte[] { });
     }
 
     public sealed class FileResponse : Response
@@ -169,6 +174,7 @@ namespace Alabaster
             this.fileName = fileName;
             this.baseDirectory = baseDirectory;
         }
+        public static new Response Default = new FileResponse(null);
     }
 
     public sealed class EmptyResponse : Response
@@ -178,6 +184,7 @@ namespace Alabaster
             this.StatusCode = status;
             this.data = null;
         }
+        public static new Response Default = new EmptyResponse(400);
     }
 
     public sealed class PassThrough : Response
@@ -188,5 +195,6 @@ namespace Alabaster
             this.data = data;
             this.StatusCode = status;
         }
+        public static new Response Default = new PassThrough();
     }
 }

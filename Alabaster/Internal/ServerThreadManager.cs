@@ -22,6 +22,6 @@ namespace Alabaster
             }
         });
         static ServerThreadManager() => MainThread.Start();
-        public static void Run(Action callback) => ActionQueue.Add(callback);        
+        public static void Run(Action callback) => ActionQueue.Add(callback);
     }
 }

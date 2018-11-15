@@ -35,7 +35,7 @@ namespace Alabaster
                 this.ExceptionType = t;
             }
             public static implicit operator ExceptionHandlerResolver((ExceptionHandler h, Type t) args) => new ExceptionHandlerResolver(args.h, args.t);
-            internal Response Resolve(ExceptionInfo exceptionInfo) => (exceptionInfo.Exception.GetType() == this.ExceptionType) ? Handler(exceptionInfo) : new PassThrough();
+            internal Response Resolve(ExceptionInfo exceptionInfo) => (exceptionInfo.Exception.GetType() == this.ExceptionType) ? Handler(exceptionInfo) : PassThrough.Default;
         }
 
         public static void AddExceptionHandler<T>(ExceptionHandler callback) where T : Exception

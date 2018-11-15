@@ -24,7 +24,7 @@ namespace Alabaster
         public readonly WebSocketModule Module;
         public readonly byte[] Data;
 
-        internal WebSocketMessageContext(WebSocketBuffer dataBuffer, WebSocketConnection connection, WebSocketModule module)
+        internal WebSocketMessageContext(WebSocketReceiveBuffer dataBuffer, WebSocketConnection connection, WebSocketModule module)
         {
             this.Data = dataBuffer.Data.ToArray();
             this.Connection = connection;
@@ -43,8 +43,8 @@ namespace Alabaster
 
     public sealed class WebSocketModule
     {
-        private WebSocketCallback[] NumberedEvents = new WebSocketCallback[256];
-        private ConcurrentDictionary<string, WebSocketCallback> NamedEvents = new ConcurrentDictionary<string, WebSocketCallback>(Environment.ProcessorCount, 100);
+        private readonly WebSocketCallback[] NumberedEvents = new WebSocketCallback[256];
+        private readonly ConcurrentDictionary<string, WebSocketCallback> NamedEvents = new ConcurrentDictionary<string, WebSocketCallback>(Environment.ProcessorCount, 100);
         private WebSocketCallback connectEvent;
         private WebSocketCallback disconnectEvent;
         public readonly WebSocketChannel MainChannel;
@@ -64,8 +64,7 @@ namespace Alabaster
         internal void RunCallback(byte number, WebSocketMessageContext data) => this.NumberedEvents[number]?.Invoke(data);
         internal void RunCallback(string name, WebSocketMessageContext data) { if (this.NamedEvents.TryGetValue(name, out WebSocketCallback callback)) { callback(data); } }
         internal void RunConnectionCallback(WebSocketMessageContext data) => this.connectEvent?.Invoke(data);
-        internal void RunDisconnectionCallback(WebSocketMessageContext data) => this.disconnectEvent?.Invoke(data);
-     
+        internal void RunDisconnectionCallback(WebSocketMessageContext data) => this.disconnectEvent?.Invoke(data);     
     }
 
     public sealed class WebSocketChannel
@@ -129,7 +128,7 @@ namespace Alabaster
                 this.Join(module.MainChannel);
                 module.RunConnectionCallback(new WebSocketMessageContext(new byte[] { }, this, module));
 
-                WebSocketBuffer buffer = new WebSocketBuffer(0);
+                WebSocketReceiveBuffer buffer = new WebSocketReceiveBuffer(null);
                 while (ws.State == WebSocketState.Open)
                 {
                     buffer.Clear();
@@ -145,10 +144,10 @@ namespace Alabaster
                     WebSocketMessageContext wsm = new WebSocketMessageContext(buffer, this, module);
                     switch(buffer.Type)
                     {
-                        case WebSocketBuffer.MessageType.Numbered:
+                        case WebSocketReceiveBuffer.MessageType.Numbered:
                             module.RunCallback(buffer.ID, wsm);
                             break;
-                        case WebSocketBuffer.MessageType.Named:
+                        case WebSocketReceiveBuffer.MessageType.Named:
                             module.RunCallback(buffer.Name, wsm);
                             break;
                         default:
@@ -160,8 +159,7 @@ namespace Alabaster
 
         public void Join(WebSocketChannel channel)
         {
-            if (this.module != channel.Module) { return; }
-            
+            if (this.module != channel.Module) { return; }            
             channel.connections[this] = true;
             this.channels[channel] = true;
         }
@@ -178,16 +176,19 @@ namespace Alabaster
 
         public Task SendAsync(byte eventID, byte[] data)
         {
-            byte[] buffer = new byte[data.Length + 2];
+            if (data.Length > WebSocketParameters.WSDataSize) { return Task.Run(() => { }); }
+            byte[] buffer = new byte[WebSocketParameters.WSDataSize + WebSocketParameters.WSHeaderSize];
             buffer[0] = 0;
             buffer[1] = eventID;
             Array.Copy(data, 0, buffer, 2, data.Length);
             return SendAsyncImplementation(buffer);
-        }        
+        }
 
         public Task SendAsync(string eventName, byte[] data)
         {
-            byte[] buffer = new byte[data.Length + eventName.Length + 1];
+            if(eventName.Length + 1 > WebSocketParameters.WSHeaderSize) { return Task.Run(()=> { }); }
+            if(data.Length > WebSocketParameters.WSDataSize) { return Task.Run(() => { }); }
+            byte[] buffer = new byte[WebSocketParameters.WSDataSize + WebSocketParameters.WSHeaderSize];
             byte[] eventNameBytes = Encoding.UTF8.GetBytes(eventName);
             Array.Copy(eventNameBytes, buffer, eventNameBytes.Length);
             Array.Copy(data, 0, buffer, eventNameBytes.Length + 2, data.Length);
@@ -208,7 +209,7 @@ namespace Alabaster
         }
     }
 
-    internal readonly ref struct WebSocketBuffer
+    internal readonly ref struct WebSocketReceiveBuffer
     {        
         internal readonly byte[] RawBuffer;
         internal enum MessageType : byte { Invalid, Numbered, Named };
@@ -241,7 +242,7 @@ namespace Alabaster
                 return (dataLength != -1) ? new ArraySegment<byte>(RawBuffer, typeOffset, RawBuffer.Length - typeOffset) : new ArraySegment<byte>(new byte[] { });
             }
         }
-        internal WebSocketBuffer(byte _)
+        internal WebSocketReceiveBuffer(object _)
         {
             this.RawBuffer = new byte[WebSocketParameters.WSHeaderSize + WebSocketParameters.WSDataSize];
         }
@@ -262,7 +263,7 @@ namespace Alabaster
         
         public static void AttachWebSocketModule(string route, WebSocketModule module)
         { 
-            Get(route, (Request req) => (req.IsWebSocketRequest) ? (Response)(new WebSocketHandshake(module, req.cw.Context)) : new PassThrough());
+            Get(route, (Request req) => (req.IsWebSocketRequest) ? (Response)(new WebSocketHandshake(module, req.cw.Context)) : PassThrough.Default);
             attachedWSModules.Add(module);
         }
     }

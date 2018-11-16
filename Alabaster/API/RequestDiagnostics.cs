@@ -32,13 +32,19 @@ namespace Alabaster
         public readonly struct HandlerResult
         {
             public readonly RouteCallback_A Handler;
-            public readonly Response Result;
+            public readonly Response Response;
             public readonly string[] Messages;
             internal HandlerResult(RouteCallback_A handler, Response result, string[] messages)
             {
                 this.Handler = handler;
-                this.Result = result;
+                this.Response = result;
                 this.Messages = messages;
+            }
+            public void Deconstruct(out RouteCallback_A handler, out Response res, out string[] messages)
+            {
+                handler = this.Handler;
+                res = this.Response;
+                messages = this.Messages;
             }
         }
     }

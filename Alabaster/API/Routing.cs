@@ -250,6 +250,7 @@ namespace Alabaster
 
         internal static void Initialize()
         {
+            AddHandlerInternal((MethodArg)null, (RouteArg)null, (Request req) => 400);
             ProcessHandlerQueue();
             Handlers.Initialize();
         }

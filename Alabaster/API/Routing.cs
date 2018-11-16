@@ -146,8 +146,6 @@ namespace Alabaster
 
     internal static class Routing
     {
-        private static RouteCallback_A[] FinalizedHandlers;
-        private static List<RouteCallback_A> Handlers = new List<RouteCallback_A>(1024);
         private static Queue<(MethodArg method, RouteArg route, RouteCallback_A callback)> currentHandlerGroup = new Queue<(MethodArg, RouteArg, RouteCallback_A)>(100);
         private enum HandlerType : byte { Universal, URL, URL_AllMethods, StandardMethod, CustomMethod }
         private static HandlerType? lastHandlerType = null;
@@ -253,14 +251,13 @@ namespace Alabaster
         internal static void Initialize()
         {
             ProcessHandlerQueue();
-            FinalizedHandlers = Handlers.ToArray();
-            Handlers = null;
+            Handlers.Initialize();
         }
 
         internal static Response ResolveHandlers(ContextWrapper cw)
         {
             Response result = null;
-            foreach(RouteCallback_A handler in FinalizedHandlers)
+            foreach(RouteCallback_A handler in Handlers.FinalizedHandlers)
             {
                 result = handler(new Request(cw));
                 result.Merge(cw);
@@ -277,6 +274,34 @@ namespace Alabaster
             bool isValid(string str) => str == null || str != string.Empty && !str.Contains(' ');
         }
 
+        private static class Handlers
+        {
+            private static List<RouteCallback_A> handlers = new List<RouteCallback_A>(1024);
+            internal static RouteCallback_A[] FinalizedHandlers;
+
+            internal static void Add(RouteCallback_A handler)
+            {
+                RouteCallback_A finalHandler = handler;
+                if(Server.Config.EnableRouteDiagnostics)
+                {
+                    finalHandler = (Request req) =>
+                    {
+                        req.Diagnostics.PushHandler(handler);
+                        Response res = handler(req);
+                        req.Diagnostics.PushResult(res);
+                        return res;
+                    };
+                }
+                handlers.Add(finalHandler);
+            }
+
+            internal static void Initialize()
+            {
+                FinalizedHandlers = handlers.ToArray();
+                handlers = null;
+            }
+        }
+        
         internal struct RoutingKey
         {
             private (RouteArg route, MethodArg method) data;

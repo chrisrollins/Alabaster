@@ -8,6 +8,7 @@ namespace Alabaster
     internal sealed class ContextWrapper
     {
         internal HttpListenerContext Context;
+        internal readonly RequestDiagnostics diagnostics;
         private byte[] data;
         internal byte[] ResponseBody
         {
@@ -19,6 +20,7 @@ namespace Alabaster
         {
             this.Context = ctx;
             this.data = null;
+            this.diagnostics = Server.Config.EnableRouteDiagnostics ? new RequestDiagnostics() : null;
         }
 
         internal string Route => this.Context.Request.Url.AbsolutePath;

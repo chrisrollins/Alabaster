@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace Alabaster
 {
     public struct Request
-    {
+    {        
         internal readonly ContextWrapper cw;
         internal HttpListenerRequest req { get => this.cw.Context.Request; }
         internal HttpListenerResponse res { get => this.cw.Context.Response; }
@@ -21,7 +21,15 @@ namespace Alabaster
         public Session[] Sessions { get => this.sessions.SessionList; }
         public string[] SessionCategories { get => this.sessions.CategoryList; }
         public Session GetSession(string category) => this.sessions[category];
-
+        public RequestDiagnostics Diagnostics
+        {
+            get
+            {
+                if(!Server.Config.EnableRouteDiagnostics) { throw new InvalidOperationException("Server.Config.EnableRouteDiagnostics must be true to use this feature."); }
+                return this.cw.diagnostics;
+            }
+        }
+        
         internal Request(ContextWrapper cw)
         {
             this.cw = cw;

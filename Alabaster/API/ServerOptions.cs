@@ -6,6 +6,7 @@ namespace Alabaster
     public struct ServerOptions
     {
         public bool EnableCustomHTTPMethods { get; set; }
+        public bool EnableRouteDiagnostics { get; set; }
 
         private int _schemesEnabled;
         public HTTPScheme SchemesEnabled

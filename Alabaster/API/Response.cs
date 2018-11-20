@@ -38,7 +38,7 @@ namespace Alabaster
         public Response AddSession(Session session)
         {
             Cookie cookie = new Cookie(Server.Config.ServerID, session.id.ToString());
-            cookie.HttpOnly = true;           
+            cookie.HttpOnly = true;
             this.Cookies.Add(cookie);
             return this;
         }
@@ -63,6 +63,7 @@ namespace Alabaster
                 {
                     foreach(Cookie cookie in cc)
                     {
+                        if(Server.Config.DropUnknownCookies && (cookie.Name != Server.Config.ServerID || Session.GetSession(cookie.Value) == null)) { continue; }
                         if(result[cookie.Name] == null) { result.Add(cookie); }
                     }
                 }
@@ -84,6 +85,7 @@ namespace Alabaster
         public static implicit operator Response(byte[] bytes) => new DataResponse(bytes);
         public static implicit operator Response(byte b) => new DataResponse(new byte[] { b });
         public static implicit operator Response(string str) => new StringResponse(str);
+        public static implicit operator Response((string str, int status) arg ) => new StringResponse(arg.str, arg.status);
         public static implicit operator Response(char c) => new StringResponse(c.ToString());
         public static implicit operator Response(Int64 n) => new EmptyResponse((Int32)n);
         public static implicit operator Response(Int32 n) => new EmptyResponse(n);

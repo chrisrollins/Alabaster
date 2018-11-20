@@ -12,7 +12,7 @@ namespace Alabaster
     {
         private readonly ConcurrentDictionary<string, object> sessionData = new ConcurrentDictionary<string, object>();
         
-        private ValueType this[string key]
+        public ValueType this[string key]
         {
             get => (this.sessionData.TryGetValue(key, out object result) ? (ValueType)result : default);
             set => this.sessionData[key] = value;

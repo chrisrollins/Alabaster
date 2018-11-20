@@ -36,8 +36,46 @@ namespace Alabaster
         internal static bool initialized = false;
         internal static volatile bool optionsInitialized = false;
         internal static bool running = false;
-        
-        public static void Start(int Port) => Start(new ServerOptions { Port = Port });        
+
+        public static void Start(
+            int Port,
+            string ServerID,
+            string StaticFilesBaseDirectory = ServerOptions.Defaults.StaticFilesBaseDirectory,
+            HTTPScheme SchemesEnabled = ServerOptions.Defaults.SchemesEnabled,
+            long MaximumCacheFileSize = ServerOptions.Defaults.MaximumCacheFileSize,
+            bool EnableRouteDiagnostics = ServerOptions.Defaults.EnableRouteDiagnostics,
+            bool EnableCustomHTTPMethods = ServerOptions.Defaults.EnableCustomHTTPMethods,
+            bool DropUnknownCookies = ServerOptions.Defaults.DropUnknownCookies)
+        => Start(new ServerOptions {
+            Port = Port,
+            ServerID = ServerID,
+            StaticFilesBaseDirectory = StaticFilesBaseDirectory,
+            SchemesEnabled = SchemesEnabled,
+            MaximumCacheFileSize = MaximumCacheFileSize,
+            EnableRouteDiagnostics = EnableRouteDiagnostics,
+            EnableCustomHTTPMethods = EnableCustomHTTPMethods,
+            DropUnknownCookies = DropUnknownCookies
+        });
+
+        public static void Start(
+            int Port,
+            string StaticFilesBaseDirectory = ServerOptions.Defaults.StaticFilesBaseDirectory,
+            HTTPScheme SchemesEnabled = ServerOptions.Defaults.SchemesEnabled,
+            long MaximumCacheFileSize = ServerOptions.Defaults.MaximumCacheFileSize,
+            bool EnableRouteDiagnostics = ServerOptions.Defaults.EnableRouteDiagnostics,
+            bool EnableCustomHTTPMethods = ServerOptions.Defaults.EnableCustomHTTPMethods,
+            bool DropUnknownCookies = ServerOptions.Defaults.DropUnknownCookies)
+        => Start(new ServerOptions
+        {
+            Port = Port,
+            ServerID = ServerOptions.Defaults.ServerID,
+            StaticFilesBaseDirectory = StaticFilesBaseDirectory,
+            SchemesEnabled = SchemesEnabled,
+            MaximumCacheFileSize = MaximumCacheFileSize,
+            EnableRouteDiagnostics = EnableRouteDiagnostics,
+            EnableCustomHTTPMethods = EnableCustomHTTPMethods,
+            DropUnknownCookies = DropUnknownCookies
+        });
 
         public static void Start(ServerOptions options)
         {

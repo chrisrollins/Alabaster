@@ -35,6 +35,7 @@ namespace Alabaster
             this.cw = cw;
             this.sessions = new SessionCollection(cw.Context.Request.Cookies);
             this.Parameters = new NameValueCollection(0);
+            this.Body = new RequestBody(cw.Context.Request);
         }
 
         public int ClientCertificateError { get => this.req.ClientCertificateError; }
@@ -68,16 +69,9 @@ namespace Alabaster
         public TransportContext TransportContext { get => this.req.TransportContext; }
         public string Route => this.cw.Route;
 
-        public string Body { get => GetBodyAsync().Result; }
-        public NameValueCollection Parameters { get; internal set; }
-                
-        public async Task<string> GetBodyAsync(int maximumSize = 104857600)
-        {
-            int size = (int)Util.Clamp(this.ContentLength64, 0, maximumSize);
-            byte[] buffer = new byte[size];
-            await this.req.InputStream.ReadAsync(buffer, 0, size);
-            return Encoding.UTF8.GetString(buffer);
-        }
+        public readonly RequestBody Body;
+
+        public NameValueCollection Parameters { get; internal set; }                
 
         private struct SessionCollection
         {
@@ -96,7 +90,7 @@ namespace Alabaster
             {
                 get
                 {
-                    ParseSessions();
+                    this.ParseSessions();
                     return this._sessions;
                 }
             }
@@ -116,6 +110,7 @@ namespace Alabaster
             private void ParseSessions()
             {
                 if (Interlocked.CompareExchange(ref parsed, 1, 0) == 1) { return; }
+                this._sessions = new ConcurrentDictionary<string, Session>(Environment.ProcessorCount, 10);
                 foreach (Cookie cookie in this.cookies)
                 {
                     if (cookie.Name != Server.Config.ServerID) { continue; }

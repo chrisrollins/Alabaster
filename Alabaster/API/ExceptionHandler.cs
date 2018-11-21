@@ -35,7 +35,19 @@ namespace Alabaster
                 this.ExceptionType = t;
             }
             public static implicit operator ExceptionHandlerResolver((ExceptionHandler h, Type t) args) => new ExceptionHandlerResolver(args.h, args.t);
-            internal Response Resolve(ExceptionInfo exceptionInfo) => (exceptionInfo.Exception.GetType() == this.ExceptionType) ? Handler(exceptionInfo) : PassThrough.Default;
+            internal Response Resolve(ExceptionInfo exceptionInfo) => (MatchException(exceptionInfo.Exception)) ? Handler(exceptionInfo) : PassThrough.Default;
+
+            private bool MatchException(Exception e)
+            {
+                if(this.ExceptionType == typeof(Exception)) { return true; }
+                Type t = e.GetType();
+                while(this.ExceptionType != t)
+                {
+                    t = t.BaseType;
+                    if (t == typeof(object)) { return false; }
+                }
+                return true;
+            }
         }
 
         public static void AddExceptionHandler<T>(ExceptionHandler callback) where T : Exception

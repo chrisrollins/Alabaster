@@ -7,10 +7,15 @@ namespace Alabaster
     using RouteCallback_C = Func<Response>;
     using RouteCallback_D = Action;
 
-    internal ref struct RouteCallback
+    internal readonly struct RouteCallback
     {
-        internal RouteCallback_A Callback;
-        internal RouteCallback(RouteCallback_A cb) => this.Callback = cb;
+        internal readonly RouteCallback_A Callback;
+        internal readonly int Priority;
+        internal RouteCallback(RouteCallback_A cb, int priority = 0)
+        {
+            this.Callback = cb;
+            this.Priority = priority;
+        }
         public static implicit operator RouteCallback(RouteCallback_A cb) => new RouteCallback(cb);
         public static implicit operator RouteCallback(RouteCallback_B cb) => Convert(cb);
         public static implicit operator RouteCallback(RouteCallback_D cb) => Convert(cb);

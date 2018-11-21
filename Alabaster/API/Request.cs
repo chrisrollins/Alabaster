@@ -95,11 +95,11 @@ namespace Alabaster
                 }
             }
 
-            public Session this[string c]
+            public Session this[string name]
             {
                 get
                 {
-                    sessions.TryGetValue(c, out Session session);
+                    sessions.TryGetValue(name, out Session session);
                     return session;
                 }
             }
@@ -115,7 +115,7 @@ namespace Alabaster
                 {
                     if (cookie.Name != Server.Config.ServerID) { continue; }
                     Session session = Session.GetSession(cookie.Value);
-                    if (session != null) { this.sessions.TryAdd(session.category, session); }
+                    if (session != null) { this.sessions.TryAdd(session.name, session); }
                 }
             }
         }

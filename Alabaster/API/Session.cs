@@ -19,7 +19,7 @@ namespace Alabaster
         }
         
         internal readonly string id;
-        internal readonly string category;
+        internal readonly string name;
         private long disposed = 0;
         private Intervals.IntervalCallback intervalCallback;
         private const int defaultDuration = 50;
@@ -27,9 +27,9 @@ namespace Alabaster
         [ThreadStatic] private static Random rand;
         private static ConcurrentDictionary<string, Session> sessions = new ConcurrentDictionary<string, Session>(Environment.ProcessorCount, 100);
         
-        public Session(string category)
+        internal Session(string name)
         {
-            this.category = category ?? throw new ArgumentNullException("Category must not be null.");
+            this.name = name ?? throw new ArgumentNullException("Category must not be null.");
             this.id = GenerateSessionID();
             this.intervalCallback = new Intervals.IntervalCallback();
             this.intervalCallback.SetTimes(defaultDuration);
@@ -41,6 +41,8 @@ namespace Alabaster
             Intervals.DailyJob(this.intervalCallback);
             sessions[this.id] = this;
         }
+
+
         
         internal static Session GetSession(string id)
         {
@@ -80,6 +82,29 @@ namespace Alabaster
         public void Dispose()
         {
             if (Interlocked.CompareExchange(ref this.disposed, 1, 0) == 0) { sessions[this.id] = null; }
+        }
+    }
+
+    public static partial class Server
+    {
+        public static void SessionInitializer(string name, Action<Session> callback) => SessionInitializer(name, (Session s, Request r) => callback(s));
+        public static void SessionInitializer(string name, Action<Session, Request> callback)
+        {
+            RouteCallback initializer = new RouteCallback
+            (
+                priority: 1,
+                cb: (req) =>
+                {                    
+                    if (req.GetSession(name) == null)
+                    {
+                        Session s = new Session(name);
+                        callback(s, req);
+                        return new PassThrough().AddSession(s);
+                    }
+                    return PassThrough.Default;           
+                }
+            );
+            Routing.AddHandler(initializer);
         }
     }
 }

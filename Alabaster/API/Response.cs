@@ -16,6 +16,9 @@ namespace Alabaster
         public CookieCollection Cookies = new CookieCollection();
         private bool? _KeepAlive;
         internal int? _StatusCode;
+        private bool stale = false;
+        private object staleLock = new object();
+        private string id = Guid.NewGuid().ToString();
         
         public bool KeepAlive
         {
@@ -45,6 +48,11 @@ namespace Alabaster
 
         internal void Merge(ContextWrapper cw)
         {
+            lock(staleLock)
+            {
+                if(this.stale) { throw new InvalidOperationException("Instance of Response must not be reused by multiple requests."); }
+                this.stale = true;
+            }
             HttpListenerResponse res = cw.Context.Response;
             res.ContentType = this.ContentType ?? res.ContentType;
             res.ContentEncoding = this.ContentEncoding ?? res.ContentEncoding;
@@ -105,21 +113,21 @@ namespace Alabaster
         public static implicit operator Response(decimal[] arr) => JoinArr(arr);
 
         private static string JoinArr<T>(T[] arr) => string.Join(null, "[", string.Join(",", arr ?? new T[] { }), "]");
-
+        
         public static Response Default => new EmptyResponse(400);
     }
 
     public sealed class RedirectResponse : Response
     {
-        private string redirectRoute;
+        internal string RedirectRoute;
         public RedirectResponse(string route, int statusCode = 302)
         {
-            this.redirectRoute = route;
+            this.RedirectRoute = route;
             this.StatusCode = Util.Clamp(statusCode, 300, 399);
         }
         internal override void Finish(ContextWrapper cw)
         {
-            cw.Context.Response.Redirect(redirectRoute);
+            cw.Context.Response.Redirect(RedirectRoute);
             base.Finish(cw);
         }
         public static new Response Default => new RedirectResponse("/");
@@ -151,13 +159,13 @@ namespace Alabaster
 
     public sealed class FileResponse : Response
     {
-        private string fileName;
-        private string baseDirectory;
+        internal string FileName;
+        internal string BaseDirectory;
         public override byte[] Body
         {
             get
             {
-                if(this.data == null) { this.data = FileIO.GetFile(fileName, baseDirectory).Data; }
+                if(this.data == null) { this.data = FileIO.GetFile(FileName, BaseDirectory).Data; }
                 return this.data;
             }
         }
@@ -173,8 +181,8 @@ namespace Alabaster
         public FileResponse(string fileName, string baseDirectory)
         {
             this.data = null;
-            this.fileName = fileName;
-            this.baseDirectory = baseDirectory;
+            this.FileName = fileName;
+            this.BaseDirectory = baseDirectory;
         }
         public static new Response Default => new FileResponse(null);
     }

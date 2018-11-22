@@ -19,8 +19,8 @@ namespace Alabaster
         private readonly SessionCollection sessions;        
 
         public Session[] Sessions { get => this.sessions.SessionList; }
-        public string[] SessionCategories { get => this.sessions.CategoryList; }
-        public Session GetSession(string category) => this.sessions[category];
+        public string[] SessionNames { get => this.sessions.NameList; }
+        public Session GetSession(string name) => this.sessions[name];
         public RequestDiagnostics Diagnostics
         {
             get
@@ -105,7 +105,7 @@ namespace Alabaster
             }
 
             public Session[] SessionList => this.sessions.Values.ToArray();
-            public string[] CategoryList => this.sessions.Keys.ToArray();
+            public string[] NameList => this.sessions.Keys.ToArray();
 
             private void ParseSessions()
             {

@@ -149,6 +149,7 @@ namespace Alabaster
         private static Queue<(MethodArg method, RouteArg route, RouteCallback callback)> currentHandlerGroup = new Queue<(MethodArg, RouteArg, RouteCallback)>(100);
         private enum HandlerType : byte { Universal, URL, URL_AllMethods, StandardMethod, CustomMethod }
         private static HandlerType? lastHandlerType = null;
+        private static int? lastPriority = null;
 
         internal static void AddHandler(RoutePatternMatch rp, RouteCallback rc) => AddHandler((MethodArg)null, rp, rc);
         internal static void AddHandler(MethodArg method, RoutePatternMatch rp, RouteCallback rc) => AddHandler(method, rp.CreateCallback(rc.Callback));
@@ -169,9 +170,11 @@ namespace Alabaster
         {
             RouteAddingExceptions(method.Value, route.Value, rc.Callback);
             HandlerType currentHandlerType = GetHandlerType();
-            if (currentHandlerType != lastHandlerType) { ProcessHandlerQueue(); }
+            int currentPriority = rc.Priority;
+            if (currentHandlerType != lastHandlerType || currentPriority != lastPriority) { ProcessHandlerQueue(lastPriority ?? 0); }
             currentHandlerGroup.Enqueue((method, route, rc));
-            lastHandlerType = currentHandlerType;               
+            lastHandlerType = currentHandlerType;
+            lastPriority = currentPriority;
 
             HandlerType GetHandlerType()
             {
@@ -182,7 +185,7 @@ namespace Alabaster
             }
         }
 
-        private static void ProcessHandlerQueue()
+        private static void ProcessHandlerQueue(int priority)
         {
             if (currentHandlerGroup.Count == 0) { return; }
 
@@ -206,7 +209,7 @@ namespace Alabaster
             void Universal()
             {
                 while (currentHandlerGroup.Count > 0)
-                {                    
+                {
                     Handlers.Add(currentHandlerGroup.Dequeue().callback);
                 }
             }
@@ -220,7 +223,7 @@ namespace Alabaster
                     RoutingKey key = (MethodArg)m.Value;
                     dict[key] = (dict.TryGetValue(key, out RouteCallback_A existingCallback)) ? (Request req) => existingCallback(req) ?? c.Callback(req) : c.Callback;
                 } while (currentHandlerGroup.Count > 0);
-                Handlers.Add((Request req) => dict.TryGetValue((MethodArg)req.HttpMethod, out RouteCallback_A handler) ? handler(req) : PassThrough.Default);
+                Handlers.Add((Request req) => dict.TryGetValue((MethodArg)req.HttpMethod, out RouteCallback_A handler) ? handler(req) : PassThrough.Default, priority);
             }
 
             void URL()
@@ -232,7 +235,7 @@ namespace Alabaster
                     RoutingKey key = (m, r);
                     dict[key] = (dict.TryGetValue(key, out RouteCallback_A existingCallback)) ? (Request req) => existingCallback(req) ?? c.Callback(req) : c.Callback;
                 } while (currentHandlerGroup.Count > 0);
-                Handlers.Add((Request req) => (RouteValidator.IsValid(req.Route) && dict.TryGetValue(req.cw, out RouteCallback_A handler)) ? handler(req) : PassThrough.Default);
+                Handlers.Add((Request req) => (RouteValidator.IsValid(req.Route) && dict.TryGetValue(req.cw, out RouteCallback_A handler)) ? handler(req) : PassThrough.Default, priority);
                 
             }
 
@@ -244,14 +247,14 @@ namespace Alabaster
                     (_, RouteArg key, RouteCallback c) = currentHandlerGroup.Dequeue();
                     dict[key] = (dict.TryGetValue(key, out RouteCallback_A existingCallback)) ? (Request req) => existingCallback(req) ?? c.Callback(req) : c.Callback;
                 } while (currentHandlerGroup.Count > 0);                    
-                Handlers.Add((Request req) => (RouteValidator.IsValid(req.Route) && dict.TryGetValue((RouteArg)req.Route, out RouteCallback_A handler)) ? handler(req) : PassThrough.Default);
+                Handlers.Add((Request req) => (RouteValidator.IsValid(req.Route) && dict.TryGetValue((RouteArg)req.Route, out RouteCallback_A handler)) ? handler(req) : PassThrough.Default, priority);
             }
         }
 
         internal static void Initialize()
         {
             AddHandlerInternal((MethodArg)null, (RouteArg)null, new RouteCallback( (Request req) => 400 ));
-            ProcessHandlerQueue();
+            ProcessHandlerQueue(lastPriority ?? 0);
             Handlers.Initialize();
         }
 
@@ -280,6 +283,7 @@ namespace Alabaster
             private static List<RouteCallback_A>[] handlers = new List<RouteCallback_A>[10];
             internal static RouteCallback_A[] FinalizedHandlers;
 
+            internal static void Add(RouteCallback_A rc, int priority) => Add(new RouteCallback(rc, priority));
             internal static void Add(RouteCallback_A rc) => Add(new RouteCallback(rc));
             internal static void Add(RouteCallback rc)
             {

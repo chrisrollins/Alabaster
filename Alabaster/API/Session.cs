@@ -11,12 +11,28 @@ namespace Alabaster
     public sealed class Session : IDisposable
     {
         private readonly ConcurrentDictionary<string, object> sessionData = new ConcurrentDictionary<string, object>();
-        
-        public ValueType this[string key]
+                
+        private object this[string key]
         {
-            get => (this.sessionData.TryGetValue(key, out object result) ? (ValueType)result : default);
+            get => (this.sessionData.TryGetValue(key, out object result) ? result : default);
             set => this.sessionData[key] = value;
         }
+
+        public bool TryGetValue(string key, out string item) => TryGetValueImplementation(key, out item);
+        public bool TryGetValue<T>(string key, out T item) where T : struct => TryGetValueImplementation(key, out item);
+        private bool TryGetValueImplementation<T>(string key, out T item)
+        {
+            object o = this[key];
+            if(o != null)
+            {
+                item = (T)o;
+                return true;
+            }
+            item = default;
+            return false;
+        }
+        public void SetValue<T>(string key, T value) where T : struct => this[key] = value;
+        public void SetValue(string key, string value) => this[key] = value;
         
         internal readonly string id;
         internal readonly string name;

@@ -40,7 +40,7 @@ namespace Alabaster
                 {
                     req.Parameters.Add(name, value);
                 }
-                return (result.Match) ? callback(req) : PassThrough.Default;
+                return (result.Match) ? callback(req) : PassThrough.Skip;
             };
         }
 

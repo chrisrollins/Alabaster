@@ -112,6 +112,30 @@ namespace Alabaster
         public static void Route(HTTPMethod method, RoutePatternMatch route, RouteCallback_C callback) => Routing.AddHandler(method, route, callback);
         public static void Route(HTTPMethod method, RoutePatternMatch route, RouteCallback_D callback) => Routing.AddHandler(method, route, callback);
         public static void Route(HTTPMethod method, RoutePatternMatch route, Response res) => Routing.AddHandler(method, route, res);
+
+        public delegate void PrefixedRouteAdder(params PartialController[] routes);
+
+        public static PrefixedRouteAdder Get(string prefix) => AddControllersWithPrefix(HTTPMethod.GET, (RouteArg)prefix);
+        public static PrefixedRouteAdder Post(string prefix) => AddControllersWithPrefix(HTTPMethod.POST, (RouteArg)prefix);
+        public static PrefixedRouteAdder Patch(string prefix) => AddControllersWithPrefix(HTTPMethod.PATCH, (RouteArg)prefix);
+        public static PrefixedRouteAdder Put(string prefix) => AddControllersWithPrefix(HTTPMethod.PUT, (RouteArg)prefix);
+        public static PrefixedRouteAdder Delete(string prefix) => AddControllersWithPrefix(HTTPMethod.DELETE, (RouteArg)prefix);
+        private static PrefixedRouteAdder AddControllersWithPrefix(MethodArg method, RouteArg prefix)
+        {
+            void Adder(params PartialController[] controllers)
+            {
+                Controller[] prefixedControllers = new Controller[controllers.Length];
+                for(int i = 0; i < controllers.Length; i++)
+                {
+                    PartialController beforePrefix = controllers[i];
+                    if(beforePrefix.Route == null) { throw new ArgumentException("Cannot use a RoutePatternMatch route with the prefix adder."); }
+                    prefixedControllers[i] = (method.Value, prefix.Value + beforePrefix.Route.TrimStart('/', '\\'), beforePrefix.Callback);
+                }
+                Routes(prefixedControllers);
+            }
+            return Adder;
+        }
+        
     }
 
     internal struct MethodArg
@@ -265,7 +289,7 @@ namespace Alabaster
             {
                 result = handler(new Request(cw));
                 if (!result.Skipped) { result.Merge(cw); }
-                if(!(result is PassThrough)) { break; }
+                if (!(result is PassThrough)) { break; }
             }
             return (result is PassThrough) ? (result._StatusCode ?? 400) : result;
         }

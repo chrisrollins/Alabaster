@@ -69,6 +69,7 @@ namespace Alabaster
                 foreach (ExceptionHandlerResolver ehr in finalizedExceptionHandlers)
                 {
                     result = ehr.Resolve(exceptionInfo);
+                    if (!result.Skipped) { result.Merge(exceptionInfo.Request.cw); }
                     if (!(result is PassThrough)) { break; }
                 }
             }

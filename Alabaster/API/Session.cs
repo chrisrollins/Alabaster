@@ -39,14 +39,16 @@ namespace Alabaster
         private long disposed = 0;
         private Intervals.IntervalCallback intervalCallback;
         private const int defaultDuration = 50;
+        private static long sessionCount = long.MinValue + new Random().Next() + DateTime.Now.Millisecond;
 
         [ThreadStatic] private static Random rand;
         private static ConcurrentDictionary<string, Session> sessions = new ConcurrentDictionary<string, Session>(Environment.ProcessorCount, 100);
         
         internal Session(string name)
         {
-            this.name = name ?? throw new ArgumentNullException("Category must not be null.");
-            this.id = GenerateSessionID();
+            long count = Interlocked.Increment(ref sessionCount);
+            this.name = name ?? throw new ArgumentNullException("Name must not be null.");
+            this.id = Guid.NewGuid().ToString() + count;
             this.intervalCallback = new Intervals.IntervalCallback();
             this.intervalCallback.SetTimes(defaultDuration);
             this.intervalCallback.Work = () =>
@@ -57,38 +59,13 @@ namespace Alabaster
             Intervals.DailyJob(this.intervalCallback);
             sessions[this.id] = this;
         }
-
-
         
         internal static Session GetSession(string id)
         {
             sessions.TryGetValue(id, out Session session);
             session?.intervalCallback.SetTimes(defaultDuration);
             return session;
-        }
-                
-        private static string GenerateSessionID()
-        {
-            if (rand == null) { SetupRNG(); }
-            string id;
-            int count = 0;
-            do
-            {
-                id = Guid.NewGuid().ToString() + rand.Next();
-                if(count++ > 1000) { throw new Exception("Could not generate unique session GUID."); }
-            } while (sessions.ContainsKey(id));
-            return id;
-        }
-
-        private static void SetupRNG()
-        {
-            rand = new Random();
-            int dummyRolls = (Thread.CurrentThread.ManagedThreadId + (Server.Config.Port % 11)) % 100;
-            for(int i = 0; i < dummyRolls; i++)
-            {
-                int n = rand.Next();
-            }
-        }
+        }                
 
         private void DisposedCheck()
         {
@@ -110,14 +87,14 @@ namespace Alabaster
             (
                 priority: 1,
                 cb: (req) =>
-                {                    
+                {
                     if (req.GetSession(name) == null)
                     {
                         Session s = new Session(name);
                         callback(s, req);
                         return new PassThrough().AddSession(s);
                     }
-                    return PassThrough.Default;           
+                    return PassThrough.Skip;           
                 }
             );
             Routing.AddHandler(initializer);

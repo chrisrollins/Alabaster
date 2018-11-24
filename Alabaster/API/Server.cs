@@ -44,8 +44,7 @@ namespace Alabaster
             HTTPScheme SchemesEnabled = ServerOptions.Defaults.SchemesEnabled,
             long MaximumCacheFileSize = ServerOptions.Defaults.MaximumCacheFileSize,
             bool EnableRouteDiagnostics = ServerOptions.Defaults.EnableRouteDiagnostics,
-            bool EnableCustomHTTPMethods = ServerOptions.Defaults.EnableCustomHTTPMethods,
-            bool DropUnknownCookies = ServerOptions.Defaults.DropUnknownCookies)
+            bool EnableCustomHTTPMethods = ServerOptions.Defaults.EnableCustomHTTPMethods)
         => Start(new ServerOptions {
             Port = Port,
             ServerID = ServerID,
@@ -53,8 +52,7 @@ namespace Alabaster
             SchemesEnabled = SchemesEnabled,
             MaximumCacheFileSize = MaximumCacheFileSize,
             EnableRouteDiagnostics = EnableRouteDiagnostics,
-            EnableCustomHTTPMethods = EnableCustomHTTPMethods,
-            DropUnknownCookies = DropUnknownCookies
+            EnableCustomHTTPMethods = EnableCustomHTTPMethods
         });
 
         public static void Start(
@@ -63,8 +61,7 @@ namespace Alabaster
             HTTPScheme SchemesEnabled = ServerOptions.Defaults.SchemesEnabled,
             long MaximumCacheFileSize = ServerOptions.Defaults.MaximumCacheFileSize,
             bool EnableRouteDiagnostics = ServerOptions.Defaults.EnableRouteDiagnostics,
-            bool EnableCustomHTTPMethods = ServerOptions.Defaults.EnableCustomHTTPMethods,
-            bool DropUnknownCookies = ServerOptions.Defaults.DropUnknownCookies)
+            bool EnableCustomHTTPMethods = ServerOptions.Defaults.EnableCustomHTTPMethods)
         => Start(new ServerOptions
         {
             Port = Port,
@@ -73,8 +70,7 @@ namespace Alabaster
             SchemesEnabled = SchemesEnabled,
             MaximumCacheFileSize = MaximumCacheFileSize,
             EnableRouteDiagnostics = EnableRouteDiagnostics,
-            EnableCustomHTTPMethods = EnableCustomHTTPMethods,
-            DropUnknownCookies = DropUnknownCookies
+            EnableCustomHTTPMethods = EnableCustomHTTPMethods
         });
 
         public static void Start(ServerOptions options)

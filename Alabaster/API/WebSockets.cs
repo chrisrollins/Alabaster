@@ -263,7 +263,7 @@ namespace Alabaster
         
         public static void AttachWebSocketModule(string route, WebSocketModule module)
         { 
-            Get(route, (Request req) => (req.IsWebSocketRequest) ? (Response)(new WebSocketHandshake(module, req.cw.Context)) : PassThrough.Default);
+            Get(route, (Request req) => (req.IsWebSocketRequest) ? (Response)(new WebSocketHandshake(module, req.cw.Context)) : PassThrough.Skip);
             attachedWSModules.Add(module);
         }
     }

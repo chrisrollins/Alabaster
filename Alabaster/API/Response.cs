@@ -18,8 +18,8 @@ namespace Alabaster
         internal int? _StatusCode;
         private bool stale = false;
         private object staleLock = new object();
-        private string id = Guid.NewGuid().ToString();
-        
+        internal bool Skipped = false;
+
         public bool KeepAlive
         {
             get => this._KeepAlive ?? false;
@@ -38,9 +38,9 @@ namespace Alabaster
             return this;
         }
 
-        public Response AddSession(Session session)
+        internal Response AddSession(Session session)
         {
-            Cookie cookie = new Cookie(Server.Config.ServerID, session.id.ToString());
+            Cookie cookie = new Cookie(Server.Config.ServerID, session.id);
             cookie.HttpOnly = true;
             this.Cookies.Add(cookie);
             return this;
@@ -62,6 +62,7 @@ namespace Alabaster
             res.StatusCode = this._StatusCode ?? res.StatusCode;
             res.Cookies = mergeCookies(this.Cookies, res.Cookies, cw.Context.Request.Cookies);
             cw.Context.Request.Cookies.Add(res.Cookies);
+            cw.Context.Response.Cookies = res.Cookies;
             cw.ResponseBody = this.Body;
 
             CookieCollection mergeCookies(params CookieCollection[] cookies)
@@ -70,8 +71,7 @@ namespace Alabaster
                 foreach (CookieCollection cc in cookies)
                 {
                     foreach(Cookie cookie in cc)
-                    {
-                        if(Server.Config.DropUnknownCookies && (cookie.Name != Server.Config.ServerID || Session.GetSession(cookie.Value) == null)) { continue; }
+                    {                        
                         if(result[cookie.Name] == null) { result.Add(cookie); }
                     }
                 }
@@ -82,7 +82,7 @@ namespace Alabaster
         internal virtual void Finish(ContextWrapper cw)
         {
             HttpListenerResponse res = cw.Context.Response;
-            byte[] data = cw.ResponseBody;
+            byte[] data = cw.ResponseBody;            
             res.ContentLength64 = data.Length;
             res.OutputStream.Write(data, 0, data.Length);
             res.OutputStream.Close();
@@ -199,6 +199,7 @@ namespace Alabaster
 
     public sealed class PassThrough : Response
     {
+        internal PassThrough(bool skip) : this() => this.Skipped = skip;
         public PassThrough() : this(null, 200) { }
         public PassThrough(byte[] data, int status)
         {
@@ -206,5 +207,6 @@ namespace Alabaster
             this.StatusCode = status;
         }
         public static new Response Default => new PassThrough();
+        internal static Response Skip => new PassThrough(skip: true);
     }
 }

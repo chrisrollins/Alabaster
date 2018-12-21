@@ -71,8 +71,8 @@ namespace Alabaster
 
         public readonly RequestBody Body;
 
-        public NameValueCollection Parameters { get; internal set; }                
-
+        public NameValueCollection Parameters { get; internal set; }
+        
         private struct SessionCollection
         {
             private ConcurrentDictionary<string, Session> _sessions;

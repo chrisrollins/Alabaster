@@ -120,7 +120,7 @@ namespace Alabaster
     public sealed class RedirectResponse : Response
     {
         internal string RedirectRoute;
-        public RedirectResponse(string route, int statusCode = 302)
+        public RedirectResponse(string route, int statusCode = 303)
         {
             this.RedirectRoute = route;
             this.StatusCode = Util.Clamp(statusCode, 300, 399);
@@ -128,6 +128,7 @@ namespace Alabaster
         internal override void Finish(ContextWrapper cw)
         {
             cw.Context.Response.Redirect(RedirectRoute);
+            cw.Context.Response.StatusCode = this._StatusCode ?? 303;
             base.Finish(cw);
         }
         public static new Response Default => new RedirectResponse("/");

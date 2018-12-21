@@ -149,7 +149,7 @@ namespace Alabaster
                     result.Finish(cw);
                 }
             }
-        }        
+        }
 
         public static void Stop()
         {

@@ -82,6 +82,7 @@ namespace Alabaster
         internal virtual void Finish(ContextWrapper cw)
         {
             HttpListenerResponse res = cw.Context.Response;
+            string _ = res.StatusDescription;
             byte[] data = cw.ResponseBody;            
             res.ContentLength64 = data.Length;
             res.OutputStream.Write(data, 0, data.Length);
@@ -93,7 +94,8 @@ namespace Alabaster
         public static implicit operator Response(byte[] bytes) => new DataResponse(bytes);
         public static implicit operator Response(byte b) => new DataResponse(new byte[] { b });
         public static implicit operator Response(string str) => new StringResponse(str);
-        public static implicit operator Response((string str, int status) arg ) => new StringResponse(arg.str, arg.status);
+        public static implicit operator Response((string str, int status) arg) => new StringResponse(arg.str, arg.status);
+        public static implicit operator Response((int status, string str) arg) => new StringResponse(arg.str, arg.status);
         public static implicit operator Response(char c) => new StringResponse(c.ToString());
         public static implicit operator Response(Int64 n) => new EmptyResponse((Int32)n);
         public static implicit operator Response(Int32 n) => new EmptyResponse(n);
@@ -127,8 +129,10 @@ namespace Alabaster
         }
         internal override void Finish(ContextWrapper cw)
         {
-            cw.Context.Response.Redirect(RedirectRoute);
-            cw.Context.Response.StatusCode = this._StatusCode ?? 303;
+            HttpListenerResponse res = cw.Context.Response;
+            res.Redirect(RedirectRoute);
+            res.StatusCode = this._StatusCode ?? 303;
+            res.StatusDescription = null;
             base.Finish(cw);
         }
         public static new Response Default => new RedirectResponse("/");

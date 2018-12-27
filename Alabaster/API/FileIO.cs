@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Linq;
 
 namespace Alabaster
 {
@@ -63,19 +64,21 @@ namespace Alabaster
             {
                 get
                 {
-                    if (this.data == null) { this.data = LRUCache.GetStaticFileData((FilePath)this.FilePath, (DirectoryPath)this.BaseDirectory); }
+                    if (this.data == null) { this.data = LRUCache.GetStaticFileData(this.filePath, this.baseDir); }
                     return this.data;
                 }
             }
             public bool Found => ((FilePath)this.FullPath).Valid;
             public byte this[int i] => this.Data[i];
-            public readonly string BaseDirectory;
-            public readonly string FilePath;
-            public string FullPath => this.BaseDirectory + this.FilePath;
+            private DirectoryPath baseDir;
+            private FilePath filePath;
+            public string BaseDirectory => this.baseDir.Value;
+            public string FilePath => this.filePath.Value;
+            public string FullPath => (this.baseDir + this.filePath).Value;
             internal FileData(string path, string baseDir, bool preload = false)
             {
-                this.FilePath = path;
-                this.BaseDirectory = baseDir;
+                this.filePath = (FilePath)path;
+                this.baseDir = (DirectoryPath)baseDir;
                 this.data = null;
                 if (preload) { _ = this.Data; }
             }
@@ -92,6 +95,7 @@ namespace Alabaster
         private interface IPath
         {
             DirectoryPath GetDirectory();
+            string GetExtension();
             string Value { get; set; }
         }
 
@@ -101,7 +105,8 @@ namespace Alabaster
             public FilePath(string val) => this.Value = val.Replace('\\', '/');
             public DirectoryPath GetDirectory() => new DirectoryPath(this.Value.Substring(0, Util.Clamp(this.Value.LastIndexOf('/'), 0, int.MaxValue)));
             public static explicit operator FilePath(string path) => new FilePath(path);
-            public bool Valid => IsPathAllowed(this) && IsPathAllowed(this.GetDirectory()) && File.Exists(this.Value);            
+            public bool Valid => IsPathAllowed(this) && IsPathAllowed(this.GetDirectory()) && File.Exists(this.Value);
+            public string GetExtension() => Util.GetFileExtension(this.Value) ?? "";
         }
 
         private struct DirectoryPath : IPath
@@ -110,12 +115,16 @@ namespace Alabaster
             public DirectoryPath(string val)
             {
                 this.Value = val.Replace('\\', '/');
-                //if (val == "" || val[val.Length - 1] != '/') { this.Value += "/"; }
             }
             public DirectoryPath GetDirectory() => this;
+            public string GetExtension() => "";
             public static IPath operator +(DirectoryPath p1, IPath p2)
             {
-                string value = p1.Value + p2.Value;
+                string dir = p1.Value;
+                if(!string.IsNullOrEmpty(dir) && dir[dir.Length - 1] != '/') { dir = dir + "/"; }
+                string extDir = GetFileExtensionDirectory(p2.GetExtension());
+                if(!string.IsNullOrEmpty(extDir)) { extDir += "/"; }
+                string value = string.Join(null, dir, extDir, p2.Value);
                 return (p2.GetType() == typeof(DirectoryPath)) ? (IPath)new DirectoryPath(value) : new FilePath(value);
             }
             public static explicit operator DirectoryPath(string path) => new DirectoryPath(path);

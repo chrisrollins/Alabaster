@@ -8,6 +8,7 @@ namespace Alabaster
     public abstract partial class Response
     {
         protected byte[] data;
+        protected bool noResponse = false;
         public virtual byte[] Body { get => this.data; }
         public string ContentType;
         public Encoding ContentEncoding;
@@ -57,9 +58,9 @@ namespace Alabaster
             res.ContentType = this.ContentType ?? res.ContentType;
             res.ContentEncoding = this.ContentEncoding ?? res.ContentEncoding;
             res.Headers = this.Headers ?? res.Headers;
+            res.StatusCode = this._StatusCode ?? res.StatusCode;
             res.StatusDescription = this.StatusDescription ?? res.StatusDescription;
             res.KeepAlive = this._KeepAlive ?? res.KeepAlive;
-            res.StatusCode = this._StatusCode ?? res.StatusCode;
             res.Cookies = mergeCookies(this.Cookies, res.Cookies, cw.Context.Request.Cookies);
             cw.Context.Request.Cookies.Add(res.Cookies);
             cw.Context.Response.Cookies = res.Cookies;
@@ -82,11 +83,14 @@ namespace Alabaster
         internal virtual void Finish(ContextWrapper cw)
         {
             HttpListenerResponse res = cw.Context.Response;
-            string _ = res.StatusDescription;
-            byte[] data = cw.ResponseBody;            
-            res.ContentLength64 = data.Length;
-            res.OutputStream.Write(data, 0, data.Length);
-            res.OutputStream.Close();
+            if (this.noResponse == false)
+            {
+                string _ = res.StatusDescription;
+                byte[] data = cw.ResponseBody;
+                res.ContentLength64 = data.Length;
+                res.OutputStream.Write(data, 0, data.Length);
+                res.OutputStream.Close();
+            }
             this.AdditionalFinishTasks(new Request(cw), this);
         }
         
@@ -200,6 +204,12 @@ namespace Alabaster
             this.data = null;
         }
         public static new Response Default => new EmptyResponse(400);
+    }
+
+    public sealed class NoResponse : Response
+    {
+        public NoResponse() { this.noResponse = true; }
+        public static new NoResponse Default => new NoResponse();
     }
 
     public sealed class PassThrough : Response

@@ -19,12 +19,12 @@ namespace Alabaster
         
         static FileIO()
         {
-            foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
+            Array.ForEach(AppDomain.CurrentDomain.GetAssemblies(), asm =>
             {
                 FilePath path = new FilePath(asm.Location);
                 allowedPaths[path] = false;
                 allowedPaths.Lock(path);
-            }
+            });
         }
 
         public static void InitializeFileRequestHandler()
@@ -50,7 +50,7 @@ namespace Alabaster
 
         public static void SetFileExtensionDirectory(string extension, string directory) => extensionPaths[extension] = directory;
         public static bool RemoveFileExtensionDirectory(string extension) => extensionPaths.TryRemove(extension, out _);
-        public static string GetFileExtensionDirectory(string extension) => extensionPaths[extension];
+        public static string GetFileExtensionDirectory(string extension) => extensionPaths.TryGetValue(extension, out string path) ? path : "";
 
         public static FileData GetFile(string file) => new FileData(file, Server.Config.StaticFilesBaseDirectory);
         public static FileData GetFile(string file, string baseDirectory) => new FileData(file, baseDirectory);
@@ -136,15 +136,11 @@ namespace Alabaster
             {
                 private byte[] data;
                 public LRUNode Node;
-
                 public CachedFile() => this.Node = new LRUNode(this);
-
                 public DateTime Timestamp { get; private set; }
-
                 public byte[] Data
                 {
                     get => data;
-
                     set
                     {
                         Timestamp = DateTime.Now;
@@ -191,7 +187,7 @@ namespace Alabaster
                 byte[] GetFromCache()
                 {
                     byte[] data = result?.Data;
-                    return (data != null && File.GetLastWriteTime(fullPath.Value) > result.Timestamp) ? data : LoadFromDisk();
+                    return (data != null && File.GetLastWriteTime(fullPath.Value) < result.Timestamp) ? data : LoadFromDisk();
                 }
 
                 void LRUPrepend()

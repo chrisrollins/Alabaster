@@ -30,10 +30,7 @@ namespace Alabaster
         private void AdditionalFinishTasks(Request req, Response res)
         {
             if(Server.ResponseSentCallbacks.Count == 0) { return; }
-            foreach(ResponseSentCallback_A cb in Server.ResponseSentCallbacks)
-            {
-                cb(req, res);
-            }            
+            Server.ResponseSentCallbacks.ForEach(callback => callback(req, res));
         }
     }
 }

@@ -29,7 +29,7 @@ namespace Alabaster
                 return true;
             }
             item = default;
-            return false;
+            return false;            
         }
         public void SetValue<T>(string key, T value) where T : struct => this[key] = value;
         public void SetValue(string key, string value) => this[key] = value;

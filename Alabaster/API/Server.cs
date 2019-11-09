@@ -116,10 +116,9 @@ namespace Alabaster
                 lock (configAccessLock)
                 {
                     optionsInitialized = true;
-                    foreach (PropertyInfo prop in Config.GetType().GetProperties())
-                    {
+                    Array.ForEach(Config.GetType().GetProperties(), prop => {
                         object temp = prop.GetValue(Config);
-                    }
+                    });
                 }
             }
 

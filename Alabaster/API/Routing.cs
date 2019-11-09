@@ -135,7 +135,6 @@ namespace Alabaster
             }
             return Adder;
         }
-        
     }
 
     internal struct MethodArg

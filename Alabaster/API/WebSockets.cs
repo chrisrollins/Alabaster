@@ -89,21 +89,8 @@ namespace Alabaster
 
         private Task SendAsyncImplementation(Action<WebSocketConnection> callback)
         {
-            Task[] tasks = new Task[this.connections.Count];
-            int i = 0;
-            foreach(WebSocketConnection connection in this.connections.Keys)
-            {
-                tasks[i] = Task.Run(()=>callback(connection));
-                i++;
-            }
-            Task all = Task.Run(() =>
-            {
-                foreach (Task t in tasks)
-                {
-                    t.Wait();
-                }
-            });
-            return all;
+            Task[] tasks = this.connections.Keys.Select(connection => Task.Run(() => callback(connection))).ToArray();                        
+            return Task.Run(() => Array.ForEach(tasks, task => task.Wait()));
         }
     }
 

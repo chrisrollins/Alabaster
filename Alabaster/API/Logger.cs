@@ -48,12 +48,12 @@ namespace Alabaster
                 return this;
             }
             public Channel() : this(new Channel[] { }) { }
-            public Channel(Action<Message> handler) : this(null, null, handler) { }
+            public Channel(MessageHandler handler) : this(null, null, handler) { }
             public Channel(params Channel[] recievers) : this(null, recievers, null) { }
             public Channel(string name) : this(name, (Channel)null, null) { }
             public Channel(string name, params Channel[] recievers) : this(name, recievers, null) { }
-            public Channel(string name, Action<Message> handler) : this(name, null, handler) { }
-            public Channel(string name, IEnumerable<Channel> recievers, Action<Message> handler)
+            public Channel(string name, MessageHandler handler) : this(name, null, handler) { }
+            public Channel(string name, IEnumerable<Channel> recievers, MessageHandler handler)
             {
                 handler ??= (_) => { };
                 this.Handler = (message, alreadyReceived) =>
@@ -76,6 +76,15 @@ namespace Alabaster
                     .Distinct()
                 );
             }
+            public static implicit operator Channel(MessageHandler handler) => new Channel(handler);
+            public static implicit operator Channel(Channel[] recievers) => new Channel(recievers);
+            public static implicit operator Channel(string name) => new Channel(name);
+            public static implicit operator Channel((string name, Channel[] recievers) args) => new Channel(args.name, args.recievers);
+            public static implicit operator Channel((string name, Channel reciever) args) => new Channel(args.name, args.reciever);
+            public static implicit operator Channel((string name, MessageHandler messageHandler) args) => new Channel(args.name, args.messageHandler);
+            public static implicit operator Channel((string name, IEnumerable<Channel> recievers, MessageHandler handler) args) => new Channel(args.name, args.recievers, args.handler);
+
+            public delegate void MessageHandler(Message message);
         }
     }
 }

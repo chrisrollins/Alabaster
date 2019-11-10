@@ -276,7 +276,7 @@ namespace Alabaster
 
         internal static void Initialize()
         {
-            AddHandlerInternal((MethodArg)null, (RouteArg)null, new RouteCallback( (Request req) => 400 ));
+            AddHandlerInternal((MethodArg)null, (RouteArg)null, new RouteCallback( (Request req) => (Util.GetFileExtension(req.Route) != null) ? 404 : 400 ));
             ProcessHandlerQueue(lastPriority ?? 0);
             Handlers.Initialize();
         }

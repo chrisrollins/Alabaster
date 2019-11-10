@@ -15,10 +15,16 @@ namespace Alabaster
         {
             public readonly string Content;
             public Message(string content) => this.Content = content;
-            public Message(object content) : this(content.ToString()) { }
-            public Message(Array array) => this.Content = "[" + String.Join(", ", array) + "]";
+            public Message(object content) : this(
+                content is System.Collections.IEnumerable ?
+                FormatArray((content as IEnumerable<object>).ToArray()) :
+                content.ToString()
+            ) { }
+            private static string FormatArray(Array array) => "[" + String.Join(", ", array) + "]";
+            public Message(Array array) => this.Content = FormatArray(array);
             public static implicit operator Message(string value) => new Message(value);
             public static implicit operator Message(Exception value) => new Message(value);
+            public static implicit operator Message(bool value) => new Message(value);
             public static implicit operator Message(char value) => new Message(value);
             public static implicit operator Message(byte value) => new Message(value);
             public static implicit operator Message(UInt16 value) => new Message(value);

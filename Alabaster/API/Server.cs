@@ -101,7 +101,7 @@ namespace Alabaster
                     return;
                 }
                 if (Config.Port == 0) { throw new InvalidOperationException("Port not set."); }
-                Util.ProgressVisualizer("Initializing Server...", "Listening on port " + Config.Port,
+                Util.ProgressVisualizer("Initializing Server...", "Initialized.",
                     InitializeOptions,
                     FileIO.InitializeFileRequestHandler,
                     Routing.Initialize,
@@ -110,6 +110,7 @@ namespace Alabaster
                     GC.Collect
                 );
                 initialized = true;
+                DefaultLoggers.Console.Log($"Server started. Server ID: \"{Server.Config.ServerID}\", Port: {Config.Port}");
             }
 
             void InitializeOptions()

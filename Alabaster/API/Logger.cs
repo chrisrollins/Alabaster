@@ -9,7 +9,7 @@ namespace Alabaster
 {
     public static partial class Logger
     {
-        public static void Log(Channel channel, params Message[] messages) => ServerThreadManager.Run(() => channel.Handler(String.Join(' ', messages), new HashSet<Channel>()));
+        public static void Log(Channel channel, params Message[] messages) => ServerThreadManager.Run(() => channel.Handler(String.Join(' ', messages.Select(message => message.Content)), new HashSet<Channel>()));
         public static void Log(params Message[] messages) => Log(DefaultLoggers.Default, messages);
         public readonly struct Message
         {
@@ -35,6 +35,7 @@ namespace Alabaster
             public static implicit operator Message(Int32 value) => new Message(value);
             public static implicit operator Message(Int64 value) => new Message(value);
             public static implicit operator Message(Array values) => new Message(values);
+            public override string ToString() => this.Content;
         }
 
         public sealed class Channel

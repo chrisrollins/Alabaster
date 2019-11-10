@@ -24,7 +24,7 @@ namespace Alabaster
 
         internal static void ProgressVisualizer(string startLabel, string endLabel, params Action[] functions)
         {
-            DefaultLoggers.Info.Log(startLabel);
+            Console.WriteLine(startLabel);
             int barLength = 100 + (functions.Length - (100 % functions.Length));
             int chunkSize = barLength / functions.Length;
             string progressChunk = new string(':', chunkSize);
@@ -38,7 +38,7 @@ namespace Alabaster
                 Console.Write(progressChunk);
             }
             Console.CursorLeft = 0;
-            DefaultLoggers.Info.Log(String.Join(null, '\n', endLabel, new string(' ', barLength)));
+            Console.WriteLine(String.Join(null, '\n', endLabel, new string(' ', barLength)));
         }
 
         internal static string ReplaceMultiple(string str, string toReplace, char replacement)

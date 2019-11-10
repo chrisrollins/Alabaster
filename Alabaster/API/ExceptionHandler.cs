@@ -73,10 +73,11 @@ namespace Alabaster
                     if (!(result is PassThrough)) { break; }
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                Console.WriteLine("Exception occurred in exception handler:");
-                Console.WriteLine(e);
+                DefaultLoggers.Error
+                .Log("Exception occurred in exception handler:")
+                .Log(e);
                 result = 500;
             }
             return (result is PassThrough) ? (result._StatusCode ?? 500) : result;
@@ -86,10 +87,11 @@ namespace Alabaster
         {
             AddExceptionHandlerInternal<Exception>((ExceptionInfo exceptionInfo) =>
             {
-                Console.WriteLine("Exception while handling request:");
-                Console.WriteLine(exceptionInfo.Exception);
-                Console.WriteLine("Request URL path: \"" + exceptionInfo.Request.Route + "\"");
-                Console.WriteLine("Request HTTP method: \"" + exceptionInfo.Request.HttpMethod + "\"");
+                DefaultLoggers.Error
+                .Log("Exception while handling request:")
+                .Log(exceptionInfo.Exception)
+                .Log("Request URL path: \"" + exceptionInfo.Request.Route + "\"")
+                .Log("Request HTTP method: \"" + exceptionInfo.Request.HttpMethod + "\"");
                 return 500;
             });
             finalizedExceptionHandlers = exceptionHandlerAddList.ToArray();

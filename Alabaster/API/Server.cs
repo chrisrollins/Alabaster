@@ -95,8 +95,9 @@ namespace Alabaster
                 try { listener.Start(); }
                 catch (HttpListenerException e)
                 {
-                    Console.WriteLine("Server was unable to start. Error code: " + e.ErrorCode);
-                    Console.WriteLine("Exception message: " + e.Message);
+                    DefaultLoggers.Error
+                    .Log("Server was unable to start. Error code: " + e.ErrorCode)
+                    .Log("Exception message: " + e.Message);
                     return;
                 }
                 if (Config.Port == 0) { throw new InvalidOperationException("Port not set."); }

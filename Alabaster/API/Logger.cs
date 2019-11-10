@@ -9,8 +9,7 @@ namespace Alabaster
 {
     public static partial class Logger
     {
-        private static BlockingCollection<(Channel channel, Message message)> MessageQueue = new BlockingCollection<(Channel, Message)>(new ConcurrentQueue<(Channel, Message)>());
-        public static void Log(Channel channel, params Message[] messages) => MessageQueue.Add((channel, String.Join(' ', messages)));
+        public static void Log(Channel channel, params Message[] messages) => ServerThreadManager.Run(() => channel.Handler(String.Join(' ', messages), new HashSet<Channel>()));
         public static void Log(params Message[] messages) => Log(DefaultLoggers.Default, messages);
         public readonly struct Message
         {
@@ -34,7 +33,7 @@ namespace Alabaster
 
         public sealed class Channel
         {
-            private readonly Action<Message, HashSet<Channel>> Handler;
+            internal readonly Action<Message, HashSet<Channel>> Handler;
             public readonly string Name;
             public readonly ConcurrentBag<Channel> Receivers;
             public Channel Log(params Message[] messages)
@@ -64,21 +63,12 @@ namespace Alabaster
                         reciever.Handler(message, alreadyRecieved);
                     });
                 };
-                this.Name = name ?? Guid.NewGuid().ToString();
+                this.Name = name ?? "";
                 this.Receivers = new ConcurrentBag<Channel>(
                     (recievers ?? new List<Channel>())
                     .Where(reciever => reciever != this)
                     .Distinct()
                 );
-            }
-
-            static Channel()
-            {
-                new Thread(() =>
-                {
-                    var (channel, message) = MessageQueue.Take();
-                    channel.Handler(message, new HashSet<Channel>());
-                }).Start();
             }
         }
     }

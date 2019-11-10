@@ -50,17 +50,17 @@ namespace Alabaster
             public Channel(string name, IEnumerable<Channel> recievers, Action<Message> handler)
             {
                 handler ??= (_) => { };
-                this.Handler = (message, alreadyRecieved) =>
+                this.Handler = (message, alreadyReceived) =>
                 {
                     message = String.IsNullOrEmpty(this.Name) ? message : String.Join(null, this.Name, ": ", message);
                     handler(message);
                     Array.ForEach(
                         this.Receivers
-                        .Where(receiver => !alreadyRecieved.Contains(receiver))
+                        .Where(receiver => !alreadyReceived.Contains(receiver))
                         .ToArray(),
                     reciever => {
-                        alreadyRecieved.Add(reciever);
-                        reciever.Handler(message, alreadyRecieved);
+                        alreadyReceived.Add(reciever);
+                        reciever.Handler(message, alreadyReceived);
                     });
                 };
                 this.Name = name ?? "";

@@ -15,15 +15,15 @@ namespace Alabaster
             public const string Error = BasePrefix + "Error";
         }
 
-        public static readonly Logger.Channel Console = (Names.Console, message => System.Console.WriteLine(message.Content));
-        public static readonly Logger.Channel Info = (Names.Info, DefaultLoggers.Console);
-        public static readonly Logger.Channel Error = (Names.Info, DefaultLoggers.Console);
-        public static readonly Logger.Channel Default = new Logger.Channel(DefaultLoggers.Console);
+        public static readonly Logger.Channel Console = (name: Names.Console, handler: message => System.Console.WriteLine(message.Content));
+        public static readonly Logger.Channel Default = (name: Names.Console, receiver: DefaultLoggers.Console);
+        public static readonly Logger.Channel Info = (name: Names.Info, receiver: DefaultLoggers.Default);
+        public static readonly Logger.Channel Error = (name: Names.Error, receiver: DefaultLoggers.Default);
         public static readonly Logger.Channel Debug =
         #if DEBUG
-            new Logger.Channel(Names.Debug, DefaultLoggers.Console);
+            (name: Names.Debug, receiver: DefaultLoggers.Console);
         #else
-            new Logger.Channel(Names.Debug);
+            new Logger.Channel(name: Names.Debug);
         #endif
     }
 }

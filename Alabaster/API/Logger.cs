@@ -50,11 +50,11 @@ namespace Alabaster
             }
             public Channel() : this(new Channel[] { }) { }
             public Channel(MessageHandler handler) : this(null, null, handler) { }
-            public Channel(params Channel[] recievers) : this(null, recievers, null) { }
+            public Channel(params Channel[] receivers) : this(null, receivers, null) { }
             public Channel(string name) : this(name, (Channel)null, null) { }
-            public Channel(string name, params Channel[] recievers) : this(name, recievers, null) { }
+            public Channel(string name, params Channel[] receivers) : this(name, null, receivers) { }
             public Channel(string name, MessageHandler handler) : this(name, null, handler) { }
-            public Channel(string name, IEnumerable<Channel> recievers, MessageHandler handler)
+            public Channel(string name, MessageHandler handler, params Channel[] receivers)
             {
                 handler ??= (_) => { };
                 this.Handler = (message, alreadyReceived) =>
@@ -65,25 +65,25 @@ namespace Alabaster
                         this.Receivers
                         .Where(receiver => !alreadyReceived.Contains(receiver))
                         .ToArray(),
-                    reciever => {
-                        alreadyReceived.Add(reciever);
-                        reciever.Handler(message, alreadyReceived);
+                    receiver => {
+                        alreadyReceived.Add(receiver);
+                        receiver.Handler(message, alreadyReceived);
                     });
                 };
                 this.Name = name ?? "";
                 this.Receivers = new ConcurrentBag<Channel>(
-                    (recievers ?? new List<Channel>())
-                    .Where(reciever => reciever != this)
+                    (receivers ?? new Channel[] { })
+                    .Where(receiver => receiver != this)
                     .Distinct()
                 );
             }
             public static implicit operator Channel(MessageHandler handler) => new Channel(handler);
-            public static implicit operator Channel(Channel[] recievers) => new Channel(recievers);
+            public static implicit operator Channel(Channel[] receivers) => new Channel(receivers);
             public static implicit operator Channel(string name) => new Channel(name);
-            public static implicit operator Channel((string name, Channel[] recievers) args) => new Channel(args.name, args.recievers);
-            public static implicit operator Channel((string name, Channel reciever) args) => new Channel(args.name, args.reciever);
-            public static implicit operator Channel((string name, MessageHandler messageHandler) args) => new Channel(args.name, args.messageHandler);
-            public static implicit operator Channel((string name, IEnumerable<Channel> recievers, MessageHandler handler) args) => new Channel(args.name, args.recievers, args.handler);
+            public static implicit operator Channel((string name, IEnumerable<Channel> receivers) args) => new Channel(args.name, args.receivers.ToArray());
+            public static implicit operator Channel((string name, Channel receiver) args) => new Channel(args.name, args.receiver);
+            public static implicit operator Channel((string name, MessageHandler handler) args) => new Channel(args.name, args.handler);
+            public static implicit operator Channel((string name, IEnumerable<Channel> receivers, MessageHandler handler) args) => new Channel(args.name, args.receivers.ToArray(), args.handler);
 
             public delegate void MessageHandler(Message message);
         }

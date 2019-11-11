@@ -110,7 +110,7 @@ namespace Alabaster
                     GC.Collect
                 );
                 initialized = true;
-                DefaultLoggers.Console.Log($"Server started. Server ID: \"{Server.Config.ServerID}\", Port: {Config.Port}");
+                DefaultLoggers.Default.Log($"Server started. Server ID: \"{Server.Config.ServerID}\", Port: {Config.Port}");
             }
 
             void InitializeOptions()

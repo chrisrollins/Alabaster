@@ -4,19 +4,20 @@ using System.Text;
 
 namespace Alabaster
 {    
-    static class DefaultLoggers
+    public static class DefaultLoggers
     {
         private static class Names
         {
             private const string BasePrefix = "Alabaster-Logger-";
-            public const string Console = "";
+            public const string Blank = "";
             public const string Debug = BasePrefix + "Debug";
             public const string Info = BasePrefix + "Info";
             public const string Error = BasePrefix + "Error";
         }
 
-        public static readonly Logger.Channel Console = (name: Names.Console, handler: message => System.Console.WriteLine(message.Content));
-        public static readonly Logger.Channel Default = (name: Names.Console, receiver: DefaultLoggers.Console);
+        public static readonly Logger.Channel WithTimestamp = (name: Names.Blank, handler: (Logger.Message message) => (Logger.Message)String.Join(null, "[", DateTime.Now.ToString(), "] ", message.Content), receiver: DefaultLoggers.Console);
+        public static readonly Logger.Channel Console = (name: Names.Blank, handler: message => System.Console.WriteLine(message.Content));
+        public static readonly Logger.Channel Default = (name: Names.Blank, receiver: DefaultLoggers.WithTimestamp);
         public static readonly Logger.Channel Info = (name: Names.Info, receiver: DefaultLoggers.Default);
         public static readonly Logger.Channel Error = (name: Names.Error, receiver: DefaultLoggers.Default);
         public static readonly Logger.Channel Debug =

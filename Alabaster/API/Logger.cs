@@ -7,6 +7,8 @@ using System.Threading;
 
 namespace Alabaster
 {
+    using MessageHandler_A = Func<Logger.Message, Logger.Message>;
+    using MessageHandler_B = Action<Logger.Message>;
     public static partial class Logger
     {
         public static void Log(Channel channel, params Message[] messages) => ServerThreadManager.Run(() => channel.Handler(String.Join(' ', messages.Select(message => message.Content)), new HashSet<Channel>()));
@@ -49,18 +51,17 @@ namespace Alabaster
                 return this;
             }
             public Channel() : this(new Channel[] { }) { }
-            public Channel(MessageHandler handler) : this(null, null, handler) { }
+            public Channel(MessageHandler handler) : this(null, MessageHandler.None, handler) { }
             public Channel(params Channel[] receivers) : this(null, receivers, null) { }
             public Channel(string name) : this(name, (Channel)null, null) { }
-            public Channel(string name, params Channel[] receivers) : this(name, null, receivers) { }
-            public Channel(string name, MessageHandler handler) : this(name, null, handler) { }
+            public Channel(string name, params Channel[] receivers) : this(name, MessageHandler.None, receivers) { }
+            public Channel(string name, MessageHandler handler) : this(name, MessageHandler.None, handler) { }
             public Channel(string name, MessageHandler handler, params Channel[] receivers)
             {
-                handler ??= (_) => { };
                 this.Handler = (message, alreadyReceived) =>
                 {
                     message = String.IsNullOrEmpty(this.Name) ? message : String.Join(null, this.Name, ": ", message);
-                    handler(message);
+                    handler.handler(message);
                     Array.ForEach(
                         this.Receivers
                         .Where(receiver => !alreadyReceived.Contains(receiver))
@@ -83,9 +84,29 @@ namespace Alabaster
             public static implicit operator Channel((string name, IEnumerable<Channel> receivers) args) => new Channel(args.name, args.receivers.ToArray());
             public static implicit operator Channel((string name, Channel receiver) args) => new Channel(args.name, args.receiver);
             public static implicit operator Channel((string name, MessageHandler handler) args) => new Channel(args.name, args.handler);
-            public static implicit operator Channel((string name, IEnumerable<Channel> receivers, MessageHandler handler) args) => new Channel(args.name, args.receivers.ToArray(), args.handler);
+            public static implicit operator Channel((string name, MessageHandler_A handler) args) => new Channel(args.name, args.handler);
+            public static implicit operator Channel((string name, MessageHandler_B handler) args) => new Channel(args.name, args.handler);
+            public static implicit operator Channel((string name, MessageHandler handler, IEnumerable<Channel> receivers) args) => new Channel(args.name, args.handler, args.receivers.ToArray());
+            public static implicit operator Channel((string name, MessageHandler_A handler, IEnumerable<Channel> receivers) args) => new Channel(args.name, args.handler, args.receivers.ToArray());
+            public static implicit operator Channel((string name, MessageHandler_B handler, IEnumerable<Channel> receivers) args) => new Channel(args.name, args.handler, args.receivers.ToArray());
+            public static implicit operator Channel((string name, MessageHandler handler, Channel receiver) args) => new Channel(args.name, args.handler, args.receiver);
+            public static implicit operator Channel((string name, MessageHandler_A handler, Channel receiver) args) => new Channel(args.name, args.handler, args.receiver);
+            public static implicit operator Channel((string name, MessageHandler_B handler, Channel receiver) args) => new Channel(args.name, args.handler, args.receiver);
 
-            public delegate void MessageHandler(Message message);
+            public struct MessageHandler
+            {
+                internal MessageHandler_A handler;
+                public MessageHandler(MessageHandler_A handler) => this.handler = handler;
+                public MessageHandler(MessageHandler_B handler) => this.handler = m =>
+                {
+                    handler(m);
+                    return m;
+                };
+
+                public static implicit operator MessageHandler(MessageHandler_A handler) => new MessageHandler(handler);
+                public static implicit operator MessageHandler(MessageHandler_B handler) => new MessageHandler(handler);
+                internal static MessageHandler None = new MessageHandler(_ => { });
+            }
         }
     }
 }

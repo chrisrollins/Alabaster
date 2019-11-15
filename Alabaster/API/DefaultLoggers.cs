@@ -22,7 +22,7 @@ namespace Alabaster
         public static readonly Logger.Channel Error = (name: Names.Error, receiver: DefaultLoggers.Default);
         public static readonly Logger.Channel Debug =
         #if DEBUG
-            (name: Names.Debug, receiver: DefaultLoggers.Console);
+            (name: Names.Debug, receiver: DefaultLoggers.Default);
         #else
             new Logger.Channel(name: Names.Debug);
         #endif

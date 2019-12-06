@@ -52,7 +52,7 @@ namespace Alabaster
 
         public static void AddExceptionHandler<T>(ExceptionHandler callback) where T : Exception
         {
-            ServerThreadManager.Run(() =>
+            InternalQueueManager.SetupQueue.Run(() =>
             {
                 Util.InitExceptions();
                 AddExceptionHandlerInternal<T>(callback);

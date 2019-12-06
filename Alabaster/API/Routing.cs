@@ -181,7 +181,7 @@ namespace Alabaster
         internal static void AddHandler(RouteCallback rc) => AddHandler((MethodArg)null, (RouteArg)null, rc);
         internal static void AddHandler(MethodArg method, RouteArg route, RouteCallback rc)
         {
-            ServerThreadManager.Run(() => 
+            InternalQueueManager.SetupQueue.Run(() => 
             {
                 Util.InitExceptions();
                 AddHandlerInternal(method, route, rc);

@@ -15,7 +15,7 @@ namespace Alabaster
         public static void OnResponseSent(ResponseSentCallback_B callback) => OnResponseSent((Request req, Response res) => callback(res));
         public static void OnResponseSent(ResponseSentCallback_A callback)
         {
-            ServerThreadManager.Run(() =>
+            InternalQueueManager.SetupQueue.Run(() =>
             {
                 Util.InitExceptions();
                 OnResponseSentInternal(callback);

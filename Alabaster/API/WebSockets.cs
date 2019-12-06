@@ -54,7 +54,7 @@ namespace Alabaster
 
         public WebSocketChannel CreateChannel() => new WebSocketChannel(this, Interlocked.Increment(ref this.channelCount));
 
-        private static void SetupEventCallback(Action callback) => ServerThreadManager.Run(() => Util.InitExceptions(callback));
+        private static void SetupEventCallback(Action callback) => InternalQueueManager.SetupQueue.Run(() => Util.InitExceptions(callback));
 
         public void NumberedEvent(byte number, WebSocketCallback callback) => SetupEventCallback(() => this.NumberedEvents[number] = callback );
         public void NamedEvent(string name, WebSocketCallback callback) => SetupEventCallback(() => this.NamedEvents[name] = callback );

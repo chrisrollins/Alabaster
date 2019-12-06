@@ -11,7 +11,7 @@ namespace Alabaster
     using MessageHandler_B = Action<Logger.Message>;
     public static partial class Logger
     {
-        public static void Log(Channel channel, params Message[] messages) => ServerThreadManager.Run(() => channel.Handler(String.Join(' ', messages.Select(message => message.Content)), new HashSet<Channel>()));
+        public static void Log(Channel channel, params Message[] messages) => InternalQueueManager.SetupQueue.Run(() => channel.Handler(String.Join(' ', messages.Select(message => message.Content)), new HashSet<Channel>()));
         public static void Log(params Message[] messages) => Log(DefaultLoggers.Default, messages);
         public readonly struct Message
         {

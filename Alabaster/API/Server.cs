@@ -81,7 +81,7 @@ namespace Alabaster
 
         public static void Start()
         {
-            ServerThreadManager.Run(() =>
+            InternalQueueManager.SetupQueue.Run(() =>
             {
                 if (!initialized) { Init(); }
                 else if (!running) { LaunchListeners(); }
@@ -154,7 +154,7 @@ namespace Alabaster
 
         public static void Stop()
         {
-            ServerThreadManager.Run(() =>
+            InternalQueueManager.SetupQueue.Run(() =>
             {
                 if (running) { running = false; }
                 else { throw new InvalidOperationException(); }

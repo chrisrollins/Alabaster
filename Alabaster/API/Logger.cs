@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
+using static Alabaster.InternalQueueManager;
 
 namespace Alabaster
 {
@@ -11,7 +12,8 @@ namespace Alabaster
     using MessageHandler_B = Action<Logger.Message>;
     public static partial class Logger
     {
-        public static void Log(Channel channel, params Message[] messages) => InternalQueueManager.SetupQueue.Run(() => channel.Handler(String.Join(' ', messages.Select(message => message.Content)), new HashSet<Channel>()));
+        private static ActionQueue LoggerQueue = new ActionQueue();
+        public static void Log(Channel channel, params Message[] messages) => LoggerQueue.Run(() => channel.Handler(String.Join(' ', messages.Select(message => message.Content)), new HashSet<Channel>()));
         public static void Log(params Message[] messages) => Log(DefaultLoggers.Default, messages);
         public readonly struct Message
         {

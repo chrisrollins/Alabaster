@@ -14,9 +14,9 @@ namespace Alabaster
             public const string Info = BasePrefix + "Info";
             public const string Error = BasePrefix + "Error";
         }
-
-        public static readonly Logger.Channel WithTimestamp = (name: Names.Blank, handler: (Logger.Message message) => (Logger.Message)String.Join(null, "[", DateTime.Now.ToString(), "] ", message.Content), receiver: DefaultLoggers.Console);
+        
         public static readonly Logger.Channel Console = (name: Names.Blank, handler: message => System.Console.WriteLine(message.Content));
+        public static readonly Logger.Channel WithTimestamp = (name: Names.Blank, handler: (Logger.Message message) => (Logger.Message)string.Join(null, "[", DateTime.Now.ToString(), "] ", message.Content), receiver: DefaultLoggers.Console);
         public static readonly Logger.Channel Default = (name: Names.Blank, receiver: DefaultLoggers.WithTimestamp);
         public static readonly Logger.Channel Info = (name: Names.Info, receiver: DefaultLoggers.Default);
         public static readonly Logger.Channel Error = (name: Names.Error, receiver: DefaultLoggers.Default);

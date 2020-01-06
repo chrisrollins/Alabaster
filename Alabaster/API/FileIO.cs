@@ -82,6 +82,12 @@ namespace Alabaster
                 this.data = null;
                 if (preload) { _ = this.Data; }
             }
+            internal FileData(byte[] data)
+            {
+                this.data = data;
+                this.baseDir = (DirectoryPath)"";
+                this.filePath = (FilePath)"";
+            }
         }
 
         private static void AddPath(IPath p, bool allowed) => allowedPaths[p] = allowed;

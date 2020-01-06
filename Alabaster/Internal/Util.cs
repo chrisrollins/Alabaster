@@ -85,5 +85,24 @@ namespace Alabaster
                 else { handler(e); }
             }
         }
+
+        internal class CustomEqualityComparer<T> : IEqualityComparer<T>
+        {
+            private Func<T, T, bool> _Equals;
+            private Func<T, int> _GetHashCode;
+            public CustomEqualityComparer(Func<T, T, bool> Equals, Func<T, int> GetHashCode) => (this._Equals, this._GetHashCode) = (Equals, GetHashCode);
+            public bool Equals(T x, T y) => this._Equals(x, y);
+            public int GetHashCode(T obj) => this._GetHashCode(obj);
+        }
+
+        internal static void ForEach<T>(this IEnumerable<T> items, Action<T, int> callback)
+        {
+            int count = items.Count();
+            for (int i = 0; i < count; i++)
+            {
+                callback(items.ElementAt(i), i);
+            }
+        }
+        internal static void ForEach<T>(this IEnumerable<T> items, Action<T> callback) => items.ForEach((item, i) => callback(item));
     }
 }

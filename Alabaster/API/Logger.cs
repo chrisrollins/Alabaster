@@ -13,7 +13,7 @@ namespace Alabaster
     public static partial class Logger
     {
         private static ActionQueue LoggerQueue = new ActionQueue();
-        public static void Log(Channel channel, params Message[] messages) => LoggerQueue.Run(() => channel.Handler(String.Join(' ', messages.Select(message => message.Content)), new HashSet<Channel>()));
+        public static void Log(Channel channel, params Message[] messages) => LoggerQueue.Run(() => channel.Handler(string.Join(' ', messages.Select(message => message.Content)), new HashSet<Channel>()));
         public static void Log(params Message[] messages) => Log(DefaultLoggers.Default, messages);
         public readonly struct Message
         {
@@ -24,7 +24,7 @@ namespace Alabaster
                 FormatArray((content as IEnumerable<object>).ToArray()) :
                 content.ToString()
             ) { }
-            private static string FormatArray(Array array) => "[" + String.Join(", ", array) + "]";
+            private static string FormatArray(Array array) => "[" + string.Join(", ", array) + "]";
             public Message(Array array) => this.Content = FormatArray(array);
             public static implicit operator Message(string value) => new Message(value);
             public static implicit operator Message(Exception value) => new Message(value);
@@ -53,22 +53,18 @@ namespace Alabaster
                 return this;
             }
             public Channel() : this(new Channel[] { }) { }
-            public Channel(MessageHandler handler) : this(null, MessageHandler.None, handler) { }
-            public Channel(params Channel[] receivers) : this(null, receivers, null) { }
-            public Channel(string name) : this(name, (Channel)null, null) { }
+            public Channel(MessageHandler handler) : this(null, handler, null) { }
+            public Channel(params Channel[] receivers) : this(null, receivers) { }
+            public Channel(string name) : this(name, (Channel)null) { }
             public Channel(string name, params Channel[] receivers) : this(name, MessageHandler.None, receivers) { }
-            public Channel(string name, MessageHandler handler) : this(name, MessageHandler.None, handler) { }
+            public Channel(string name, MessageHandler handler) : this(name, handler, null) { }
             public Channel(string name, MessageHandler handler, params Channel[] receivers)
             {
                 this.Handler = (message, alreadyReceived) =>
                 {
-                    message = String.IsNullOrEmpty(this.Name) ? message : String.Join(null, this.Name, ": ", message);
+                    message = string.IsNullOrEmpty(this.Name) ? message : string.Join(null, this.Name, ": ", message);
                     handler.handler(message);
-                    Array.ForEach(
-                        this.Receivers
-                        .Where(receiver => !alreadyReceived.Contains(receiver))
-                        .ToArray(),
-                    receiver => {
+                    this.Receivers.ForEach(receiver => {
                         alreadyReceived.Add(receiver);
                         receiver.Handler(message, alreadyReceived);
                     });
@@ -80,9 +76,9 @@ namespace Alabaster
                     .Distinct()
                 );
             }
-            public static implicit operator Channel(MessageHandler handler) => new Channel(handler);
-            public static implicit operator Channel(Channel[] receivers) => new Channel(receivers);
-            public static implicit operator Channel(string name) => new Channel(name);
+            public static explicit operator Channel(MessageHandler handler) => new Channel(handler);
+            public static explicit operator Channel(Channel[] receivers) => new Channel(receivers);
+            public static explicit operator Channel(string name) => new Channel(name);
             public static implicit operator Channel((string name, IEnumerable<Channel> receivers) args) => new Channel(args.name, args.receivers.ToArray());
             public static implicit operator Channel((string name, Channel receiver) args) => new Channel(args.name, args.receiver);
             public static implicit operator Channel((string name, MessageHandler handler) args) => new Channel(args.name, args.handler);

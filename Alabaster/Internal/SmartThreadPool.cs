@@ -60,7 +60,7 @@ namespace Alabaster
             this.workQueue.Enqueue(work);
             lock (CheckConcurrencyLock)
             {
-                if (runningThreads.Count < this.concurrency)
+                if (this.runningThreads.Count < this.concurrency)
                 {
                     StartWork();
                     return;
@@ -70,7 +70,7 @@ namespace Alabaster
             lock (CheckSuspendedLock)
             {
                 int running = 0;
-                foreach (WorkerThread thread in runningThreads.Keys)
+                foreach (WorkerThread thread in this.runningThreads.Keys)
                 {
                     if (thread.InternalThread.ThreadState == ThreadState.Running) { running++; }
                 }

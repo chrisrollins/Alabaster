@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 namespace Alabaster
 {
-    //this class is responsible for validating routes
     internal static class RouteValidator
     {
         private const string allowedCharacters = "                                 !  $% '()*+,-. 0123456789       ABCDEFGHIJKLMNOPQRSTUVWXYZ    _ abcdefghijklmnopqrstuvwxyz";

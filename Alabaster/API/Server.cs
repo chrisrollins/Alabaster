@@ -117,10 +117,10 @@ namespace Alabaster
             {
                 lock (configAccessLock)
                 {
-                    optionsInitialized = true;
                     Array.ForEach(Config.GetType().GetProperties(), prop => {
                         object temp = prop.GetValue(Config);
                     });
+                    optionsInitialized = true;
                 }
             }
 

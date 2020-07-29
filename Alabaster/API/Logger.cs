@@ -13,19 +13,29 @@ namespace Alabaster
     public static partial class Logger
     {
         private static ActionQueue LoggerQueue = new ActionQueue();
-        public static void Log(Channel channel, params Message[] messages) => LoggerQueue.Run(() => channel.Handler(string.Join(' ', messages.Select(message => message.Content)), new HashSet<Channel>()));
+        internal static void Log(Channel channel, Thread originThread, params Message[] messages) => LoggerQueue.Run(() => channel.Handler(new Message(string.Join(' ', messages.Select(message => message.Content)), originThread), new HashSet<Channel>()));
+        public static void Log(Channel channel, params Message[] messages) => Log(channel, Thread.CurrentThread, messages);
         public static void Log(params Message[] messages) => Log(DefaultLoggers.Default, messages);
         public readonly struct Message
         {
+            public readonly Thread OriginThread;
             public readonly string Content;
-            public Message(string content) => this.Content = content;
+            internal Message(string content, Thread originThread)
+            {
+                this.OriginThread = originThread;
+                this.Content = content;
+            }
+            public Message(string content) : this(
+                content,
+                Thread.CurrentThread
+            ) { }
             public Message(object content) : this(
                 content is System.Collections.IEnumerable ?
                 FormatArray((content as IEnumerable<object>).ToArray()) :
                 content.ToString()
             ) { }
             private static string FormatArray(Array array) => "[" + string.Join(", ", array) + "]";
-            public Message(Array array) => this.Content = FormatArray(array);
+            public Message(Array array) : this(FormatArray(array)) { }
             public static implicit operator Message(string value) => new Message(value);
             public static implicit operator Message(Exception value) => new Message(value);
             public static implicit operator Message(bool value) => new Message(value);
@@ -62,11 +72,13 @@ namespace Alabaster
             {
                 this.Handler = (message, alreadyReceived) =>
                 {
-                    message = string.IsNullOrEmpty(this.Name) ? message : string.Join(null, this.Name, ": ", message);
-                    handler.handler(message);
-                    this.Receivers.ForEach(receiver => {
+                    var prefixedMessage = string.IsNullOrEmpty(this.Name) ? message : string.Join(null, this.Name, ": ", message);
+                    var processedMessage = handler.handler(prefixedMessage);
+                    this.Receivers
+                    .Where(receiver => !alreadyReceived.Contains(receiver))
+                    .ForEach(receiver => {
                         alreadyReceived.Add(receiver);
-                        receiver.Handler(message, alreadyReceived);
+                        receiver.Handler(processedMessage, alreadyReceived);
                     });
                 };
                 this.Name = name ?? "";

@@ -1,15 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27004.2005
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Alabaster", "Alabaster\Alabaster.csproj", "{0996A120-4DA3-4C26-857C-5F0DE15054CD}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AlabasterTestApp", "AlabasterTestApp\AlabasterTestApp.csproj", "{B25A1C1A-E7B0-4063-831A-B550F329F6BD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HTML Programmatic Templating", "HTML Programming Model\HTML Programmatic Templating.csproj", "{2DF0E43A-7563-459C-84D9-58F14417687A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HTML Programmatic Templating", "HTML Programming Model\HTML Programmatic Templating.csproj", "{2DF0E43A-7563-459C-84D9-58F14417687A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Limbo", "Limbo\Limbo.csproj", "{656EC579-4FEE-45DE-97CC-24745FD2F515}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Limbo", "Limbo\Limbo.csproj", "{656EC579-4FEE-45DE-97CC-24745FD2F515}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoggerServer", "LoggerServer\LoggerServer.csproj", "{BDB8E9D3-5429-465B-BA5E-4CD3048BD62B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{656EC579-4FEE-45DE-97CC-24745FD2F515}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{656EC579-4FEE-45DE-97CC-24745FD2F515}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{656EC579-4FEE-45DE-97CC-24745FD2F515}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDB8E9D3-5429-465B-BA5E-4CD3048BD62B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDB8E9D3-5429-465B-BA5E-4CD3048BD62B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDB8E9D3-5429-465B-BA5E-4CD3048BD62B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDB8E9D3-5429-465B-BA5E-4CD3048BD62B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

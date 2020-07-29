@@ -74,11 +74,12 @@ namespace Alabaster
                 {
                     var prefixedMessage = string.IsNullOrEmpty(this.Name) ? message : string.Join(null, this.Name, ": ", message);
                     var processedMessage = handler.handler(prefixedMessage);
+                    var threadCorrectedMessage = new Message(processedMessage.Content, message.OriginThread);
                     this.Receivers
                     .Where(receiver => !alreadyReceived.Contains(receiver))
                     .ForEach(receiver => {
                         alreadyReceived.Add(receiver);
-                        receiver.Handler(processedMessage, alreadyReceived);
+                        receiver.Handler(threadCorrectedMessage, alreadyReceived);
                     });
                 };
                 this.Name = name ?? "";

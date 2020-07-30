@@ -77,7 +77,8 @@ namespace Alabaster
                     var threadCorrectedMessage = new Message(processedMessage.Content, message.OriginThread);
                     this.Receivers
                     .Where(receiver => !alreadyReceived.Contains(receiver))
-                    .ForEach(receiver => {
+                    .ForEach(receiver =>
+                    {
                         alreadyReceived.Add(receiver);
                         receiver.Handler(threadCorrectedMessage, alreadyReceived);
                     });

@@ -32,10 +32,11 @@ namespace Alabaster
             get => this._StatusCode ?? 200;
             set => this._StatusCode = value;
         }
-        
-        public Response SetStatusCode(int statusCode)
+
+        public Response SetStatusCode(HTTPStatus status) => SetStatusCode((Int32)status);
+        public Response SetStatusCode(int status)
         {
-            this.StatusCode = statusCode;
+            this.StatusCode = status;
             return this;
         }
 
@@ -89,7 +90,11 @@ namespace Alabaster
                 byte[] data = cw.ResponseBody;
                 res.ContentLength64 = data.Length;
                 res.OutputStream.Write(data, 0, data.Length);
-                res.OutputStream.Close();
+                res.Close();
+            }
+            else
+            {
+                res.Abort();
             }
             this.AdditionalFinishTasks(new Request(cw), this);
         }
@@ -101,6 +106,7 @@ namespace Alabaster
         public static implicit operator Response((string str, int status) arg) => new StringResponse(arg.str, arg.status);
         public static implicit operator Response((int status, string str) arg) => new StringResponse(arg.str, arg.status);
         public static implicit operator Response(char c) => new StringResponse(c.ToString());
+        public static implicit operator Response(HTTPStatus status) => new EmptyResponse(status);
         public static implicit operator Response(Int64 n) => new EmptyResponse((Int32)n);
         public static implicit operator Response(Int32 n) => new EmptyResponse(n);
         public static implicit operator Response(Int16 n) => new EmptyResponse(n);
@@ -120,16 +126,17 @@ namespace Alabaster
 
         private static string JoinArr<T>(T[] arr) => string.Join(null, "[", string.Join(",", arr ?? new T[] { }), "]");
         
-        public static Response Default => new EmptyResponse(400);
+        public static Response Default => new EmptyResponse(HTTPStatus.BadRequest);
     }
 
     public sealed class RedirectResponse : Response
     {
         internal string RedirectRoute;
-        public RedirectResponse(string route, int statusCode = 303)
+        public RedirectResponse(string route, HTTPStatus status = HTTPStatus.SeeOther) : this(route, (Int32)status) { }
+        public RedirectResponse(string route, int status)
         {
             this.RedirectRoute = route;
-            this.StatusCode = Util.Clamp(statusCode, 300, 399);
+            this.StatusCode = Util.Clamp(status, 300, 399);
         }
         internal override void Finish(ContextWrapper cw)
         {
@@ -144,7 +151,8 @@ namespace Alabaster
 
     public sealed class StringResponse : Response
     {
-        public StringResponse(string response, int status = 200)
+        public StringResponse(string response, HTTPStatus status = HTTPStatus.OK) : this(response, (Int32)status) { }
+        public StringResponse(string response, int status)
         {
             this.data = Encoding.UTF8.GetBytes(response);
             this.StatusCode = status;
@@ -155,6 +163,7 @@ namespace Alabaster
 
     public sealed class DataResponse : Response
     {
+        public DataResponse(byte[] data, HTTPStatus status) : this(data, (Int32)status) { }
         public DataResponse(byte[] data) : this(data, (data == null) ? 501 : 200) { }
         public DataResponse(byte[] data, int status)
         {
@@ -197,13 +206,14 @@ namespace Alabaster
     }
 
     public sealed class EmptyResponse : Response
-    {      
+    {
+        public EmptyResponse(HTTPStatus status) : this((Int32) status) { }
         public EmptyResponse(Int32 status)
         {
             this.StatusCode = status;
             this.data = null;
         }
-        public static new Response Default => new EmptyResponse(400);
+        public static new Response Default => new EmptyResponse(HTTPStatus.BadRequest);
     }
 
     public sealed class NoResponse : Response
@@ -215,7 +225,8 @@ namespace Alabaster
     public sealed class PassThrough : Response
     {
         internal PassThrough(bool skip) : this() => this.Skipped = skip;
-        public PassThrough() : this(null, 200) { }
+        public PassThrough() : this(null, HTTPStatus.OK) { }
+        public PassThrough(byte[] data, HTTPStatus status) : this(data, (Int32)status) { }
         public PassThrough(byte[] data, int status)
         {
             this.data = data;

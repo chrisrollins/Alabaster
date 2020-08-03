@@ -158,6 +158,7 @@ namespace Alabaster
             }
         }
 
+        /* Not properly implemented
         public static void Stop()
         {
             InternalQueueManager.SetupQueue.Run(() =>
@@ -166,5 +167,6 @@ namespace Alabaster
                 else { throw new InvalidOperationException(); }
             });
         }
+        */
     }
 }

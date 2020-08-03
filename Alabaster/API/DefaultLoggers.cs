@@ -17,8 +17,9 @@ namespace Alabaster
         }
         
         public static readonly Logger.Channel Console = (name: Names.Blank, handler: message => System.Console.WriteLine(message.Content));
-        public static readonly Logger.Channel WithTimestampAndThreadID = (name: Names.Blank, handler: (Logger.Message message) => (Logger.Message)$"[{DateTime.Now.ToString()}][Thread {message.OriginThread.ManagedThreadId}] {message.Content}", receiver: DefaultLoggers.Console);
-        public static readonly Logger.Channel Default = (name: Names.Blank, receiver: DefaultLoggers.WithTimestampAndThreadID);
+        public static readonly Logger.Channel WithThreadID = (name: Names.Blank, handler: (Logger.Message message) => (Logger.Message)$"[Thread {message.OriginThread.ManagedThreadId}] {message.Content}", receiver: DefaultLoggers.Console);
+        public static readonly Logger.Channel WithTimestamp = (name: Names.Blank, handler: (Logger.Message message) => (Logger.Message)$"[{DateTime.Now.ToString()}] {message.Content}", receiver: DefaultLoggers.Console);
+        public static readonly Logger.Channel Default = (name: Names.Blank, receiver: Logger.Channel.Chain(WithThreadID, WithTimestamp));
         public static readonly Logger.Channel Info = (name: Names.Info, receiver: DefaultLoggers.Default);
         public static readonly Logger.Channel Error = (name: Names.Error, receiver: DefaultLoggers.Default);
         public static readonly Logger.Channel Debug =

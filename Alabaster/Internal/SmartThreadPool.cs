@@ -17,19 +17,25 @@ namespace Alabaster
     //this implementation is independent of what the application does and the application may use the .NET threadpool however it needs to.
     internal sealed class SmartThreadPool
     {
-        private readonly int concurrency;
+        private readonly Configuration Params;
         private readonly ConcurrentQueue<Action> workQueue = new ConcurrentQueue<Action>();
         private readonly ConcurrentBag<WorkerThread> availableThreads = new ConcurrentBag<WorkerThread>();
         private readonly ConcurrentDictionary<WorkerThread, bool> runningThreads = new ConcurrentDictionary<WorkerThread, bool>();
         private readonly object CheckConcurrencyLock = new object();
         private readonly object CheckSuspendedLock = new object();
-        private readonly bool autoExpand;
 
-        public SmartThreadPool(int concurrency, int initialThreadCount, bool autoExpand)
+        internal struct Configuration
         {
-            this.concurrency = concurrency;
-            this.autoExpand = autoExpand;
-            for (int i = 0; i < initialThreadCount; i++)
+            public UInt32 Concurrency;
+            public UInt32 InitialThreadCount;
+            public ThreadPriority Priority;
+            public bool AutoExpand;
+        }
+
+        internal SmartThreadPool(Configuration configuration)
+        {
+            this.Params = configuration;
+            for (UInt32 i = 0u; i < this.Params.InitialThreadCount; i++)
             {
                 this.availableThreads.Add(this.GenerateThread());
             }
@@ -50,17 +56,18 @@ namespace Alabaster
                     wt.ResetEvent.WaitOne();
                 }
             });
+            wt.InternalThread.Priority = this.Params.Priority;
             return wt;
         }
 
-        public void QueueWork(Action work)
+        internal void QueueWork(Action work)
         {
             ConcurrentBag<WorkerThread> at = this.availableThreads;
-            bool autoExpand = this.autoExpand;
+            bool autoExpand = this.Params.AutoExpand;
             this.workQueue.Enqueue(work);
             lock (CheckConcurrencyLock)
             {
-                if (this.runningThreads.Count < this.concurrency)
+                if (this.runningThreads.Count < this.Params.Concurrency)
                 {
                     StartWork();
                     return;
@@ -74,7 +81,7 @@ namespace Alabaster
                 {
                     if (thread.InternalThread.ThreadState == ThreadState.Running) { running++; }
                 }
-                if (running < this.concurrency) { StartWork(); }
+                if (running < this.Params.Concurrency) { StartWork(); }
             }            
 
             void StartWork()

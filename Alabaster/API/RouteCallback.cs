@@ -42,6 +42,8 @@ namespace Alabaster
                     return (req) => new EmptyResponse(res.StatusCode);
                 case PassThrough r:
                     return (req) => new PassThrough(res.Body, res.StatusCode);
+                case NoResponse r:
+                    return (req) => new NoResponse();
                 case WebSocketHandshake r:
                     throw new InvalidOperationException("An internal error has occurred in WebSocket initialization.");
                 default:

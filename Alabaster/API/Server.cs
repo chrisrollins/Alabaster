@@ -127,7 +127,13 @@ namespace Alabaster
             void LaunchListeners()
             {
                 running = true;
-                SmartThreadPool stp = new SmartThreadPool(Environment.ProcessorCount, 100, true);
+                SmartThreadPool stp = new SmartThreadPool(new SmartThreadPool.Configuration
+                {
+                    Concurrency = (UInt32)Environment.ProcessorCount,
+                    InitialThreadCount = 100,
+                    Priority = ThreadPriority.Highest,
+                    AutoExpand = true,
+                });
                 for (int i = 0; i < Environment.ProcessorCount; i++)
                 {
                     new Thread(Listen).Start();

@@ -12,10 +12,13 @@ namespace Alabaster
     using MessageHandler_B = Action<Logger.Message>;
     public static partial class Logger
     {
-        private static ActionQueue LoggerQueue = new ActionQueue();
+        private static ActionQueue LoggerQueue = new ActionQueue(new ActionQueue.Configuration {
+            Priority = ThreadPriority.Lowest,
+        });
         internal static void Log(Channel channel, Thread originThread, params Message[] messages) => LoggerQueue.Run(() => channel.Handler(new Message(string.Join(' ', messages.Select(message => message.Content)), originThread), new HashSet<Channel>()));
         public static void Log(Channel channel, params Message[] messages) => Log(channel, Thread.CurrentThread, messages);
         public static void Log(params Message[] messages) => Log(DefaultLoggers.Default, messages);
+
         public readonly struct Message
         {
             public readonly Thread OriginThread;
@@ -57,6 +60,7 @@ namespace Alabaster
             internal readonly Action<Message, HashSet<Channel>> Handler;
             public readonly string Name;
             public readonly ConcurrentBag<Channel> Receivers;
+            private readonly MessageHandler RawHandler;
             public Channel Log(params Message[] messages)
             {
                 Logger.Log(this, messages);
@@ -70,25 +74,26 @@ namespace Alabaster
             public Channel(string name, MessageHandler handler) : this(name, handler, null) { }
             public Channel(string name, MessageHandler handler, params Channel[] receivers)
             {
+                this.RawHandler = handler;
+                this.Name = name ?? "";
+                this.Receivers = new ConcurrentBag<Channel>(
+                    (receivers ?? new Channel[] { })
+                    .Where(receiver => receiver != this && receiver != null)
+                    .Distinct()
+                );
                 this.Handler = (message, alreadyReceived) =>
                 {
                     var prefixedMessage = string.IsNullOrEmpty(this.Name) ? message : string.Join(null, this.Name, ": ", message);
-                    var processedMessage = handler.handler(prefixedMessage);
+                    var processedMessage = this.RawHandler.handler(prefixedMessage);
                     var threadCorrectedMessage = new Message(processedMessage.Content, message.OriginThread);
                     this.Receivers
-                    .Where(receiver => !alreadyReceived.Contains(receiver))
                     .ForEach(receiver =>
                     {
+                        if (alreadyReceived.Contains(receiver)) { return; }
                         alreadyReceived.Add(receiver);
                         receiver.Handler(threadCorrectedMessage, alreadyReceived);
                     });
                 };
-                this.Name = name ?? "";
-                this.Receivers = new ConcurrentBag<Channel>(
-                    (receivers ?? new Channel[] { })
-                    .Where(receiver => receiver != this)
-                    .Distinct()
-                );
             }
             public static explicit operator Channel(MessageHandler handler) => new Channel(handler);
             public static explicit operator Channel(Channel[] receivers) => new Channel(receivers);
@@ -104,11 +109,13 @@ namespace Alabaster
             public static implicit operator Channel((string name, MessageHandler handler, Channel receiver) args) => new Channel(args.name, args.handler, args.receiver);
             public static implicit operator Channel((string name, MessageHandler_A handler, Channel receiver) args) => new Channel(args.name, args.handler, args.receiver);
             public static implicit operator Channel((string name, MessageHandler_B handler, Channel receiver) args) => new Channel(args.name, args.handler, args.receiver);
+                        
+            public static Channel Chain(params Channel[] channels) => channels.Reverse().Aggregate(new Channel(), (result, current) => new Channel(current.Name, current.RawHandler, current.Receivers.Append(result).ToArray()));
 
             public struct MessageHandler
             {
                 internal MessageHandler_A handler;
-                public MessageHandler(MessageHandler_A handler) => this.handler = handler;
+                public MessageHandler(MessageHandler_A handler) => this.handler = handler ?? MessageHandler.None.handler;
                 public MessageHandler(MessageHandler_B handler) => this.handler = m =>
                 {
                     handler(m);

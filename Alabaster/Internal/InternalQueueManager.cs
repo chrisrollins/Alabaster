@@ -17,7 +17,19 @@ namespace Alabaster
             private Thread Thread;
             private BlockingCollection<Action> Queue = new BlockingCollection<Action>(new ConcurrentQueue<Action>());
             internal void Run(Action callback) => this.Queue.Add(callback);
-            internal ActionQueue()
+
+            internal struct Configuration
+            {
+                public ThreadPriority Priority;
+
+                public static Configuration Default = new Configuration
+                {
+                    Priority = ThreadPriority.Normal,
+                };
+            }
+
+            internal ActionQueue() : this(Configuration.Default) { }
+            internal ActionQueue(Configuration configuration)
             {
                 this.Thread = new Thread(() =>
                 {
@@ -27,6 +39,7 @@ namespace Alabaster
                         action?.Invoke();
                     }
                 });
+                this.Thread.Priority = configuration.Priority;
                 this.Thread.Start();
             }
         }

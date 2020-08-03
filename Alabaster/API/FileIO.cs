@@ -34,7 +34,7 @@ namespace Alabaster
             {
                 if(Util.GetFileExtension(req.Route) == null) { return PassThrough.Default; }
                 FileData file = GetFile(req.Route);
-                return (file.Data != null) ? (Response)file : new PassThrough(null, 404);
+                return (file.Data != null) ? (Response)file : new PassThrough(null, HTTPStatus.NotFound);
             });            
         }
 

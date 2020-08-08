@@ -190,7 +190,7 @@ namespace Alabaster
                 lock (this.sendLock)
                 {                    
                     this.currentSend.Wait();
-                    this.currentSend = Util.RunTaskWithExceptionHandler(() => this.socket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Binary, this.socketResult.EndOfMessage, CancellationToken.None).Wait());
+                    this.currentSend = new Task(() => InternalExceptionHandler.Try(() => this.socket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Binary, this.socketResult.EndOfMessage, CancellationToken.None).Wait()));
                 }
             });
         }

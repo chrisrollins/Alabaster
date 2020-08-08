@@ -14,17 +14,22 @@ namespace Alabaster
 
         internal class ActionQueue
         {
-            private Thread Thread;
+            internal readonly Thread Thread;
             private BlockingCollection<Action> Queue = new BlockingCollection<Action>(new ConcurrentQueue<Action>());
+
             internal void Run(Action callback) => this.Queue.Add(callback);
+
+            internal void Throw(InternalExceptionCode errorCode) => this.Run(() => throw new InternalException(errorCode));
 
             internal struct Configuration
             {
                 public ThreadPriority Priority;
+                public Action<Exception> ExceptionHandler;
 
                 public static Configuration Default = new Configuration
                 {
                     Priority = ThreadPriority.Normal,
+                    ExceptionHandler = (exception) => InternalExceptionHandler.Handle(exception)    
                 };
             }
 
@@ -35,9 +40,18 @@ namespace Alabaster
                 {
                     while (true)
                     {
-                        this.Queue.TryTake(out Action action);
-                        action?.Invoke();
+                        try
+                        {
+                            Action action = null;
+                            InternalExceptionHandler.Rethrow(InternalExceptionCode.ActionQueueTryTake, () => this.Queue.TryTake(out action));
+                            action?.Invoke();
+                        }
+                        catch (Exception exception)
+                        {
+                            configuration.ExceptionHandler?.Invoke(exception);
+                        }
                     }
+                    
                 });
                 this.Thread.Priority = configuration.Priority;
                 this.Thread.Start();

@@ -10,27 +10,27 @@ namespace Alabaster
     //this class can run jobs hourly or daily while the server is running. it's used to implement Session lifetimes.
     internal static class Intervals
     {
-        private static ConcurrentQueue<IntervalCallback> hourly = new ConcurrentQueue<IntervalCallback>();
-        private static ConcurrentQueue<IntervalCallback> daily = new ConcurrentQueue<IntervalCallback>();
-        private static Thread workThread = new Thread(HandleActions);
-        private static object syncLock = new object();
-        private static int delay = 0;
-        private const int hourMS = 3600000;
+        private static ConcurrentBag<IntervalCallback> Hourly = new ConcurrentBag<IntervalCallback>();
+        private static ConcurrentBag<IntervalCallback> Daily = new ConcurrentBag<IntervalCallback>();
+        private static InternalQueueManager.ActionQueue WorkQueue = new InternalQueueManager.ActionQueue();
+        private static object SyncLock = new object();
+        private static int Delay = 0;
+        private const int HourMS = 3600000;
         private static ConcurrentDictionary<int, bool> IntervalThreadIDs = new ConcurrentDictionary<int, bool>();
 
         static Intervals()
         {
-            delay = hourMS - (DateTime.Now.Millisecond + DateTime.Now.Second * 1000 + DateTime.Now.Minute * 60000);
-            workThread.Start();
+            Delay = HourMS - (DateTime.Now.Millisecond + DateTime.Now.Second * 1000 + DateTime.Now.Minute * 60000);
+            WorkQueue.Run(HandleActions);
         }
         
-        internal static void DailyJob(IntervalCallback callback) => AddJob(callback, daily);
-        internal static void HourlyJob(IntervalCallback callback) => AddJob(callback, hourly);
-        private static void AddJob(IntervalCallback callback, ConcurrentQueue<IntervalCallback> queue)
+        internal static void DailyJob(IntervalCallback callback) => AddJob(callback, Daily);
+        internal static void HourlyJob(IntervalCallback callback) => AddJob(callback, Hourly);
+        private static void AddJob(IntervalCallback callback, ConcurrentBag<IntervalCallback> queue)
         {
             IntervalThreadIDs.TryGetValue(Thread.CurrentThread.ManagedThreadId, out bool isIntervalThread);
             if(isIntervalThread) { throw new InvalidOperationException("Can't schedule job from a job callback."); }
-            lock (syncLock) { queue.Enqueue(callback); }
+            lock (SyncLock) { queue.Add(callback); }
         }
         
         internal struct IntervalCallback
@@ -49,35 +49,37 @@ namespace Alabaster
         {
             while (true)
             {
-                Thread.Sleep(delay);
-                delay = hourMS;
-                lock (syncLock)
+                Thread.Sleep(Delay);
+                Delay = HourMS;
+                lock (SyncLock)
                 {
-                    processQueue(hourly);
-                    if (DateTime.Now.Hour == 0) { processQueue(daily); }
+                    processQueue(Hourly);
+                    if (DateTime.Now.Hour == 0) { processQueue(Daily); }
                 }
             }
 
-            void processQueue(ConcurrentQueue<IntervalCallback> queue)
+            void processQueue(ConcurrentBag<IntervalCallback> queue)
             {
-                Queue<IntervalCallback> tempQueue = new Queue<IntervalCallback>();
-                while (queue.Count > 0)
+                var reQueue = new List<IntervalCallback>();
+                while(queue.TryTake(out var callback))
                 {
-                    queue.TryDequeue(out IntervalCallback callback);
                     callback.SubtractTimes(1);
-                    Thread t = new Thread(() =>
+                    var actionQueue = new InternalQueueManager.ActionQueue();
+                    if (IntervalThreadIDs.TryAdd(actionQueue.Thread.ManagedThreadId, true))
                     {
-                        callback.Work();
-                        IntervalThreadIDs.TryRemove(Thread.CurrentThread.ManagedThreadId, out bool _);
-                    });
-                    IntervalThreadIDs.TryAdd(t.ManagedThreadId, true);
-                    t.Start();
-                    if (callback.RemainingTimes > 0) { tempQueue.Enqueue(callback); }
+                        actionQueue.Run(() =>
+                        {
+                            InternalExceptionHandler.Try(callback.Work);
+                            IntervalThreadIDs.TryRemove(Thread.CurrentThread.ManagedThreadId, out bool _);
+                        });
+                    }
+                    else
+                    {
+                        actionQueue.Throw(InternalExceptionCode.FailedToRegisterIntervalThreadID);
+                    }              
+                    if (callback.RemainingTimes > 0) { reQueue.Add(callback); }
                 }
-                while (tempQueue.Count > 0)
-                {
-                    queue.Enqueue(tempQueue.Dequeue());
-                }
+                reQueue.ForEach(callback => queue.Add(callback));
             }
         }
     }

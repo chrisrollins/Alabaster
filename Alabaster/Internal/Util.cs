@@ -69,23 +69,6 @@ namespace Alabaster
         
         internal static T Clamp<T>(T value, T min, T max) where T : struct, IComparable, IFormattable, IConvertible, IComparable<T>, IEquatable<T> => (value.CompareTo(max) > 0) ? max : (value.CompareTo(min) < 0) ? min : value;
 
-        internal static Task TaskWithExceptionHandler(Action callback, Action<Exception> handler = null) => new Task(() => ExceptionHandlerCallback(callback, handler));
-        internal static Task RunTaskWithExceptionHandler(Action callback, Action<Exception> handler = null) => Task.Run(() => ExceptionHandlerCallback(callback, handler));
-        private static void ExceptionHandlerCallback(Action callback, Action<Exception> handler)
-        {
-            try { callback(); }
-            catch (Exception e)
-            {
-                if (handler == null)
-                {
-                    DefaultLoggers.Error
-                    .Log("Exception on a background thread:")
-                    .Log(e);
-                }
-                else { handler(e); }
-            }
-        }
-
         internal class CustomEqualityComparer<T> : IEqualityComparer<T>
         {
             private Func<T, T, bool> _Equals;
@@ -97,10 +80,10 @@ namespace Alabaster
 
         internal static void ForEach<T>(this IEnumerable<T> items, Action<T, int> callback)
         {
-            int count = items.Count();
-            for (int i = 0; i < count; i++)
+            T[] evaluatedCollection = items.ToArray();            
+            for (int i = 0; i < evaluatedCollection.Length; i++)
             {
-                callback(items.ElementAt(i), i);
+                callback(evaluatedCollection.ElementAt(i), i);
             }
         }
         internal static void ForEach<T>(this IEnumerable<T> items, Action<T> callback) => items.ForEach((item, i) => callback(item));

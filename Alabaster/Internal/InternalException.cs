@@ -9,18 +9,35 @@ namespace Alabaster
             ExceptionHandler = (exception) => DefaultLoggers.Error.Log(InternalExceptionMessage(InternalExceptionCode.ErrorInsideInternalExceptionHandler)),
         });
 
-        internal static void Rethrow(InternalExceptionCode errorCode, Action action)
+        internal static void Rethrow(InternalExceptionCode errorCode, Action action) => Rethrow(errorCode, () =>
         {
-            try { action(); }
+            action();
+            return 0;
+        });
+
+        internal static T Rethrow<T>(InternalExceptionCode errorCode, Func<T> action)
+        {
+            try { return action(); }
             catch (Exception exception) { throw new InternalException(errorCode, exception); }
         }
 
+        internal static T Try<T>(InternalExceptionCode rethrowCode, Func<T> action) => Try(() => Rethrow(rethrowCode, action));
+
         internal static void Try(InternalExceptionCode rethrowCode, Action action) => Try(() => Rethrow(rethrowCode, action));
 
-        internal static void Try(Action action)
+        internal static void Try(Action action) => Try(() => {
+            action();
+            return 0;
+        });
+
+        internal static T Try<T>(Func<T> action)
         {
-            try { action(); }
-            catch (Exception exception) { Handle(exception); }
+            try { return action(); }
+            catch (Exception exception)
+            {
+                Handle(exception);
+                return default;
+            }
         }
 
         internal static void Handle(Exception exception)
@@ -49,6 +66,7 @@ namespace Alabaster
         Unspecified,
         ErrorInsideInternalExceptionHandler,
         ActionQueueTryTake,
+        ActionQueueRejectedOperation,
         FailedToRegisterIntervalThreadID,
     }
 

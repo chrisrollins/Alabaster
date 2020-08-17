@@ -1,13 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Alabaster
 {
@@ -38,7 +31,7 @@ namespace Alabaster
                 Console.Write(progressChunk);
             }
             Console.CursorLeft = 0;
-            Console.WriteLine(String.Join(null, '\n', endLabel, new string(' ', barLength)));
+            Console.WriteLine(string.Join(null, '\n', endLabel, new string(' ', barLength)));
         }
 
         internal static string ReplaceMultiple(string str, string toReplace, char replacement)
@@ -59,12 +52,6 @@ namespace Alabaster
                 if (!toRemove.Contains(newChars[i])) { newChars.Add(toRemove[i]); }
             }
             return string.Join(null, newChars);
-        }
-        
-        internal static void InitExceptions(Action callback = null)
-        {
-            if (Server.initialized) { throw new InvalidOperationException("Cannot use initialization operations after server has started."); }
-            callback?.Invoke();
         }
         
         internal static T Clamp<T>(T value, T min, T max) where T : struct, IComparable, IFormattable, IConvertible, IComparable<T>, IEquatable<T> => (value.CompareTo(max) > 0) ? max : (value.CompareTo(min) < 0) ? min : value;

@@ -13,15 +13,7 @@ namespace Alabaster
         internal static List<ResponseSentCallback_A> ResponseSentCallbacks = new List<ResponseSentCallback_A>(1);
 
         public static void OnResponseSent(ResponseSentCallback_B callback) => OnResponseSent((Request req, Response res) => callback(res));
-        public static void OnResponseSent(ResponseSentCallback_A callback)
-        {
-            InternalQueueManager.SetupQueue.Run(() =>
-            {
-                Util.InitExceptions();
-                OnResponseSentInternal(callback);
-            });
-        }
-
+        public static void OnResponseSent(ResponseSentCallback_A callback) => InternalQueueManager.SetupQueue.Run(() => OnResponseSentInternal(callback));
         private static void OnResponseSentInternal(ResponseSentCallback_A callback) => ResponseSentCallbacks.Add(callback);        
     }
 

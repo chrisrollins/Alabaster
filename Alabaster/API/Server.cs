@@ -84,12 +84,11 @@ namespace Alabaster
             InternalQueueManager.SetupQueue.Run(() =>
             {
                 if (!initialized) { Init(); }
-                else if (!running) { LaunchListeners(); }
+                InternalQueueManager.SetupQueue.Stop();
             });
 
             void Init()
             {
-                Util.InitExceptions();
                 if ((Config.SchemesEnabled & HTTPScheme.HTTP) == HTTPScheme.HTTP) { listener.Prefixes.Add(string.Join(null, "http://*:", Config.Port.ToString(), "/")); }
                 if ((Config.SchemesEnabled & HTTPScheme.HTTPS) == HTTPScheme.HTTPS) { listener.Prefixes.Add(string.Join(null, "https://*:", Config.Port.ToString(), "/")); }
                 try { listener.Start(); }
@@ -157,16 +156,5 @@ namespace Alabaster
                 }
             }
         }
-
-        /* Not properly implemented
-        public static void Stop()
-        {
-            InternalQueueManager.SetupQueue.Run(() =>
-            {
-                if (running) { running = false; }
-                else { throw new InvalidOperationException(); }
-            });
-        }
-        */
     }
 }

@@ -50,14 +50,10 @@ namespace Alabaster
             }
         }
 
-        public static void AddExceptionHandler<T>(ExceptionHandler callback) where T : Exception
-        {
-            InternalQueueManager.SetupQueue.Run(() =>
-            {
-                Util.InitExceptions();
-                AddExceptionHandlerInternal<T>(callback);
-            });
-        }
+        /// <summary>Registers a handler for exceptions encountered while processing HTTP requests.</summary>
+        /// <exception cref="InvalidOperationException">Thrown if this is called after server was started.</exception>
+        public static void AddExceptionHandler<T>(ExceptionHandler callback) where T : Exception => InternalQueueManager.SetupQueue.Run(() => AddExceptionHandlerInternal<T>(callback));
+        
         private static void AddExceptionHandlerInternal<T>(ExceptionHandler callback) where T : Exception => exceptionHandlerAddList.Add((callback, typeof(T)));            
         
         private static Response ResolveException(Exception e, ContextWrapper cw) => ResolveException((e, new Request(cw)));

@@ -179,14 +179,7 @@ namespace Alabaster
         internal static void AddHandler(MethodArg method, RouteCallback rc) => AddHandler(method, (RouteArg)null, rc);
         internal static void AddHandler(RouteArg route, RouteCallback rc) => AddHandler((MethodArg)null, route, rc);
         internal static void AddHandler(RouteCallback rc) => AddHandler((MethodArg)null, (RouteArg)null, rc);
-        internal static void AddHandler(MethodArg method, RouteArg route, RouteCallback rc)
-        {
-            InternalQueueManager.SetupQueue.Run(() => 
-            {
-                Util.InitExceptions();
-                AddHandlerInternal(method, route, rc);
-            });
-        }
+        internal static void AddHandler(MethodArg method, RouteArg route, RouteCallback rc) => InternalQueueManager.SetupQueue.Run(() => AddHandlerInternal(method, route, rc));        
 
         internal static void AddHandlerInternal(MethodArg method, RouteArg route, RouteCallback_A rc) => AddHandlerInternal(method, route, new RouteCallback(rc));
         internal static void AddHandlerInternal(MethodArg method, RouteArg route, RouteCallback rc)
@@ -290,12 +283,11 @@ namespace Alabaster
                 if (!result.Skipped) { result.Merge(cw); }
                 if (!(result is PassThrough)) { break; }
             }
-            return (result is PassThrough) ? (result._StatusCode ?? 400) : result;
+            return (result is PassThrough) ? (result._StatusCode ?? (int)HTTPStatus.BadRequest) : result;
         }
 
         private static void RouteAddingExceptions(string method, string route, RouteCallback_A callback)
         {
-            Util.InitExceptions();
             if (callback == null) { throw new ArgumentNullException("Callback cannot be null."); }
             if (!isValid(method) || !isValid(route)) { throw new ArgumentException("Routes and methods cannot be empty or contain spaces."); }
             bool isValid(string str) => str == null || str != string.Empty && !str.Contains(' ');

@@ -10,34 +10,40 @@ namespace Alabaster
 {
     public static class Client
     {
-        private static HttpClient client = new HttpClient();   
+        private static HttpClient client = new HttpClient();
 
+        /// <summary>Sends an HTTP request.</summary>
         public static async Task<string> Get(string url, HTTPScheme scheme = HTTPScheme.HTTP) => await Request("GET", url, "", scheme);
+
+        /// <summary>Sends an HTTP request.</summary>
         public static async Task<string> Delete(string url, HTTPScheme scheme = HTTPScheme.HTTP) => await Request("DELETE", url, "", scheme);
+
+        /// <summary>Sends an HTTP request.</summary>
         public static async Task<string> Post(string url, string body, HTTPScheme scheme = HTTPScheme.HTTP) => await Request("POST", url, body, scheme);
+
+        /// <summary>Sends an HTTP request.</summary>
         public static async Task<string> Patch(string url, string body, HTTPScheme scheme = HTTPScheme.HTTP) => await Request("PATCH", url, body, scheme);
+
+        /// <summary>Sends an HTTP request.</summary>
         public static async Task<string> Put(string url, string body, HTTPScheme scheme = HTTPScheme.HTTP) => await Request("PUT", url, body, scheme);
 
+        /// <summary>Sends an HTTP request.</summary>
+        public static async Task<string> Request(HTTPMethod method, string url, string body, HTTPScheme scheme = HTTPScheme.HTTP) => await Request(method.ToString(), url, body, scheme);
+
+        /// <summary>Sends an HTTP request.</summary>
         public static async Task<string> Request(string method, string url, string body, HTTPScheme scheme = HTTPScheme.HTTP)
-        {
+        {            
             if (scheme != HTTPScheme.HTTP && scheme != HTTPScheme.HTTPS) { throw new ArgumentException("HTTP scheme must be HTTP or HTTPS."); }
             if (url.Substring(0, 4).ToUpper() == "HTTP") { throw new ArgumentException("HTTP scheme must not be defined in the URL."); }            
-            string fullURL = String.Join(null, scheme.ToString().ToLower() , "://" , url);
-            using (HttpRequestMessage msg = new HttpRequestMessage(new HttpMethod(method), fullURL))
+            string fullURL = string.Join(null, scheme.ToString().ToLower() , "://" , url);            
+            return await InternalExceptionHandler.Try(async () =>
             {
-                msg.Content = new StringContent(body ?? "");
-                try
-                {
-                    using (HttpResponseMessage res = await client.SendAsync(msg, HttpCompletionOption.ResponseContentRead))
-                    {
-                        return await res.Content.ReadAsStringAsync();
-                    }
-                }
-                catch (HttpRequestException)
-                {
-                    return null;
-                }
-            }
+                using HttpRequestMessage msg = new HttpRequestMessage(new HttpMethod(method), fullURL);
+                if (!(new string[] { "GET", "HEAD" }).Contains(method.ToUpper())) { msg.Content = new StringContent(body ?? ""); }
+                using (HttpResponseMessage res = await client.SendAsync(msg, HttpCompletionOption.ResponseContentRead))
+                return await res.Content.ReadAsStringAsync();                    
+            });
+            
         }
 
     }

@@ -54,12 +54,10 @@ namespace Alabaster
 
         public WebSocketChannel CreateChannel() => new WebSocketChannel(this, Interlocked.Increment(ref this.channelCount));
 
-        private static void SetupEventCallback(Action callback) => InternalQueueManager.SetupQueue.Run(() => Util.InitExceptions(callback));
-
-        public void NumberedEvent(byte number, WebSocketCallback callback) => SetupEventCallback(() => this.NumberedEvents[number] = callback );
-        public void NamedEvent(string name, WebSocketCallback callback) => SetupEventCallback(() => this.NamedEvents[name] = callback );
-        public void ConnectionEvent(WebSocketCallback callback) => SetupEventCallback(() => this.connectEvent = callback );
-        public void DisconnectionEvent(WebSocketCallback callback) => SetupEventCallback(() => this.disconnectEvent = callback );   
+        public void NumberedEvent(byte number, WebSocketCallback callback) => InternalQueueManager.SetupQueue.Run(() => this.NumberedEvents[number] = callback );
+        public void NamedEvent(string name, WebSocketCallback callback) => InternalQueueManager.SetupQueue.Run(() => this.NamedEvents[name] = callback );
+        public void ConnectionEvent(WebSocketCallback callback) => InternalQueueManager.SetupQueue.Run(() => this.connectEvent = callback );
+        public void DisconnectionEvent(WebSocketCallback callback) => InternalQueueManager.SetupQueue.Run(() => this.disconnectEvent = callback );   
 
         internal void RunCallback(byte number, WebSocketMessageContext data) => this.NumberedEvents[number]?.Invoke(data);
         internal void RunCallback(string name, WebSocketMessageContext data) { if (this.NamedEvents.TryGetValue(name, out WebSocketCallback callback)) { callback(data); } }

@@ -13,19 +13,19 @@ namespace Alabaster
         private static HttpClient client = new HttpClient();
 
         /// <summary>Sends an HTTP request.</summary>
-        public static async Task<string> Get(string url, HTTPScheme scheme = HTTPScheme.HTTP) => await Request("GET", url, "", scheme);
+        public static async Task<string> Get(string url, HTTPScheme scheme = HTTPScheme.HTTP) => await Request(HTTPMethod.GET, url, "", scheme);
 
         /// <summary>Sends an HTTP request.</summary>
-        public static async Task<string> Delete(string url, HTTPScheme scheme = HTTPScheme.HTTP) => await Request("DELETE", url, "", scheme);
+        public static async Task<string> Delete(string url, HTTPScheme scheme = HTTPScheme.HTTP) => await Request(HTTPMethod.DELETE, url, "", scheme);
 
         /// <summary>Sends an HTTP request.</summary>
-        public static async Task<string> Post(string url, string body, HTTPScheme scheme = HTTPScheme.HTTP) => await Request("POST", url, body, scheme);
+        public static async Task<string> Post(string url, string body, HTTPScheme scheme = HTTPScheme.HTTP) => await Request(HTTPMethod.POST, url, body, scheme);
 
         /// <summary>Sends an HTTP request.</summary>
-        public static async Task<string> Patch(string url, string body, HTTPScheme scheme = HTTPScheme.HTTP) => await Request("PATCH", url, body, scheme);
+        public static async Task<string> Patch(string url, string body, HTTPScheme scheme = HTTPScheme.HTTP) => await Request(HTTPMethod.PATCH, url, body, scheme);
 
         /// <summary>Sends an HTTP request.</summary>
-        public static async Task<string> Put(string url, string body, HTTPScheme scheme = HTTPScheme.HTTP) => await Request("PUT", url, body, scheme);
+        public static async Task<string> Put(string url, string body, HTTPScheme scheme = HTTPScheme.HTTP) => await Request(HTTPMethod.PUT, url, body, scheme);
 
         /// <summary>Sends an HTTP request.</summary>
         public static async Task<string> Request(HTTPMethod method, string url, string body, HTTPScheme scheme = HTTPScheme.HTTP) => await Request(method.ToString(), url, body, scheme);

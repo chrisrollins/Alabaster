@@ -74,9 +74,9 @@ namespace Alabaster
                 DefaultLoggers.Error
                 .Log("Exception occurred in exception handler:")
                 .Log(e);
-                result = HTTPStatus.InternalServerError;
+                result = HTTPStatusCode.InternalServerError;
             }
-            return (result is PassThrough) ? (result._StatusCode ?? (Int32)HTTPStatus.InternalServerError) : result;
+            return (result is PassThrough) ? (result._StatusCode ?? (Int32)HTTPStatusCode.InternalServerError) : result;
         }
 
         private static void FinalizeExceptionHandlers()
@@ -88,7 +88,7 @@ namespace Alabaster
                 .Log(exceptionInfo.Exception)
                 .Log("Request URL path: \"" + exceptionInfo.Request.Route + "\"")
                 .Log("Request HTTP method: \"" + exceptionInfo.Request.HttpMethod + "\"");
-                return HTTPStatus.InternalServerError;
+                return HTTPStatusCode.InternalServerError;
             });
             finalizedExceptionHandlers = exceptionHandlerAddList.ToArray();
             exceptionHandlerAddList = null;

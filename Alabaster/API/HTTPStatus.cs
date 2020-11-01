@@ -1,8 +1,8 @@
-﻿using System;
+﻿using System.Net;
 
 namespace Alabaster
 {
-    public enum HTTPStatus
+    public enum HTTPStatusCode
     {
         Continue = 100,
         SwitchingProtocols = 101,
